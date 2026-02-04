@@ -1,24 +1,36 @@
-import { Apple,Chrome, Facebook, Lock, Mail } from 'lucide-react';
-import { useState } from 'react';
-import { Link,useNavigate } from 'react-router-dom';
+import { Apple, Chrome, Facebook, Lock, Mail, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
+import { Alert, AlertDescription } from '../components/ui/alert';
 import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, error, clearError, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Clear error when component mounts or unmounts
+  useEffect(() => {
+    return () => clearError();
+  }, [clearError]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, password);
-    navigate('/');
+    clearError();
+    try {
+      await login(email, password);
+      navigate('/');
+    } catch (err) {
+      // Error is handled by AuthContext and available in error state
+      console.error('Login failed', err);
+    }
   };
 
   return (
@@ -31,6 +43,13 @@ export function LoginPage() {
           <h1 className="text-2xl font-bold mb-2">Đăng nhập</h1>
           <p className="text-gray-600">Chào mừng bạn quay trở lại!</p>
         </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6 bg-red-50 text-red-600 border-red-200">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -45,6 +64,7 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -66,6 +86,7 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -81,8 +102,12 @@ export function LoginPage() {
             </label>
           </div>
 
-          <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 h-11">
-            Đăng nhập
+          <Button
+            type="submit"
+            className="w-full bg-red-600 hover:bg-red-700 h-11"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </Button>
         </form>
 
@@ -94,13 +119,13 @@ export function LoginPage() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <Button variant="outline" className="h-11">
+          <Button variant="outline" className="h-11" disabled={isLoading}>
             <Facebook className="w-5 h-5" />
           </Button>
-          <Button variant="outline" className="h-11">
+          <Button variant="outline" className="h-11" disabled={isLoading}>
             <Chrome className="w-5 h-5" />
           </Button>
-          <Button variant="outline" className="h-11">
+          <Button variant="outline" className="h-11" disabled={isLoading}>
             <Apple className="w-5 h-5" />
           </Button>
         </div>
