@@ -45,6 +45,11 @@ const getStoredAuthState = (): Partial<AuthState> => {
           email: decoded.email || '',
           fullName: decoded.fullName || '',
           role: decoded.role || 'USER',
+          phoneNumber: decoded.phoneNumber,
+          // Backward compatible aliases
+          name: decoded.fullName || '',
+          phone: decoded.phoneNumber,
+          points: decoded.rewardPoint || 0,
         } as AuthUser,
       };
     }
