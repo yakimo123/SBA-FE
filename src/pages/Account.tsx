@@ -1,17 +1,28 @@
-import { CheckCircle, Clock, Gift, Heart, LogOut, MapPin, Package, ShoppingBag, User, XCircle } from 'lucide-react';
+import { Gift, Heart, LogOut, MapPin, ShoppingBag, Star, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Avatar } from '../components/ui/avatar';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
 import { mockOrders, vouchers } from '../data/mockData';
+import { reviewService } from '../services';
+
+interface ReviewDialogState {
+  isOpen: boolean;
+  orderId: string;
+  productId: number;
+  productName: string;
+}
 
 export function AccountPage() {
   const navigate = useNavigate();
@@ -22,6 +33,17 @@ export function AccountPage() {
     email: user?.email || '',
     phone: user?.phone || ''
   });
+  
+  // Review dialog state
+  const [reviewDialog, setReviewDialog] = useState<ReviewDialogState>({
+    isOpen: false,
+    orderId: '',
+    productId: 0,
+    productName: ''
+  });
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   if (!user) {
     navigate('/login');
@@ -33,18 +55,67 @@ export function AccountPage() {
     navigate('/');
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'shipping':
-        return <Package className="w-5 h-5 text-blue-600" />;
-      case 'processing':
-        return <Clock className="w-5 h-5 text-yellow-600" />;
-      case 'cancelled':
-        return <XCircle className="w-5 h-5 text-red-600" />;
-      default:
-        return <Clock className="w-5 h-5 text-gray-600" />;
+  const openReviewDialog = (orderId: string, productId: number, productName: string) => {
+    setReviewDialog({
+      isOpen: true,
+      orderId,
+      productId,
+      productName
+    });
+    setReviewRating(5);
+    setReviewComment('');
+  };
+
+  const closeReviewDialog = () => {
+    setReviewDialog({
+      isOpen: false,
+      orderId: '',
+      productId: 0,
+      productName: ''
+    });
+    setReviewRating(5);
+    setReviewComment('');
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user?.userId) {
+      toast.error('Vui lòng đăng nhập để đánh giá');
+      return;
+    }
+
+    if (!reviewComment.trim()) {
+      toast.error('Vui lòng nhập nhận xét');
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      await reviewService.createReview(user.userId, {
+        productId: reviewDialog.productId,
+        rating: reviewRating,
+        comment: reviewComment.trim()
+      });
+      
+      toast.success('Đánh giá thành công! Cảm ơn bạn đã đánh giá.');
+      closeReviewDialog();
+    } catch (error: unknown) {
+      console.error('Error submitting review:', error);
+      const errorMessage = 
+        error && 
+        typeof error === 'object' && 
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data &&
+        typeof error.response.data.message === 'string'
+          ? error.response.data.message
+          : 'Có lỗi xảy ra khi gửi đánh giá';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -96,11 +167,11 @@ export function AccountPage() {
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Avatar className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-500 text-white flex items-center justify-center text-2xl font-bold">
-                  {user.name.charAt(0)}
+                  {(user?.name || 'U').charAt(0).toUpperCase()}
                 </Avatar>
                 <div>
-                  <h3 className="font-bold">{user.name}</h3>
-                  <p className="text-sm text-gray-600">{user.email}</p>
+                  <h3 className="font-bold">{user?.name || 'Người dùng'}</h3>
+                  <p className="text-sm text-gray-600">{user?.email || ''}</p>
                 </div>
               </div>
 
@@ -109,8 +180,8 @@ export function AccountPage() {
                   <Gift className="w-5 h-5" />
                   <span className="font-medium">Điểm thưởng</span>
                 </div>
-                <div className="text-3xl font-bold">{user.points}</div>
-                <p className="text-sm text-white/80 mt-1">≈ {Math.floor(user.points / 100) * 10}K giảm giá</p>
+                <div className="text-3xl font-bold">{user?.points || 0}</div>
+                <p className="text-sm text-white/80 mt-1">≈ {Math.floor((user?.points || 0) / 100) * 10}K giảm giá</p>
               </div>
 
               <nav className="space-y-1">
@@ -268,7 +339,21 @@ export function AccountPage() {
                             <Button variant="outline" className="flex-1">
                               Mua lại
                             </Button>
-                            <Button variant="outline" className="flex-1">
+                            <Button 
+                              variant="outline" 
+                              className="flex-1"
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('Review button clicked for order:', order.id);
+                                const firstItem = order.items[0];
+                                if (firstItem) {
+                                  console.log('Opening review dialog for:', firstItem.name);
+                                  openReviewDialog(order.id, 1, firstItem.name);
+                                }
+                              }}
+                            >
                               Đánh giá
                             </Button>
                           </>
@@ -331,7 +416,7 @@ export function AccountPage() {
                     <div className="flex-1">
                       <h3 className="font-bold mb-1">Tích điểm đổi quà</h3>
                       <p className="text-sm text-gray-600 mb-2">
-                        Bạn có <span className="font-bold text-purple-600">{user.points} điểm</span>
+                        Bạn có <span className="font-bold text-purple-600">{user?.points || 0} điểm</span>
                       </p>
                       <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
                         Đổi điểm ngay
@@ -344,6 +429,89 @@ export function AccountPage() {
           </div>
         </div>
       </div>
+
+      {/* Review Dialog */}
+      <Dialog open={reviewDialog.isOpen} onOpenChange={(open) => !open && closeReviewDialog()}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Đánh giá sản phẩm</DialogTitle>
+            <DialogDescription>
+              Chia sẻ trải nghiệm của bạn về sản phẩm này
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                Sản phẩm
+              </Label>
+              <p className="text-sm font-semibold text-gray-900">{reviewDialog.productName}</p>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                Đánh giá của bạn
+              </Label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewRating(star)}
+                    className="focus:outline-none transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={`w-8 h-8 ${
+                        star <= reviewRating
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                {reviewRating === 5
+                  ? 'Tuyệt vời'
+                  : reviewRating === 4
+                  ? 'Hài lòng'
+                  : reviewRating === 3
+                  ? 'Bình thường'
+                  : reviewRating === 2
+                  ? 'Không hài lòng'
+                  : 'Rất tệ'}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="comment" className="text-sm font-medium text-gray-700 mb-2 block">
+                Nhận xét của bạn
+              </Label>
+              <Textarea
+                id="comment"
+                placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={closeReviewDialog} disabled={isSubmittingReview}>
+              Hủy
+            </Button>
+            <Button 
+              onClick={handleSubmitReview} 
+              disabled={isSubmittingReview || !reviewComment.trim()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isSubmittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
