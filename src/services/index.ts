@@ -6,3 +6,4 @@ export { default as reviewService } from './reviewService';
 export * from './reviewService';
 export { default as wishlistService } from './wishlistService';
 export * from './wishlistService';
+export * from './companyService';
