@@ -55,6 +55,19 @@ export interface AuthUser {
     points?: number; // alias for rewardPoint
 }
 
+// Paginated Response wrapper
+export interface PageResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first?: boolean;
+    last?: boolean;
+    numberOfElements?: number;
+    empty?: boolean;
+}
+
 // Auth State
 export interface AuthState {
     user: AuthUser | null;
