@@ -1,5 +1,5 @@
 import { Gift, Heart, LogOut, MapPin, ShoppingBag, Star, User } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -14,8 +14,9 @@ import { Separator } from '../components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
-import { mockOrders, vouchers } from '../data/mockData';
-import { reviewService } from '../services';
+import { OrderResponse,orderService } from '../services/orderService';
+import { reviewService } from '../services/reviewService';
+import { VoucherResponse,voucherService } from '../services/voucherService';
 
 interface ReviewDialogState {
   isOpen: boolean;
@@ -33,7 +34,13 @@ export function AccountPage() {
     email: user?.email || '',
     phone: user?.phone || ''
   });
-  
+
+  // API data states
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [voucherList, setVoucherList] = useState<VoucherResponse[]>([]);
+  const [loadingVouchers, setLoadingVouchers] = useState(false);
+
   // Review dialog state
   const [reviewDialog, setReviewDialog] = useState<ReviewDialogState>({
     isOpen: false,
@@ -44,6 +51,36 @@ export function AccountPage() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const fetchOrders = useCallback(async () => {
+    if (!user?.userId) return;
+    setLoadingOrders(true);
+    try {
+      const data = await orderService.getOrders({ userId: user.userId, page: 0, size: 20, sort: 'orderDate,desc' });
+      setOrders(data.content || []);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, [user?.userId]);
+
+  const fetchVouchers = useCallback(async () => {
+    setLoadingVouchers(true);
+    try {
+      const data = await voucherService.getVouchers({ validOnly: true, page: 0, size: 20 });
+      setVoucherList(data.content || []);
+    } catch (err) {
+      console.error('Error fetching vouchers:', err);
+    } finally {
+      setLoadingVouchers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+    fetchVouchers();
+  }, [fetchOrders, fetchVouchers]);
 
   if (!user) {
     navigate('/login');
@@ -121,14 +158,19 @@ export function AccountPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case 'DELIVERED':
         return 'Đã giao';
-      case 'shipping':
+      case 'SHIPPED':
         return 'Đang giao';
-      case 'processing':
+      case 'PROCESSING':
         return 'Đang xử lý';
-      case 'cancelled':
+      case 'CONFIRMED':
+        return 'Đã xác nhận';
+      case 'CANCELLED':
         return 'Đã hủy';
+      case 'REFUNDED':
+        return 'Đã hoàn tiền';
+      case 'PENDING':
       default:
         return 'Chờ xác nhận';
     }
@@ -136,14 +178,17 @@ export function AccountPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case 'DELIVERED':
         return 'bg-green-100 text-green-700';
-      case 'shipping':
+      case 'SHIPPED':
         return 'bg-blue-100 text-blue-700';
-      case 'processing':
+      case 'PROCESSING':
+      case 'CONFIRMED':
         return 'bg-yellow-100 text-yellow-700';
-      case 'cancelled':
+      case 'CANCELLED':
+      case 'REFUNDED':
         return 'bg-red-100 text-red-700';
+      case 'PENDING':
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -298,115 +343,145 @@ export function AccountPage() {
               {/* Orders Tab */}
               <TabsContent value="orders">
                 <div className="space-y-4">
-                  {mockOrders.map((order) => (
-                    <Card key={order.id} className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-bold">Đơn hàng #{order.id}</h3>
-                            <Badge className={getStatusColor(order.status)}>
-                              {getStatusText(order.status)}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">Ngày đặt: {order.date}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-red-600">
-                            {order.total.toLocaleString('vi-VN')}₫
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator className="mb-4" />
-
-                      <div className="space-y-3 mb-4">
-                        {order.items.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <span className="font-medium">{item.name}</span>
-                              <span className="text-gray-600"> x{item.quantity}</span>
+                  {loadingOrders ? (
+                    <div className="flex items-center justify-center py-16">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+                    </div>
+                  ) : orders.length === 0 ? (
+                    <Card className="p-6 text-center">
+                      <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-600">Bạn chưa có đơn hàng nào</p>
+                      <Button onClick={() => navigate('/products')} className="mt-4 bg-red-600 hover:bg-red-700">
+                        Mua sắm ngay
+                      </Button>
+                    </Card>
+                  ) : (
+                    orders.map((order) => (
+                      <Card key={order.orderId} className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <div className="flex items-center gap-3 mb-1">
+                              <h3 className="font-bold">Đơn hàng #{order.orderId}</h3>
+                              <Badge className={getStatusColor(order.orderStatus)}>
+                                {getStatusText(order.orderStatus)}
+                              </Badge>
                             </div>
-                            <span className="font-medium">
-                              {item.price.toLocaleString('vi-VN')}₫
-                            </span>
+                            <p className="text-sm text-gray-600">
+                              Ngày đặt: {new Date(order.orderDate).toLocaleDateString('vi-VN')}
+                            </p>
                           </div>
-                        ))}
-                      </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-red-600">
+                              {order.totalAmount.toLocaleString('vi-VN')}₫
+                            </div>
+                          </div>
+                        </div>
 
-                      <div className="flex gap-3">
-                        {order.status === 'delivered' && (
-                          <>
+                        <Separator className="mb-4" />
+
+                        <div className="space-y-2 mb-4 text-sm text-gray-600">
+                          <div className="flex justify-between">
+                            <span>Phương thức thanh toán:</span>
+                            <span className="font-medium text-gray-900">{order.paymentMethod}</span>
+                          </div>
+                          {order.shippingAddress && (
+                            <div className="flex justify-between">
+                              <span>Địa chỉ giao hàng:</span>
+                              <span className="font-medium text-gray-900 text-right max-w-[60%]">{order.shippingAddress}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3">
+                          {order.orderStatus === 'DELIVERED' && (
+                            <>
+                              <Button variant="outline" className="flex-1">
+                                Mua lại
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1"
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  openReviewDialog(String(order.orderId), 1, `Đơn hàng #${order.orderId}`);
+                                }}
+                              >
+                                Đánh giá
+                              </Button>
+                            </>
+                          )}
+                          {order.orderStatus === 'SHIPPED' && (
                             <Button variant="outline" className="flex-1">
-                              Mua lại
+                              Theo dõi đơn hàng
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              className="flex-1"
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log('Review button clicked for order:', order.id);
-                                const firstItem = order.items[0];
-                                if (firstItem) {
-                                  console.log('Opening review dialog for:', firstItem.name);
-                                  openReviewDialog(order.id, 1, firstItem.name);
+                          )}
+                          {(order.orderStatus === 'PENDING' || order.orderStatus === 'CONFIRMED') && (
+                            <Button
+                              variant="outline"
+                              className="flex-1 text-red-600 hover:text-red-700"
+                              onClick={async () => {
+                                try {
+                                  await orderService.cancelOrder(order.orderId);
+                                  toast.success('Đã hủy đơn hàng thành công');
+                                  fetchOrders();
+                                } catch {
+                                  toast.error('Không thể hủy đơn hàng');
                                 }
                               }}
                             >
-                              Đánh giá
+                              Hủy đơn hàng
                             </Button>
-                          </>
-                        )}
-                        {order.status === 'shipping' && (
-                          <Button variant="outline" className="flex-1">
-                            Theo dõi đơn hàng
-                          </Button>
-                        )}
-                        {order.status === 'processing' && (
-                          <Button variant="outline" className="flex-1 text-red-600 hover:text-red-700">
-                            Hủy đơn hàng
-                          </Button>
-                        )}
-                        <Button variant="outline">Chi tiết</Button>
-                      </div>
-                    </Card>
-                  ))}
+                          )}
+                          <Button variant="outline">Chi tiết</Button>
+                        </div>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </TabsContent>
 
               {/* Vouchers Tab */}
               <TabsContent value="vouchers">
-                <div className="grid md:grid-cols-2 gap-4">
-                  {vouchers.map((voucher) => (
-                    <Card key={voucher.id} className="overflow-hidden">
-                      <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Gift className="w-5 h-5" />
-                          <span className="font-medium">Mã giảm giá</span>
+                {loadingVouchers ? (
+                  <div className="flex items-center justify-center py-16">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {voucherList.map((voucher) => (
+                      <Card key={voucher.voucherId} className="overflow-hidden">
+                        <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Gift className="w-5 h-5" />
+                            <span className="font-medium">Mã giảm giá</span>
+                          </div>
+                          <div className="text-2xl font-bold mb-1">{voucher.voucherCode}</div>
+                          <p className="text-sm text-white/90">{voucher.description}</p>
                         </div>
-                        <div className="text-2xl font-bold mb-1">{voucher.code}</div>
-                        <p className="text-sm text-white/90">{voucher.title}</p>
-                      </div>
-                      <div className="p-4 bg-white">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm text-gray-600">HSD: {voucher.expiry}</span>
-                          {voucher.used ? (
-                            <Badge variant="outline">Đã sử dụng</Badge>
-                          ) : (
-                            <Badge className="bg-green-600">Khả dụng</Badge>
-                          )}
+                        <div className="p-4 bg-white">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm text-gray-600">
+                              HSD: {new Date(voucher.validTo).toLocaleDateString('vi-VN')}
+                            </span>
+                            {voucher.isValid ? (
+                              <Badge className="bg-green-600">Khả dụng</Badge>
+                            ) : (
+                              <Badge variant="outline">Hết hạn</Badge>
+                            )}
+                          </div>
+                          <Button
+                            className="w-full bg-red-600 hover:bg-red-700"
+                            disabled={!voucher.isValid}
+                          >
+                            {voucher.isValid ? 'Sử dụng ngay' : 'Hết hạn'}
+                          </Button>
                         </div>
-                        <Button 
-                          className="w-full bg-red-600 hover:bg-red-700"
-                          disabled={voucher.used}
-                        >
-                          {voucher.used ? 'Đã sử dụng' : 'Sử dụng ngay'}
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
 
                 <Card className="p-6 mt-6 bg-gradient-to-r from-purple-50 to-blue-50">
                   <div className="flex items-center gap-4">

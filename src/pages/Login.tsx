@@ -1,20 +1,30 @@
-import { Apple, Chrome, Facebook, Lock, Mail, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { AlertCircle, Apple, Chrome, Facebook, Lock, Mail } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
-import { Alert, AlertDescription } from '../components/ui/alert';
+import { getDefaultRouteForRole } from '../constants/roles';
 import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, error, clearError, isLoading } = useAuth();
+  const location = useLocation();
+  const { login, error, clearError, isLoading, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Nếu đã đăng nhập, redirect theo role
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const from = (location.state as { from?: string })?.from;
+      navigate(from || getDefaultRouteForRole(user.role), { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, location.state]);
 
   // Clear error when component mounts or unmounts
   useEffect(() => {
@@ -26,7 +36,7 @@ export function LoginPage() {
     clearError();
     try {
       await login(email, password);
-      navigate('/');
+      // Redirect sẽ được xử lý bởi useEffect ở trên khi isAuthenticated thay đổi
     } catch (err) {
       // Error is handled by AuthContext and available in error state
       console.error('Login failed', err);
