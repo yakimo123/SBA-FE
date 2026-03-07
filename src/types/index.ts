@@ -102,3 +102,25 @@ export interface CompanyResponse {
   address?: string;
 }
 
+// Shopping Cart API types
+export interface CartItemResponse {
+  productId: number;
+  productName: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface CartResponse {
+  cartId: number;
+  userId: number;
+  items: CartItemResponse[];
+  totalAmount: number;
+  totalItems: number;
+}
+
+export interface AddToCartRequest {
+  productId: number;
+  quantity: number;
+}
+
