@@ -22,3 +22,4 @@ export { default as orderService } from './orderService';
 export * from './orderService';
 export { default as voucherService } from './voucherService';
 export * from './voucherService';
+export * from './companyService';

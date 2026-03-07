@@ -84,3 +84,21 @@ export interface Wishlist {
   items: WishlistItem[];
 }
 
+// Company types
+export interface CompanyRequest {
+  companyName: string;
+  taxCode: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface CompanyResponse {
+  companyId: number;
+  companyName: string;
+  taxCode: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
