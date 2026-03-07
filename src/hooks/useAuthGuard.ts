@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation,useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
 
 interface UseAuthGuardOptions {
     redirectTo?: string;

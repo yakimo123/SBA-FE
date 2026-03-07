@@ -1,11 +1,7 @@
-import { Building2, Mail, Phone, Search, Plus, Edit, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Building2, Edit, Mail, Phone, Plus, Search, Trash2 } from 'lucide-react';
+import { useEffect,useState } from 'react';
 
 import { Column, DataTable } from '../../components/admin/DataTable';
-import { CompanyResponse, CompanyRequest } from '../../types';
-import { companyService } from '../../services/companyService';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
 import {
   Dialog,
@@ -15,7 +11,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
+import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
+import { companyService } from '../../services/companyService';
+import { CompanyRequest,CompanyResponse } from '../../types';
 
 export function CompanyList() {
   const [companies, setCompanies] = useState<CompanyResponse[]>([]);

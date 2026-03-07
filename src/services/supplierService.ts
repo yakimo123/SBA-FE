@@ -1,10 +1,10 @@
-import api from './api';
 import {
     ApiResponse,
     CreateSupplierRequest,
     Supplier,
     SupplierPage,
 } from '../types/product';
+import api from './api';
 
 export interface SupplierProductResponse {
     productId: number;

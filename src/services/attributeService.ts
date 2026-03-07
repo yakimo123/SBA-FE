@@ -1,4 +1,3 @@
-import api from './api';
 import {
     ApiResponse,
     Attribute,
@@ -7,6 +6,7 @@ import {
     ProductAttribute,
     UpdateProductAttributeRequest,
 } from '../types/product';
+import api from './api';
 
 const ATTR_BASE = '/api/v1/attributes';
 const PROD_ATTR_BASE = '/api/v1/product-attributes';

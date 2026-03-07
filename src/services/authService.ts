@@ -1,11 +1,10 @@
-import api, { setTokens, clearTokens, getRefreshToken } from './api';
 import {
+    ApiResponse,
+    AuthResponse,
     LoginRequest,
     RegisterRequest,
-    AuthResponse,
-    TokenResponse,
-    ApiResponse
-} from '../types/auth';
+    TokenResponse} from '../types/auth';
+import api, { clearTokens, getRefreshToken,setTokens } from './api';
 
 const AUTH_ENDPOINTS = {
     LOGIN: '/api/v1/auth/login',

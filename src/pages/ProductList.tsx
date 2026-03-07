@@ -13,10 +13,10 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Slider } from '../components/ui/slider';
 import { useCart } from '../contexts/CartContext';
-import { categoryService } from '../services/categoryService';
 import { brandService } from '../services/brandService';
+import { categoryService } from '../services/categoryService';
 import { productService } from '../services/productService';
-import { Category, Brand, Product } from '../types/product';
+import { Brand, Category, Product } from '../types/product';
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?w=400&q=80';

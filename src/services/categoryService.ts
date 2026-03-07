@@ -1,4 +1,3 @@
-import api from './api';
 import {
     ApiResponse,
     Category,
@@ -6,6 +5,7 @@ import {
     CreateCategoryRequest,
     UpdateCategoryRequest,
 } from '../types/product';
+import api from './api';
 
 const BASE = '/api/v1/categories';
 

@@ -1,12 +1,12 @@
 import { ShoppingCart, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { useCart } from '../contexts/CartContext';
+import { Product } from '../types/product';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { useCart } from '../contexts/CartContext';
-import { Product } from '../types/product';
 
 const PLACEHOLDER_IMG =
     'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?w=400&q=80';

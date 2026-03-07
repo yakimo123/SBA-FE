@@ -22,12 +22,12 @@ import { Card } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useCart } from '../contexts/CartContext';
-import { productService } from '../services/productService';
-import { mediaService } from '../services/mediaService';
-import { productAttributeService } from '../services/attributeService';
-import reviewService from '../services/reviewService';
-import { Product, Media, ProductAttribute } from '../types/product';
 import { reviews as fallbackReviews } from '../data/mockData';
+import { productAttributeService } from '../services/attributeService';
+import { mediaService } from '../services/mediaService';
+import { productService } from '../services/productService';
+import reviewService from '../services/reviewService';
+import { Media, Product, ProductAttribute } from '../types/product';
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?w=800&q=80';

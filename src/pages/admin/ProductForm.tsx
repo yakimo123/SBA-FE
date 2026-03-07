@@ -1,22 +1,22 @@
-import { Save, X, Plus, Trash2 } from 'lucide-react';
+import { Plus, Save, Trash2,X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { productService } from '../../services/productService';
-import { categoryService } from '../../services/categoryService';
-import { brandService } from '../../services/brandService';
-import { supplierService } from '../../services/supplierService';
-import { mediaService } from '../../services/mediaService';
 import { attributeService, productAttributeService } from '../../services/attributeService';
+import { brandService } from '../../services/brandService';
+import { categoryService } from '../../services/categoryService';
+import { mediaService } from '../../services/mediaService';
+import { productService } from '../../services/productService';
+import { supplierService } from '../../services/supplierService';
 import {
-  Category,
-  Brand,
-  Supplier,
-  Media,
   Attribute,
+  Brand,
+  Category,
+  Media,
+  MediaType,
   ProductAttribute,
   ProductStatus,
-  MediaType,
+  Supplier,
 } from '../../types/product';
 
 interface ProductFormState {
