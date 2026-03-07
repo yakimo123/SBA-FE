@@ -1,88 +1,107 @@
 import {
-    ApiResponse,
-    AuthResponse,
-    LoginRequest,
-    RegisterRequest,
-    TokenResponse} from '../types/auth';
-import api, { clearTokens, getRefreshToken,setTokens } from './api';
+  ApiResponse,
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  TokenResponse,
+} from '../types/auth';
+import api, { clearTokens, getRefreshToken, setTokens } from './api';
 
 const AUTH_ENDPOINTS = {
-    LOGIN: '/api/v1/auth/login',
-    REGISTER: '/api/v1/auth/register',
-    REFRESH: '/api/v1/auth/refresh',
+  LOGIN: '/api/v1/auth/login',
+  REGISTER: '/api/v1/auth/register',
+  REFRESH: '/api/v1/auth/refresh',
+  GOOGLE_LOGIN: '/api/v1/auth/oauth2/google',
 };
 
 export const authService = {
-    /**
-     * Login user with email and password
-     */
-    async login(credentials: LoginRequest): Promise<AuthResponse> {
-        const response = await api.post<ApiResponse<AuthResponse>>(
-            AUTH_ENDPOINTS.LOGIN,
-            credentials
-        );
+  /**
+   * Login user with email and password
+   */
+  async login(credentials: LoginRequest): Promise<AuthResponse> {
+    const response = await api.post<ApiResponse<AuthResponse>>(
+      AUTH_ENDPOINTS.LOGIN,
+      credentials
+    );
 
-        const authData = response.data.data;
+    const authData = response.data.data;
 
-        // Save tokens to localStorage
-        setTokens(authData.accessToken, authData.refreshToken);
+    // Save tokens to localStorage
+    setTokens(authData.accessToken, authData.refreshToken);
 
-        return authData;
-    },
+    return authData;
+  },
 
-    /**
-     * Register new user
-     */
-    async register(userData: RegisterRequest): Promise<AuthResponse> {
-        const response = await api.post<ApiResponse<AuthResponse>>(
-            AUTH_ENDPOINTS.REGISTER,
-            userData
-        );
+  /**
+   * Login user with Google access token
+   */
+  async googleLogin(token: string): Promise<AuthResponse> {
+    const response = await api.post<ApiResponse<AuthResponse>>(
+      AUTH_ENDPOINTS.GOOGLE_LOGIN,
+      { token }
+    );
 
-        const authData = response.data.data;
+    const authData = response.data.data;
 
-        // Save tokens to localStorage
-        setTokens(authData.accessToken, authData.refreshToken);
+    // Save tokens to localStorage
+    setTokens(authData.accessToken, authData.refreshToken);
 
-        return authData;
-    },
+    return authData;
+  },
 
-    /**
-     * Refresh access token using refresh token
-     */
-    async refreshToken(): Promise<TokenResponse> {
-        const refreshToken = getRefreshToken();
+  /**
+   * Register new user
+   */
+  async register(userData: RegisterRequest): Promise<AuthResponse> {
+    const response = await api.post<ApiResponse<AuthResponse>>(
+      AUTH_ENDPOINTS.REGISTER,
+      userData
+    );
 
-        if (!refreshToken) {
-            throw new Error('No refresh token available');
-        }
+    const authData = response.data.data;
 
-        const response = await api.post<ApiResponse<TokenResponse>>(
-            AUTH_ENDPOINTS.REFRESH,
-            { refreshToken }
-        );
+    // Save tokens to localStorage
+    setTokens(authData.accessToken, authData.refreshToken);
 
-        const tokenData = response.data.data;
+    return authData;
+  },
 
-        // Update tokens in localStorage
-        setTokens(tokenData.accessToken, tokenData.refreshToken);
+  /**
+   * Refresh access token using refresh token
+   */
+  async refreshToken(): Promise<TokenResponse> {
+    const refreshToken = getRefreshToken();
 
-        return tokenData;
-    },
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
 
-    /**
-     * Logout user - clear tokens
-     */
-    logout(): void {
-        clearTokens();
-    },
+    const response = await api.post<ApiResponse<TokenResponse>>(
+      AUTH_ENDPOINTS.REFRESH,
+      { refreshToken }
+    );
 
-    /**
-     * Check if user is authenticated (has access token)
-     */
-    isAuthenticated(): boolean {
-        return !!localStorage.getItem('accessToken');
-    },
+    const tokenData = response.data.data;
+
+    // Update tokens in localStorage
+    setTokens(tokenData.accessToken, tokenData.refreshToken);
+
+    return tokenData;
+  },
+
+  /**
+   * Logout user - clear tokens
+   */
+  logout(): void {
+    clearTokens();
+  },
+
+  /**
+   * Check if user is authenticated (has access token)
+   */
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem('accessToken');
+  },
 };
 
 export default authService;

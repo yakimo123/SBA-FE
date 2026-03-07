@@ -1,4 +1,12 @@
-export type Page = 'home' | 'products' | 'product-detail' | 'cart' | 'checkout' | 'login' | 'register' | 'account';
+export type Page =
+  | 'home'
+  | 'products'
+  | 'product-detail'
+  | 'cart'
+  | 'checkout'
+  | 'login'
+  | 'register'
+  | 'account';
 
 export interface CartItem {
   id: string;
@@ -85,12 +93,30 @@ export interface Wishlist {
 }
 
 // Company types
+export type CompanyStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+
 export interface CompanyRequest {
   companyName: string;
   taxCode: string;
   email?: string;
   phone?: string;
   address?: string;
+}
+
+export interface CreateCompanyRequest {
+  companyName: string;
+  taxCode: string;
+  email: string;
+  phone: string;
+  representativeName: string;
+  representativePosition: string;
+  userId: number;
+  address?: string;
+  foundingDate?: string; // YYYY-MM-DD
+  businessType?: string;
+  employeeCount?: number;
+  industry?: string;
+  logoUrl?: string;
 }
 
 export interface CompanyResponse {
@@ -100,6 +126,16 @@ export interface CompanyResponse {
   email?: string;
   phone?: string;
   address?: string;
+  representativeName?: string;
+  representativePosition?: string;
+  website?: string;
+  foundingDate?: string;
+  businessType?: string;
+  employeeCount?: number;
+  industry?: string;
+  status: CompanyStatus;
+  logoUrl?: string;
+  approvedAt?: string;
 }
 
 // Shopping Cart API types
@@ -123,4 +159,3 @@ export interface AddToCartRequest {
   productId: number;
   quantity: number;
 }
-

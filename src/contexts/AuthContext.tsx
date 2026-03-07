@@ -1,11 +1,34 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
-import { authService, clearTokens,getAccessToken, getRefreshToken } from '../services';
-import { AuthState, AuthUser, LoginRequest, RegisterRequest } from '../types/auth';
+import {
+  authService,
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+} from '../services';
+import {
+  AuthState,
+  AuthUser,
+  LoginRequest,
+  RegisterRequest,
+} from '../types/auth';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  register: (fullName: string, email: string, password: string, phoneNumber?: string) => Promise<void>;
+  googleLogin: (token: string) => Promise<void>;
+  register: (
+    fullName: string,
+    email: string,
+    password: string,
+    phoneNumber?: string
+  ) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
@@ -78,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Initialize auth state from localStorage on mount
   useEffect(() => {
     const storedState = getStoredAuthState();
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       ...storedState,
       isLoading: false,
@@ -99,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const handleForbidden = (event: CustomEvent<{ message: string }>) => {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: event.detail.message,
       }));
@@ -110,7 +133,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       window.removeEventListener('auth:logout', handleLogout);
-      window.removeEventListener('auth:forbidden', handleForbidden as EventListener);
+      window.removeEventListener(
+        'auth:forbidden',
+        handleForbidden as EventListener
+      );
     };
   }, []);
 
@@ -124,8 +150,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Handle Spring Boot Validation Errors (MethodArgumentNotValidException)
       // Format: { status: 400, errors: [{ defaultMessage: "..." }] }
-      if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-        return data.errors[0].defaultMessage || data.errors[0].message || 'Dữ liệu không hợp lệ';
+      if (
+        data?.errors &&
+        Array.isArray(data.errors) &&
+        data.errors.length > 0
+      ) {
+        return (
+          data.errors[0].defaultMessage ||
+          data.errors[0].message ||
+          'Dữ liệu không hợp lệ'
+        );
       }
 
       // Handle standard API response error message
@@ -137,15 +171,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return `Lỗi ${response?.status}: ${response?.statusText || 'Không xác định'}`;
     }
 
-    return error instanceof Error ? error.message : 'Có lỗi xảy ra. Vui lòng thử lại.';
+    return error instanceof Error
+      ? error.message
+      : 'Có lỗi xảy ra. Vui lòng thử lại.';
   };
 
-  const login = useCallback(async (email: string, password: string): Promise<void> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+  const login = useCallback(
+    async (email: string, password: string): Promise<void> => {
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      try {
+        const credentials: LoginRequest = { email, password };
+        const authData = await authService.login(credentials);
+
+        setState({
+          user: {
+            userId: authData.userId,
+            email: authData.email,
+            fullName: authData.fullName,
+            role: authData.role,
+            // Backward compatible aliases
+            name: authData.fullName,
+            phone: undefined,
+            points: 0,
+          },
+          accessToken: authData.accessToken,
+          refreshToken: authData.refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error);
+
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: errorMessage,
+        }));
+        throw error;
+      }
+    },
+    []
+  );
+
+  const googleLogin = useCallback(async (token: string): Promise<void> => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const credentials: LoginRequest = { email, password };
-      const authData = await authService.login(credentials);
+      const authData = await authService.googleLogin(token);
 
       setState({
         user: {
@@ -167,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       const errorMessage = extractErrorMessage(error);
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         error: errorMessage,
@@ -176,52 +250,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (
-    fullName: string,
-    email: string,
-    password: string,
-    phoneNumber?: string
-  ): Promise<void> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+  const register = useCallback(
+    async (
+      fullName: string,
+      email: string,
+      password: string,
+      phoneNumber?: string
+    ): Promise<void> => {
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    try {
-      const userData: RegisterRequest = {
-        fullName,
-        email,
-        password,
-        phoneNumber
-      };
-      const authData = await authService.register(userData);
+      try {
+        const userData: RegisterRequest = {
+          fullName,
+          email,
+          password,
+          phoneNumber,
+        };
+        const authData = await authService.register(userData);
 
-      setState({
-        user: {
-          userId: authData.userId,
-          email: authData.email,
-          fullName: authData.fullName,
-          role: authData.role,
-          phoneNumber: phoneNumber,
-          // Backward compatible aliases
-          name: authData.fullName,
-          phone: phoneNumber,
-          points: 0,
-        },
-        accessToken: authData.accessToken,
-        refreshToken: authData.refreshToken,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      const errorMessage = extractErrorMessage(error);
+        setState({
+          user: {
+            userId: authData.userId,
+            email: authData.email,
+            fullName: authData.fullName,
+            role: authData.role,
+            phoneNumber: phoneNumber,
+            // Backward compatible aliases
+            name: authData.fullName,
+            phone: phoneNumber,
+            points: 0,
+          },
+          accessToken: authData.accessToken,
+          refreshToken: authData.refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error);
 
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-      throw error;
-    }
-  }, []);
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: errorMessage,
+        }));
+        throw error;
+      }
+    },
+    []
+  );
 
   const logout = useCallback(() => {
     authService.logout();
@@ -237,17 +314,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState((prev) => ({ ...prev, error: null }));
   }, []);
 
   return (
-    <AuthContext.Provider value={{
-      ...state,
-      login,
-      register,
-      logout,
-      clearError
-    }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        googleLogin,
+        register,
+        logout,
+        clearError,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

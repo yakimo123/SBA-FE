@@ -26,7 +26,6 @@ import { TrademarkList } from '../pages/admin/TrademarkList';
 import { VoucherList } from '../pages/admin/VoucherList';
 import { BusinessApprovalPendingPage } from '../pages/b2b/BusinessApprovalPendingPage';
 import { BusinessRegistrationPage } from '../pages/b2b/BusinessRegistrationPage';
-import { BusinessVerificationPage } from '../pages/b2b/BusinessVerificationPage';
 import { CartPage } from '../pages/Cart';
 import { CheckoutPage } from '../pages/Checkout';
 import { HomePage } from '../pages/Home';
@@ -48,8 +47,6 @@ export const router = createBrowserRouter([
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'unauthorized', element: <UnauthorizedPage /> },
-      { path: 'register-business', element: <BusinessRegistrationPage /> },
-      { path: 'verify-business', element: <BusinessVerificationPage /> },
       { path: 'approval-pending', element: <BusinessApprovalPendingPage /> },
       // Protected routes (chỉ cần đăng nhập, không yêu cầu role cụ thể)
       {
@@ -58,6 +55,7 @@ export const router = createBrowserRouter([
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CheckoutPage /> },
           { path: 'account', element: <AccountPage /> },
+          { path: 'register-business', element: <BusinessRegistrationPage /> },
         ],
       },
     ],

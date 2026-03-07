@@ -8,7 +8,7 @@ import {
   Upload,
   User as UserIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '../../components/ui/button';
@@ -30,47 +30,35 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
-
-export interface BusinessRegistrationData {
-  // Company Information
-  companyName: string;
-  taxId: string;
-  industry: string;
-  companySize: string;
-
-  // Representative Information
-  representativeName: string;
-  position: string;
-  email: string;
-  phone: string;
-
-  // Company Address
-  businessAddress: string;
-  billingAddress: string;
-
-  // Documents
-  businessCertificate: File | null;
-  representativeId: File | null;
-  authorizationLetter: File | null;
-}
+import { useAuth } from '../../contexts/AuthContext';
+import { companyService } from '../../services/companyService';
+import { CreateCompanyRequest } from '../../types';
 
 export function BusinessRegistrationPage() {
   const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<BusinessRegistrationData>({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
     companyName: '',
-    taxId: '',
+    taxCode: '',
     industry: '',
-    companySize: '',
+    employeeCount: 0,
     representativeName: '',
-    position: '',
+    representativePosition: '',
     email: '',
     phone: '',
-    businessAddress: '',
+    address: '',
     billingAddress: '',
-    businessCertificate: null,
-    representativeId: null,
-    authorizationLetter: null,
+    foundingDate: '',
+    businessType: '',
+    logoUrl: '',
+    // Documents (Local state only, or can be uploaded separately)
+    businessCertificate: null as File | null,
+    representativeId: null as File | null,
+    authorizationLetter: null as File | null,
   });
 
   const [sameAsBusinessAddress, setSameAsBusinessAddress] = useState(false);
@@ -80,18 +68,25 @@ export function BusinessRegistrationPage() {
     authorizationLetter: false,
   });
 
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login', { state: { from: '/register-business' } });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
   const totalSteps = 3;
   const progress = (currentStep / totalSteps) * 100;
 
-  const updateField = <K extends keyof BusinessRegistrationData>(
-    field: K,
-    value: BusinessRegistrationData[K]
+  const updateField = (
+    field: string,
+    value: string | number | File | boolean | null
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleFileUpload = (
-    field: keyof BusinessRegistrationData,
+    field: 'businessCertificate' | 'representativeId' | 'authorizationLetter',
     file: File | null
   ) => {
     updateField(field, file);
@@ -105,22 +100,25 @@ export function BusinessRegistrationPage() {
   const handleSameAddressChange = (checked: boolean) => {
     setSameAsBusinessAddress(checked);
     if (checked) {
-      updateField('billingAddress', formData.businessAddress);
+      updateField('billingAddress', formData.address);
     }
   };
 
   const canProceedStep1 =
     formData.companyName &&
-    formData.taxId &&
+    formData.taxCode &&
     formData.industry &&
-    formData.companySize;
+    formData.employeeCount > 0 &&
+    formData.businessType;
+
   const canProceedStep2 =
     formData.representativeName &&
-    formData.position &&
+    formData.representativePosition &&
     formData.email &&
     formData.phone;
+
   const canProceedStep3 =
-    formData.businessAddress &&
+    formData.address &&
     formData.billingAddress &&
     uploadedFiles.businessCertificate &&
     uploadedFiles.representativeId;
@@ -139,10 +137,51 @@ export function BusinessRegistrationPage() {
     }
   };
 
-  const handleSubmit = () => {
-    // Chuyển hướng sang trang xác thực và truyền email qua state
-    navigate('/verify-business', { state: { email: formData.email } });
+  const handleSubmit = async () => {
+    if (!user?.userId) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const requestData: CreateCompanyRequest = {
+        companyName: formData.companyName,
+        taxCode: formData.taxCode,
+        email: formData.email,
+        phone: formData.phone,
+        representativeName: formData.representativeName,
+        representativePosition: formData.representativePosition,
+        userId: user.userId,
+        address: formData.address || undefined,
+        foundingDate: formData.foundingDate || undefined,
+        businessType: formData.businessType || undefined,
+        employeeCount: formData.employeeCount || undefined,
+        industry: formData.industry || undefined,
+        logoUrl: formData.logoUrl || undefined,
+      };
+
+      await companyService.register(requestData);
+
+      // Navigate to approval pending page
+      navigate('/approval-pending');
+    } catch (err: unknown) {
+      console.error('Registration failed:', err);
+      const errorMessage =
+        (err as any).response?.data?.message ||
+        'Đã có lỗi xảy ra khi gửi đăng ký. Vui lòng thử lại.';
+      setSubmitError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Đang tải...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto bg-gray-50 py-12">
@@ -206,6 +245,12 @@ export function BusinessRegistrationPage() {
           <Progress value={progress} className="h-2" />
         </div>
 
+        {submitError && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200 rounded-lg text-center font-medium">
+            {submitError}
+          </div>
+        )}
+
         {/* Step 1: Company Information */}
         {currentStep === 1 && (
           <Card className="shadow-lg">
@@ -223,92 +268,139 @@ export function BusinessRegistrationPage() {
               </div>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="companyName"
-                  className="text-base font-semibold"
-                >
-                  Tên công ty <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="companyName"
-                  placeholder="VD: Công ty TNHH Công nghệ ABC"
-                  value={formData.companyName}
-                  onChange={(e) => updateField('companyName', e.target.value)}
-                  className="h-12"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="companyName"
+                    className="text-base font-semibold"
+                  >
+                    Tên công ty <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="companyName"
+                    placeholder="VD: Công ty TNHH SBA"
+                    value={formData.companyName}
+                    onChange={(e) => updateField('companyName', e.target.value)}
+                    className="h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="taxCode" className="text-base font-semibold">
+                    Mã số thuế <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="taxCode"
+                    placeholder="VD: 0123456789"
+                    value={formData.taxCode}
+                    onChange={(e) => updateField('taxCode', e.target.value)}
+                    className="h-12"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="taxId" className="text-base font-semibold">
-                  Mã số thuế <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="taxId"
-                  placeholder="VD: 0123456789"
-                  value={formData.taxId}
-                  onChange={(e) => updateField('taxId', e.target.value)}
-                  className="h-12"
-                />
-                <p className="text-sm text-gray-500">
-                  Nhập mã số thuế 10-13 ký tự
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="businessType"
+                    className="text-base font-semibold"
+                  >
+                    Loại hình doanh nghiệp{' '}
+                    <span className="text-red-600">*</span>
+                  </Label>
+                  <Select
+                    value={formData.businessType}
+                    onValueChange={(value) =>
+                      updateField('businessType', value)
+                    }
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Chọn loại hình" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TNHH">TNHH</SelectItem>
+                      <SelectItem value="Cổ phần">Cổ phần</SelectItem>
+                      <SelectItem value="Tư nhân">
+                        Doanh nghiệp tư nhân
+                      </SelectItem>
+                      <SelectItem value="Liên doanh">Liên doanh</SelectItem>
+                      <SelectItem value="100% Vốn nước ngoài">
+                        100% Vốn nước ngoài
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="foundingDate"
+                    className="text-base font-semibold"
+                  >
+                    Ngày thành lập
+                  </Label>
+                  <Input
+                    id="foundingDate"
+                    type="date"
+                    value={formData.foundingDate}
+                    onChange={(e) =>
+                      updateField('foundingDate', e.target.value)
+                    }
+                    className="h-12"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="industry" className="text-base font-semibold">
-                  Lĩnh vực kinh doanh <span className="text-red-600">*</span>
-                </Label>
-                <Select
-                  value={formData.industry}
-                  onValueChange={(value) => updateField('industry', value)}
-                >
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Chọn lĩnh vực kinh doanh" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="retail">Bán lẻ</SelectItem>
-                    <SelectItem value="wholesale">Bán sỉ</SelectItem>
-                    <SelectItem value="technology">
-                      Công nghệ thông tin
-                    </SelectItem>
-                    <SelectItem value="electronics">
-                      Điện tử - Điện máy
-                    </SelectItem>
-                    <SelectItem value="ecommerce">
-                      Thương mại điện tử
-                    </SelectItem>
-                    <SelectItem value="education">Giáo dục</SelectItem>
-                    <SelectItem value="healthcare">Y tế</SelectItem>
-                    <SelectItem value="services">Dịch vụ</SelectItem>
-                    <SelectItem value="manufacturing">Sản xuất</SelectItem>
-                    <SelectItem value="other">Khác</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="industry" className="text-base font-semibold">
+                    Lĩnh vực kinh doanh <span className="text-red-600">*</span>
+                  </Label>
+                  <Select
+                    value={formData.industry}
+                    onValueChange={(value) => updateField('industry', value)}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Chọn lĩnh vực" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Retail">Bán lẻ</SelectItem>
+                      <SelectItem value="Wholesale">Bán sỉ</SelectItem>
+                      <SelectItem value="Technology">
+                        Công nghệ thông tin
+                      </SelectItem>
+                      <SelectItem value="Manufacturing">Sản xuất</SelectItem>
+                      <SelectItem value="Logistics">Vận tải</SelectItem>
+                      <SelectItem value="F&B">Thực phẩm & Đồ uống</SelectItem>
+                      <SelectItem value="Other">Khác</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="companySize"
-                  className="text-base font-semibold"
-                >
-                  Quy mô công ty <span className="text-red-600">*</span>
-                </Label>
-                <Select
-                  value={formData.companySize}
-                  onValueChange={(value) => updateField('companySize', value)}
-                >
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Chọn quy mô công ty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1-10">1-10 nhân viên</SelectItem>
-                    <SelectItem value="11-50">11-50 nhân viên</SelectItem>
-                    <SelectItem value="51-200">51-200 nhân viên</SelectItem>
-                    <SelectItem value="201-500">201-500 nhân viên</SelectItem>
-                    <SelectItem value="500+">Trên 500 nhân viên</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="employeeCount"
+                    className="text-base font-semibold"
+                  >
+                    Quy mô nhân sự <span className="text-red-600">*</span>
+                  </Label>
+                  <Select
+                    value={formData.employeeCount.toString()}
+                    onValueChange={(value) =>
+                      updateField('employeeCount', parseInt(value))
+                    }
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Chọn số lượng nhân viên" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">Dưới 10 nhân sự</SelectItem>
+                      <SelectItem value="50">10 - 50 nhân sự</SelectItem>
+                      <SelectItem value="200">51 - 200 nhân sự</SelectItem>
+                      <SelectItem value="500">201 - 500 nhân sự</SelectItem>
+                      <SelectItem value="1000">Trên 500 nhân sự</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
@@ -341,76 +433,80 @@ export function BusinessRegistrationPage() {
                   <UserIcon className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">
-                    Thông tin Người đại diện
-                  </CardTitle>
+                  <CardTitle className="text-2xl">Người đại diện</CardTitle>
                   <CardDescription>
-                    Thông tin người đại diện được ủy quyền của công ty
+                    Thông tin người đại diện pháp luật hoặc người được ủy quyền
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="representativeName"
-                  className="text-base font-semibold"
-                >
-                  Họ và tên <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="representativeName"
-                  placeholder="VD: Nguyễn Văn A"
-                  value={formData.representativeName}
-                  onChange={(e) =>
-                    updateField('representativeName', e.target.value)
-                  }
-                  className="h-12"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="representativeName"
+                    className="text-base font-semibold"
+                  >
+                    Họ và tên <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="representativeName"
+                    placeholder="VD: Nguyễn Văn A"
+                    value={formData.representativeName}
+                    onChange={(e) =>
+                      updateField('representativeName', e.target.value)
+                    }
+                    className="h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="representativePosition"
+                    className="text-base font-semibold"
+                  >
+                    Chức vụ <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="representativePosition"
+                    placeholder="VD: Giám đốc"
+                    value={formData.representativePosition}
+                    onChange={(e) =>
+                      updateField('representativePosition', e.target.value)
+                    }
+                    className="h-12"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="position" className="text-base font-semibold">
-                  Chức vụ <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="position"
-                  placeholder="VD: Giám đốc, Trưởng phòng Kinh doanh"
-                  value={formData.position}
-                  onChange={(e) => updateField('position', e.target.value)}
-                  className="h-12"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-base font-semibold">
+                    Email công việc <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="VD: a.nguyen@company.com"
+                    value={formData.email}
+                    onChange={(e) => updateField('email', e.target.value)}
+                    className="h-12"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-base font-semibold">
-                  Email <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="VD: nguyenvana@company.com"
-                  value={formData.email}
-                  onChange={(e) => updateField('email', e.target.value)}
-                  className="h-12"
-                />
-                <p className="text-sm text-gray-500">
-                  Email này sẽ được dùng để xác thực tài khoản
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-base font-semibold">
-                  Số điện thoại <span className="text-red-600">*</span>
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="VD: 0912345678"
-                  value={formData.phone}
-                  onChange={(e) => updateField('phone', e.target.value)}
-                  className="h-12"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-base font-semibold">
+                    Số điện thoại <span className="text-red-600">*</span>
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="VD: 0912345678"
+                    value={formData.phone}
+                    onChange={(e) => updateField('phone', e.target.value)}
+                    className="h-12"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-between gap-3 pt-4">
@@ -442,26 +538,22 @@ export function BusinessRegistrationPage() {
                 <div>
                   <CardTitle className="text-2xl">Địa chỉ & Giấy tờ</CardTitle>
                   <CardDescription>
-                    Địa chỉ công ty và tài liệu xác minh
+                    Địa chỉ trụ sở và các tài liệu pháp lý
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              {/* Addresses */}
               <div className="space-y-2">
-                <Label
-                  htmlFor="businessAddress"
-                  className="text-base font-semibold"
-                >
-                  Địa chỉ trụ sở <span className="text-red-600">*</span>
+                <Label htmlFor="address" className="text-base font-semibold">
+                  Địa chỉ trụ sở chính <span className="text-red-600">*</span>
                 </Label>
                 <Textarea
-                  id="businessAddress"
-                  placeholder="VD: 123 Đường ABC, Phường XYZ, Quận 1, TP. Hồ Chí Minh"
-                  value={formData.businessAddress}
+                  id="address"
+                  placeholder="Nhập địa chỉ đầy đủ theo GPKD"
+                  value={formData.address}
                   onChange={(e) => {
-                    updateField('businessAddress', e.target.value);
+                    updateField('address', e.target.value);
                     if (sameAsBusinessAddress) {
                       updateField('billingAddress', e.target.value);
                     }
@@ -483,58 +575,49 @@ export function BusinessRegistrationPage() {
                 </Label>
               </div>
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="billingAddress"
-                  className="text-base font-semibold"
-                >
-                  Địa chỉ xuất hóa đơn <span className="text-red-600">*</span>
-                </Label>
-                <Textarea
-                  id="billingAddress"
-                  placeholder="VD: 456 Đường DEF, Phường UVW, Quận 3, TP. Hồ Chí Minh"
-                  value={formData.billingAddress}
-                  onChange={(e) =>
-                    updateField('billingAddress', e.target.value)
-                  }
-                  disabled={sameAsBusinessAddress}
-                  className="min-h-[80px]"
-                />
-              </div>
+              {!sameAsBusinessAddress && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="billingAddress"
+                    className="text-base font-semibold"
+                  >
+                    Địa chỉ xuất hóa đơn <span className="text-red-600">*</span>
+                  </Label>
+                  <Textarea
+                    id="billingAddress"
+                    placeholder="Nhập địa chỉ xuất hóa đơn"
+                    value={formData.billingAddress}
+                    onChange={(e) =>
+                      updateField('billingAddress', e.target.value)
+                    }
+                    className="min-h-[80px]"
+                  />
+                </div>
+              )}
 
-              {/* Document Uploads */}
               <div className="border-t pt-6 mt-6">
                 <h3 className="text-lg font-semibold mb-4">
                   Tài liệu xác minh
                 </h3>
-
-                <div className="space-y-4">
-                  {/* Business Certificate */}
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <Label className="text-base font-semibold">
-                          Giấy chứng nhận đăng ký kinh doanh{' '}
-                          <span className="text-red-600">*</span>
-                        </Label>
-                        <p className="text-sm text-gray-500 mt-1">
-                          File PDF, JPG hoặc PNG (tối đa 5MB)
-                        </p>
-                      </div>
-                      {uploadedFiles.businessCertificate && (
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                      )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-4 bg-gray-50 flex flex-col justify-between">
+                    <div>
+                      <Label className="font-semibold">
+                        GP Kinh doanh <span className="text-red-600">*</span>
+                      </Label>
+                      <p className="text-xs text-gray-500 mb-3">
+                        PDF/Ảnh (Tối đa 5MB)
+                      </p>
                     </div>
-                    <label className="flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed rounded-lg cursor-pointer hover:bg-white transition-colors">
-                      <Upload className="w-5 h-5 text-gray-400" />
-                      <span className="text-sm font-medium">
+                    <label className="flex items-center justify-center gap-2 w-full h-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-white transition-colors">
+                      <Upload className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs font-medium">
                         {uploadedFiles.businessCertificate
-                          ? 'Đã tải lên - Chọn file khác'
-                          : 'Chọn file để tải lên'}
+                          ? 'Đã tải lên'
+                          : 'Tải lên'}
                       </span>
                       <input
                         type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
                         className="hidden"
                         onChange={(e) =>
                           handleFileUpload(
@@ -546,72 +629,29 @@ export function BusinessRegistrationPage() {
                     </label>
                   </div>
 
-                  {/* Representative ID */}
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <Label className="text-base font-semibold">
-                          CMND/CCCD người đại diện{' '}
-                          <span className="text-red-600">*</span>
-                        </Label>
-                        <p className="text-sm text-gray-500 mt-1">
-                          File PDF, JPG hoặc PNG (tối đa 5MB)
-                        </p>
-                      </div>
-                      {uploadedFiles.representativeId && (
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                      )}
+                  <div className="border rounded-lg p-4 bg-gray-50 flex flex-col justify-between">
+                    <div>
+                      <Label className="font-semibold">
+                        CMND/CCCD đại diện{' '}
+                        <span className="text-red-600">*</span>
+                      </Label>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Mặt trước & Mặt sau
+                      </p>
                     </div>
-                    <label className="flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed rounded-lg cursor-pointer hover:bg-white transition-colors">
-                      <Upload className="w-5 h-5 text-gray-400" />
-                      <span className="text-sm font-medium">
+                    <label className="flex items-center justify-center gap-2 w-full h-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-white transition-colors">
+                      <Upload className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs font-medium">
                         {uploadedFiles.representativeId
-                          ? 'Đã tải lên - Chọn file khác'
-                          : 'Chọn file để tải lên'}
+                          ? 'Đã tải lên'
+                          : 'Tải lên'}
                       </span>
                       <input
                         type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
                         className="hidden"
                         onChange={(e) =>
                           handleFileUpload(
                             'representativeId',
-                            e.target.files?.[0] || null
-                          )
-                        }
-                      />
-                    </label>
-                  </div>
-
-                  {/* Authorization Letter (Optional) */}
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <Label className="text-base font-semibold">
-                          Giấy ủy quyền (nếu có)
-                        </Label>
-                        <p className="text-sm text-gray-500 mt-1">
-                          File PDF, JPG hoặc PNG (tối đa 5MB)
-                        </p>
-                      </div>
-                      {uploadedFiles.authorizationLetter && (
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                      )}
-                    </div>
-                    <label className="flex items-center justify-center gap-2 w-full h-12 border-2 border-dashed rounded-lg cursor-pointer hover:bg-white transition-colors">
-                      <Upload className="w-5 h-5 text-gray-400" />
-                      <span className="text-sm font-medium">
-                        {uploadedFiles.authorizationLetter
-                          ? 'Đã tải lên - Chọn file khác'
-                          : 'Chọn file để tải lên'}
-                      </span>
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden"
-                        onChange={(e) =>
-                          handleFileUpload(
-                            'authorizationLetter',
                             e.target.files?.[0] || null
                           )
                         }
@@ -623,16 +663,15 @@ export function BusinessRegistrationPage() {
 
               <div className="flex justify-between gap-3 pt-4">
                 <Button variant="outline" onClick={handleBack} className="px-6">
-                  <ArrowLeft className="mr-2 w-4 h-4" />
                   Quay lại
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  disabled={!canProceedStep3}
+                  disabled={!canProceedStep3 || isSubmitting}
                   className="px-8 bg-red-600 hover:bg-red-700"
                 >
-                  <FileText className="mr-2 w-4 h-4" />
-                  Gửi đăng ký
+                  {isSubmitting ? 'Đang gửi...' : 'Gửi đăng ký'}
+                  {!isSubmitting && <FileText className="ml-2 w-4 h-4" />}
                 </Button>
               </div>
             </CardContent>
@@ -640,25 +679,14 @@ export function BusinessRegistrationPage() {
         )}
 
         {/* Footer Note */}
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-gray-500 pb-12">
           <p>
-            Đã có tài khoản doanh nghiệp?{' '}
-            <button
-              onClick={() => navigate('/login')}
-              className="text-red-600 hover:underline font-semibold"
-            >
-              Đăng nhập
-            </button>
-          </p>
-          <p className="mt-2">
-            Bằng việc đăng ký, bạn đồng ý với{' '}
+            Bằng việc gửi đăng ký, bạn xác nhận các thông tin trên là chính xác
+            và đồng ý với{' '}
             <button className="text-red-600 hover:underline">
-              Điều khoản dịch vụ
-            </button>{' '}
-            và{' '}
-            <button className="text-red-600 hover:underline">
-              Chính sách bảo mật
+              Điều khoản dịch vụ B2B
             </button>
+            .
           </p>
         </div>
       </div>

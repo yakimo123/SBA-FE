@@ -1,4 +1,5 @@
-import { AlertCircle, Apple, Chrome, Facebook, Lock, Mail } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import { AlertCircle, Apple, Facebook, Lock, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -14,7 +15,15 @@ import { useAuth } from '../contexts/AuthContext';
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, error, clearError, isLoading, isAuthenticated, user } = useAuth();
+  const {
+    login,
+    googleLogin,
+    error,
+    clearError,
+    isLoading,
+    isAuthenticated,
+    user,
+  } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -30,6 +39,8 @@ export function LoginPage() {
   useEffect(() => {
     return () => clearError();
   }, [clearError]);
+
+  // Remove custom useGoogleLogin handler since GoogleLogin component provides its own
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +58,7 @@ export function LoginPage() {
     <div className="bg-gray-50 min-h-screen flex items-center justify-center py-12">
       <Card className="max-w-md w-full mx-4 p-8">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-linear-to-br from-red-600 to-red-500 rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-bold text-2xl">PK</span>
           </div>
           <h1 className="text-2xl font-bold mb-2">Đăng nhập</h1>
@@ -55,7 +66,10 @@ export function LoginPage() {
         </div>
 
         {error && (
-          <Alert variant="destructive" className="mb-6 bg-red-50 text-red-600 border-red-200">
+          <Alert
+            variant="destructive"
+            className="mb-6 bg-red-50 text-red-600 border-red-200"
+          >
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -82,7 +96,10 @@ export function LoginPage() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <Label htmlFor="password">Mật khẩu</Label>
-              <button type="button" className="text-sm text-red-600 hover:underline">
+              <button
+                type="button"
+                className="text-sm text-red-600 hover:underline"
+              >
                 Quên mật khẩu?
               </button>
             </div>
@@ -128,15 +145,33 @@ export function LoginPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <Button variant="outline" className="h-11" disabled={isLoading}>
-            <Facebook className="w-5 h-5" />
-          </Button>
-          <Button variant="outline" className="h-11" disabled={isLoading}>
-            <Chrome className="w-5 h-5" />
-          </Button>
-          <Button variant="outline" className="h-11" disabled={isLoading}>
-            <Apple className="w-5 h-5" />
+        <div className="flex justify-center items-center w-full gap-3">
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              clearError();
+              try {
+                if (credentialResponse.credential) {
+                  await googleLogin(credentialResponse.credential);
+                } else {
+                  console.error('No credential received from Google.');
+                }
+              } catch (err) {
+                console.error('Google login failed:', err);
+              }
+            }}
+            onError={() => {
+              console.error('Google login failed');
+            }}
+            useOneTap
+          />
+
+          <Button
+            variant="outline"
+            className="h-11 border-gray-300"
+            disabled={isLoading}
+          >
+            <Facebook className="w-5 h-5 text-blue-600 mr-2" />
+            <span>Facebook</span>
           </Button>
         </div>
 
