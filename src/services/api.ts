@@ -10,7 +10,9 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 const api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json',
+        'Accept-Charset': 'UTF-8',
     },
     timeout: 10000,
 });
@@ -68,7 +70,14 @@ api.interceptors.request.use(
 
 // Response interceptor - Handle 401/403 errors and refresh token
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Debug: Log response to check encoding
+        if (response.config.url?.includes('/companies')) {
+            console.log('API Response:', response);
+            console.log('Response data:', response.data);
+        }
+        return response;
+    },
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 

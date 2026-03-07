@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
+import { ProtectedRoute } from '../components/ProtectedRoute';
+import { ROLES } from '../constants/roles';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { RootLayout } from '../layouts/RootLayout';
 import { AccountPage } from '../pages/Account';
@@ -29,55 +31,71 @@ import { LoginPage } from '../pages/Login';
 import { ProductDetailPage } from '../pages/ProductDetail';
 import { ProductListPage } from '../pages/ProductList';
 import { RegisterPage } from '../pages/Register';
+import { UnauthorizedPage } from '../pages/Unauthorized';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
     children: [
+      // Public routes
       { index: true, element: <HomePage /> },
       { path: 'products', element: <ProductListPage /> },
       { path: 'product/:id', element: <ProductDetailPage /> },
-      { path: 'cart', element: <CartPage /> },
-      { path: 'checkout', element: <CheckoutPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
-      { path: 'account', element: <AccountPage /> },
+      { path: 'unauthorized', element: <UnauthorizedPage /> },
+
+      // Protected routes (chỉ cần đăng nhập, không yêu cầu role cụ thể)
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { path: 'cart', element: <CartPage /> },
+          { path: 'checkout', element: <CheckoutPage /> },
+          { path: 'account', element: <AccountPage /> },
+        ],
+      },
     ],
   },
   {
+    // Admin routes - yêu cầu role ADMIN hoặc COMPANY
     path: '/admin',
-    element: <AdminLayout />,
+    element: <ProtectedRoute requiredRole={[ROLES.ADMIN, ROLES.COMPANY]} />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: 'dashboard', element: <Dashboard /> },
-      
-      // Products
-      { path: 'products', element: <ProductList /> },
-      { path: 'products/new', element: <ProductForm /> },
-      { path: 'products/:id/edit', element: <ProductForm /> },
-      { path: 'products/categories', element: <CategoryList /> },
-      { path: 'products/trademarks', element: <TrademarkList /> },
-      { path: 'products/suppliers', element: <SupplierList /> },
-      { path: 'products/attributes', element: <AttributeList /> },
+      {
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: 'dashboard', element: <Dashboard /> },
 
-      // Orders
-      { path: 'orders', element: <OrderList /> },
-      { path: 'orders/:id', element: <OrderDetail /> },
-      { path: 'orders/bulk', element: <BulkRequestList /> },
-      { path: 'orders/vouchers', element: <VoucherList /> },
+          // Products
+          { path: 'products', element: <ProductList /> },
+          { path: 'products/new', element: <ProductForm /> },
+          { path: 'products/:id/edit', element: <ProductForm /> },
+          { path: 'products/categories', element: <CategoryList /> },
+          { path: 'products/trademarks', element: <TrademarkList /> },
+          { path: 'products/suppliers', element: <SupplierList /> },
+          { path: 'products/attributes', element: <AttributeList /> },
 
-      // Customers
-      { path: 'customers', element: <CustomerList /> },
-      { path: 'customers/:id', element: <CustomerDetail /> },
-      { path: 'customers/companies', element: <CompanyList /> },
-      { path: 'customers/favorites', element: <FavoriteList /> },
-      { path: 'customers/feedback', element: <FeedbackList /> },
+          // Orders
+          { path: 'orders', element: <OrderList /> },
+          { path: 'orders/:id', element: <OrderDetail /> },
+          { path: 'orders/bulk', element: <BulkRequestList /> },
+          { path: 'orders/vouchers', element: <VoucherList /> },
 
-      // Settings
-      { path: 'settings/stores', element: <StoreBranchList /> },
-      { path: 'settings/guarantees', element: <GuaranteeList /> },
-      { path: 'settings/media', element: <MediaLibrary /> },
+          // Customers
+          { path: 'customers', element: <CustomerList /> },
+          { path: 'customers/:id', element: <CustomerDetail /> },
+          { path: 'customers/companies', element: <CompanyList /> },
+          { path: 'customers/favorites', element: <FavoriteList /> },
+          { path: 'customers/feedback', element: <FeedbackList /> },
+
+          // Settings
+          { path: 'settings/stores', element: <StoreBranchList /> },
+          { path: 'settings/guarantees', element: <GuaranteeList /> },
+          { path: 'settings/media', element: <MediaLibrary /> },
+        ],
+      },
     ],
   },
 ]);

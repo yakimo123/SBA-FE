@@ -1,0 +1,172 @@
+import { PageableResponse } from './index';
+
+// ─── API Response wrapper ─────────────────────────────────────────────────────
+export interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data: T;
+  timestamp?: string;
+}
+
+// ─── CATEGORY ─────────────────────────────────────────────────────────────────
+export interface Category {
+  categoryId: number;
+  categoryName: string;
+  description?: string;
+}
+
+export interface CreateCategoryRequest {
+  categoryName: string;
+  description?: string;
+}
+
+export interface UpdateCategoryRequest {
+  categoryName: string;
+  description?: string;
+}
+
+export type CategoryPage = PageableResponse<Category>;
+
+// ─── BRAND ────────────────────────────────────────────────────────────────────
+export interface Brand {
+  brandId: number;
+  brandName: string;
+  country?: string;
+  description?: string;
+}
+
+export interface CreateBrandRequest {
+  brandName: string;
+  country?: string;
+  description?: string;
+}
+
+export interface UpdateBrandRequest {
+  brandName: string;
+  country?: string;
+  description?: string;
+}
+
+export type BrandPage = PageableResponse<Brand>;
+
+// ─── SUPPLIER ─────────────────────────────────────────────────────────────────
+export interface Supplier {
+  supplierId: number;
+  supplierName: string;
+  contactPerson?: string;
+  email?: string;
+  phoneNumber?: string;
+  address?: string;
+}
+
+export interface CreateSupplierRequest {
+  supplierName: string;
+  contactPerson?: string;
+  email?: string;
+  phoneNumber?: string;
+  address?: string;
+}
+
+export type SupplierPage = PageableResponse<Supplier>;
+
+// ─── PRODUCT ──────────────────────────────────────────────────────────────────
+export type ProductStatus = 'AVAILABLE' | 'UNAVAILABLE' | 'OUT_OF_STOCK';
+
+export interface Product {
+  productId: number;
+  productName: string;
+  description?: string;
+  price: number;
+  categoryId?: number;
+  categoryName?: string;
+  brandId?: number;
+  brandName?: string;
+  supplierId?: number;
+  supplierName?: string;
+  quantity: number;
+  status: ProductStatus;
+}
+
+export interface CreateProductRequest {
+  productName: string;
+  description?: string;
+  price: number;
+  categoryId?: number;
+  brandId?: number;
+  supplierId?: number;
+  quantity?: number;
+  status?: ProductStatus;
+}
+
+export interface UpdateProductRequest {
+  productName: string;
+  description?: string;
+  price: number;
+  categoryId?: number;
+  brandId?: number;
+  supplierId?: number;
+  quantity?: number;
+  status?: ProductStatus;
+}
+
+export interface ProductFilterParams {
+  keyword?: string;
+  categoryId?: number;
+  brandId?: number;
+  page?: number;
+  size?: number;
+}
+
+export type ProductPage = PageableResponse<Product>;
+
+// ─── MEDIA ────────────────────────────────────────────────────────────────────
+export type MediaType = 'IMAGE' | 'VIDEO';
+
+export interface Media {
+  mediaId: number;
+  productId: number;
+  type: MediaType;
+  url: string;
+  sortOrder?: number;
+}
+
+export interface CreateMediaRequest {
+  productId: number;
+  type: MediaType;
+  url: string;
+  sortOrder?: number;
+}
+
+export interface UpdateMediaRequest {
+  productId: number;
+  type: MediaType;
+  url: string;
+  sortOrder?: number;
+}
+
+// ─── ATTRIBUTE ────────────────────────────────────────────────────────────────
+export interface Attribute {
+  attributeId: number;
+  attributeName: string;
+}
+
+export type AttributePage = PageableResponse<Attribute>;
+
+// ─── PRODUCT ATTRIBUTE ────────────────────────────────────────────────────────
+export interface ProductAttribute {
+  productAttributeId: number;
+  productId: number;
+  attributeId: number;
+  attributeName?: string;
+  value: string;
+}
+
+export interface CreateProductAttributeRequest {
+  productId: number;
+  attributeId: number;
+  value: string;
+}
+
+export interface UpdateProductAttributeRequest {
+  value: string;
+}
