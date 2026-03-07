@@ -1,8 +1,8 @@
 import { Mail, Phone, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { Modal } from '../../components/admin/Modal';
 import { Column, DataTable } from '../../components/admin/DataTable';
+import { Modal } from '../../components/admin/Modal';
 import { supplierService } from '../../services/supplierService';
 import { Supplier } from '../../types/product';
 

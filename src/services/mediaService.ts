@@ -1,10 +1,10 @@
-import api from './api';
 import {
     ApiResponse,
     CreateMediaRequest,
     Media,
     UpdateMediaRequest,
 } from '../types/product';
+import api from './api';
 
 const BASE = '/api/v1/media';
 

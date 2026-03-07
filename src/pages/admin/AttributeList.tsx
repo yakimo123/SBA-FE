@@ -1,8 +1,8 @@
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { Modal } from '../../components/admin/Modal';
 import { Column, DataTable } from '../../components/admin/DataTable';
+import { Modal } from '../../components/admin/Modal';
 import { attributeService } from '../../services/attributeService';
 import { Attribute } from '../../types/product';
 

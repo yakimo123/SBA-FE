@@ -1,4 +1,14 @@
-import { Heart, LogOut, MapPin, Menu, Phone, Search, Settings, ShoppingCart, User } from 'lucide-react';
+import {
+  Heart,
+  LogOut,
+  MapPin,
+  Menu,
+  Phone,
+  Search,
+  Settings,
+  ShoppingCart,
+  User,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { ROLES } from '../constants/roles';
@@ -19,9 +29,10 @@ export function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
-  
+
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const isAdminOrCompany = user?.role === ROLES.ADMIN || user?.role === ROLES.COMPANY;
+  const isAdminOrCompany =
+    user?.role === ROLES.ADMIN || user?.role === ROLES.COMPANY;
 
   const handleLogout = () => {
     logout();
@@ -46,6 +57,12 @@ export function Header() {
           <div className="flex items-center gap-4">
             <button className="hover:underline">Tra cứu đơn hàng</button>
             <button className="hover:underline">Tìm cửa hàng</button>
+            <button
+              onClick={() => navigate('/register-business')}
+              className="hover:underline font-medium border-l pl-4"
+            >
+              🏢 Đăng ký Doanh nghiệp
+            </button>
           </div>
         </div>
       </div>
@@ -54,10 +71,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center gap-6">
           {/* Logo */}
-          <Link 
-            to="/"
-            className="flex items-center gap-2 shrink-0"
-          >
+          <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">PK</span>
             </div>
@@ -71,7 +85,7 @@ export function Header() {
           <div className="flex-1 max-w-2xl">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input 
+              <Input
                 placeholder="Tìm kiếm sản phẩm, danh mục, thương hiệu..."
                 className="pl-10 pr-4 h-11 bg-gray-50 border-gray-200 focus:bg-white"
               />
@@ -89,16 +103,16 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="relative hidden md:flex"
             >
               <Heart className="w-5 h-5" />
             </Button>
 
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="relative"
               onClick={() => navigate('/cart')}
@@ -134,14 +148,17 @@ export function Header() {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-red-600"
+                  >
                     <LogOut className="w-4 h-4 mr-2" />
                     Đăng xuất
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button 
+              <Button
                 onClick={() => navigate('/login')}
                 className="hidden md:flex bg-red-600 hover:bg-red-700"
               >
@@ -149,11 +166,7 @@ export function Header() {
               </Button>
             )}
 
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="md:hidden"
-            >
+            <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="w-5 h-5" />
             </Button>
           </div>
@@ -164,37 +177,34 @@ export function Header() {
       <div className="border-t bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
           <nav className="flex items-center gap-8 py-3 text-sm overflow-x-auto">
-            <Link 
-              to="/"
-              className="font-medium text-red-600 whitespace-nowrap"
-            >
+            <Link to="/" className="font-medium text-red-600 whitespace-nowrap">
               Trang chủ
             </Link>
-            <Link 
+            <Link
               to="/products"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Phụ kiện điện thoại
             </Link>
-            <Link 
+            <Link
               to="/products"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Phụ kiện laptop
             </Link>
-            <Link 
+            <Link
               to="/products"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Thiết bị âm thanh
             </Link>
-            <Link 
+            <Link
               to="/products"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Phụ kiện gaming
             </Link>
-            <Link 
+            <Link
               to="/products"
               className="hover:text-red-600 whitespace-nowrap"
             >

@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Column, DataTable } from '../../components/admin/DataTable';
-import { productService } from '../../services/productService';
-import { categoryService } from '../../services/categoryService';
 import { brandService } from '../../services/brandService';
-import { Product, Category, Brand, ProductStatus } from '../../types/product';
+import { categoryService } from '../../services/categoryService';
+import { productService } from '../../services/productService';
+import { Brand, Category, Product, ProductStatus } from '../../types/product';
 
 const PAGE_SIZE = 10;
 

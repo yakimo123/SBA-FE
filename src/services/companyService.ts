@@ -1,5 +1,5 @@
-import api from './api';
 import { ApiResponse, CompanyRequest, CompanyResponse, PageableResponse } from '../types';
+import api from './api';
 
 export const companyService = {
     // Get company by ID
