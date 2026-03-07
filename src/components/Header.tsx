@@ -1,18 +1,32 @@
-import { Heart, MapPin, Menu, Phone,Search, ShoppingCart, User } from 'lucide-react';
+import { Heart, LogOut, MapPin, Menu, Phone, Search, Settings, ShoppingCart, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { ROLES } from '../constants/roles';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { Input } from './ui/input';
 
 export function Header() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { cartItems } = useCart();
   
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const isAdminOrCompany = user?.role === ROLES.ADMIN || user?.role === ROLES.COMPANY;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b">
@@ -98,14 +112,34 @@ export function Header() {
             </Button>
 
             {user ? (
-              <Button 
-                variant="ghost"
-                onClick={() => navigate('/account')}
-                className="hidden md:flex items-center gap-2"
-              >
-                <User className="w-5 h-5" />
-                <span>{user.name}</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="hidden md:flex items-center gap-2"
+                  >
+                    <User className="w-5 h-5" />
+                    <span>{user.name || user.fullName}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/account')}>
+                    <User className="w-4 h-4 mr-2" />
+                    Tài khoản
+                  </DropdownMenuItem>
+                  {isAdminOrCompany && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Quản trị
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button 
                 onClick={() => navigate('/login')}

@@ -25,8 +25,9 @@ import { useCart } from '../contexts/CartContext';
 import { productService } from '../services/productService';
 import { mediaService } from '../services/mediaService';
 import { productAttributeService } from '../services/attributeService';
+import reviewService from '../services/reviewService';
 import { Product, Media, ProductAttribute } from '../types/product';
-import { reviews } from '../data/mockData';
+import { reviews as fallbackReviews } from '../data/mockData';
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?w=800&q=80';
@@ -52,19 +53,40 @@ export function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
+
+  const [apiReviews, setApiReviews] = useState<{ id: number; user: string; rating: number; date: string; comment: string; verified: boolean }[]>([]);
+
   const loadProduct = useCallback(async () => {
     if (!id) return;
+    const numericId = Number(id);
     setIsLoading(true);
     setError(null);
     try {
       const [productData, mediaData, attrData] = await Promise.all([
-        productService.getProductById(Number(id)),
-        mediaService.getProductMedia(Number(id)).catch(() => [] as Media[]),
-        productAttributeService.getProductAttributes(Number(id)).catch(() => [] as ProductAttribute[]),
+        productService.getProductById(numericId),
+        mediaService.getProductMedia(numericId).catch(() => [] as Media[]),
+        productAttributeService.getProductAttributes(numericId).catch(() => [] as ProductAttribute[]),
       ]);
       setProduct(productData);
       setMediaList(mediaData ?? []);
       setAttributes(attrData ?? []);
+
+      // Fetch reviews
+      try {
+        const reviewsRes = await reviewService.getReviews({ productId: numericId, page: 0, size: 5 });
+        const mapped = (reviewsRes.content || []).map((r: any) => ({
+          id: r.reviewId,
+          user: r.userFullName,
+          rating: r.rating,
+          date: r.reviewDate,
+          comment: r.comment,
+          verified: true,
+        }));
+        setApiReviews(mapped);
+      } catch {
+        setApiReviews(fallbackReviews);
+      }
+
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể tải sản phẩm';
       setError(msg);
@@ -111,6 +133,7 @@ export function ProductDetailPage() {
       : [PLACEHOLDER_IMG];
 
   const isInStock = product.status === 'AVAILABLE' && product.quantity > 0;
+  const reviews = apiReviews.length > 0 ? apiReviews : fallbackReviews;
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
@@ -418,8 +441,8 @@ export function ProductDetailPage() {
                                   <Star
                                     key={i}
                                     className={`w-4 h-4 ${i < review.rating
-                                        ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-gray-300'
+                                      ? 'fill-yellow-400 text-yellow-400'
+                                      : 'text-gray-300'
                                       }`}
                                   />
                                 ))}

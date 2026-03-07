@@ -1,6 +1,7 @@
 import { Banknote, CheckCircle,CreditCard, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
@@ -11,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Separator } from '../components/ui/separator';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { OrderResponse,orderService } from '../services/orderService';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -20,6 +22,8 @@ export function CheckoutPage() {
   const [step, setStep] = useState<'info' | 'payment' | 'success'>('info');
   const [deliveryMethod, setDeliveryMethod] = useState('standard');
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [orderResult, setOrderResult] = useState<OrderResponse | null>(null);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -40,9 +44,59 @@ export function CheckoutPage() {
     setStep('payment');
   };
 
-  const handlePlaceOrder = () => {
-    setStep('success');
-    clearCart();
+  const handlePlaceOrder = async () => {
+    setIsPlacingOrder(true);
+    try {
+      const paymentMethodMap: Record<string, string> = {
+        cod: 'COD',
+        card: 'CREDIT_CARD',
+        ewallet: 'E_WALLET',
+        installment: 'INSTALLMENT',
+      };
+
+      const shippingAddress = [formData.address, formData.ward, formData.district, formData.city]
+        .filter(Boolean)
+        .join(', ');
+
+      const orderData = {
+        shippingAddress,
+        paymentMethod: paymentMethodMap[paymentMethod] || 'COD',
+        items: cartItems.map((item) => ({
+          productId: Number(item.id),
+          quantity: item.quantity,
+        })),
+      };
+
+      const userId = user?.userId;
+      if (!userId) {
+        toast.error('Vui lòng đăng nhập để đặt hàng');
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      const result = await orderService.createOrder(userId, orderData);
+      setOrderResult(result);
+      setStep('success');
+      clearCart();
+    } catch (error: unknown) {
+      console.error('Error placing order:', error);
+      const errorMessage =
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data &&
+        typeof error.response.data.message === 'string'
+          ? error.response.data.message
+          : 'Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.';
+      toast.error(errorMessage);
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   if (step === 'success') {
@@ -59,11 +113,15 @@ export function CheckoutPage() {
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <div className="flex justify-between mb-2">
               <span className="text-gray-600">Mã đơn hàng:</span>
-              <span className="font-medium">DH{Date.now().toString().slice(-8)}</span>
+              <span className="font-medium">
+                {orderResult ? `#${orderResult.orderId}` : `DH${Date.now().toString().slice(-8)}`}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Tổng tiền:</span>
-              <span className="font-bold text-red-600">{total.toLocaleString('vi-VN')}₫</span>
+              <span className="font-bold text-red-600">
+                {(orderResult?.totalAmount ?? total).toLocaleString('vi-VN')}₫
+              </span>
             </div>
           </div>
           <div className="flex flex-col gap-3">
@@ -340,9 +398,10 @@ export function CheckoutPage() {
                   </Button>
                   <Button
                     onClick={handlePlaceOrder}
+                    disabled={isPlacingOrder}
                     className="flex-1 bg-red-600 hover:bg-red-700"
                   >
-                    Đặt hàng
+                    {isPlacingOrder ? 'Đang xử lý...' : 'Đặt hàng'}
                   </Button>
                 </div>
               </div>

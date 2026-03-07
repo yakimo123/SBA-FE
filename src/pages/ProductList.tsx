@@ -111,6 +111,8 @@ export function ProductListPage() {
     }
   }, [page, keyword, selectedCategoryIds, selectedBrandIds]);
 
+
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);

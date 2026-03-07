@@ -6,6 +6,22 @@ import {
     SupplierPage,
 } from '../types/product';
 
+export interface SupplierProductResponse {
+    productId: number;
+    productName: string;
+    description: string;
+    price: number;
+    categoryId: number;
+    categoryName: string;
+    brandId: number;
+    brandName: string;
+    quantity: number;
+    status: string;
+    createdDate: string;
+    supplierId: number;
+    supplierName: string;
+}
+
 const BASE = '/api/v1/suppliers';
 
 export const supplierService = {
@@ -28,6 +44,14 @@ export const supplierService = {
 
     async deleteSupplier(id: number): Promise<void> {
         await api.delete(`${BASE}/${id}`);
+    },
+
+    async getSupplierProducts(supplierId: string | number, params?: { page?: number; size?: number; sort?: string }): Promise<any> {
+        const response = await api.get<ApiResponse<any>>(
+            `${BASE}/${supplierId}/products`,
+            { params }
+        );
+        return response.data.data;
     },
 };
 
