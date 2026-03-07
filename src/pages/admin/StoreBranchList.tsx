@@ -1,7 +1,8 @@
-import { Edit, MapPin, Phone,Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Edit, MapPin, Phone, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { Column, DataTable } from '../../components/admin/DataTable';
+import { BranchResponse,branchService } from '../../services/branchService';
 
 interface StoreBranch {
   id: string;
@@ -9,34 +10,40 @@ interface StoreBranch {
   address: string;
   phone: string;
   manager: string;
-  status: 'Open' | 'Closed' | 'Renovating';
 }
 
-const mockStores: StoreBranch[] = [
-  { id: '1', name: 'Main Store - D1', address: '123 Le Loi, District 1, HCMC', phone: '028 1234 5678', manager: 'Tran Van Quan', status: 'Open' },
-  { id: '2', name: 'Branch 2 - D7', address: '456 Nguyen Van Linh, District 7, HCMC', phone: '028 8765 4321', manager: 'Le Thi Ly', status: 'Open' },
-  { id: '3', name: 'Branch 3 - Hanoi', address: '789 Ba Trieu, Hai Ba Trung, Hanoi', phone: '024 1234 5678', manager: 'Pham Van Minh', status: 'Renovating' },
-];
-
 export function StoreBranchList() {
-  const [stores] = useState<StoreBranch[]>(mockStores);
+  const [stores, setStores] = useState<StoreBranch[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      setLoading(true);
+      try {
+        const data = await branchService.getBranches({ size: 100 });
+        const mapped: StoreBranch[] = data.content.map((b: BranchResponse) => ({
+          id: String(b.branchId),
+          name: b.branchName,
+          address: b.location,
+          phone: b.contactNumber,
+          manager: b.managerName,
+        }));
+        setStores(mapped);
+      } catch (err) {
+        console.error('Error fetching branches:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBranches();
+  }, []);
 
   const columns: Column<StoreBranch>[] = [
     { header: 'Branch Name', accessor: 'name', render: (s) => <span className="font-medium text-purple-900">{s.name}</span> },
     { header: 'Address', accessor: 'address', render: (s) => <div className="flex items-center gap-1 text-sm"><MapPin className="h-3 w-3 text-gray-400"/> {s.address}</div> },
     { header: 'Phone', accessor: 'phone', render: (s) => <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3 text-gray-400"/> {s.phone}</div> },
     { header: 'Manager', accessor: 'manager' },
-    { 
-      header: 'Status', 
-      accessor: 'status',
-      render: (s) => (
-        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold 
-          ${s.status === 'Open' ? 'bg-green-100 text-green-800' : 
-            s.status === 'Closed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
-          {s.status}
-        </span>
-      )
-    },
     {
       header: 'Actions',
       accessor: 'id',
@@ -49,6 +56,14 @@ export function StoreBranchList() {
       ),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

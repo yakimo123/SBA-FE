@@ -1,5 +1,5 @@
 import { Award, CheckCircle,ChevronLeft, ChevronRight, Heart, Share2, Shield, ShoppingCart, Star, Truck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate,useParams } from 'react-router-dom';
 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -10,7 +10,10 @@ import { Card } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useCart } from '../contexts/CartContext';
-import { productData, relatedProducts,reviews } from '../data/mockData';
+import { productData as fallbackProductData, relatedProducts as fallbackRelatedProducts, reviews as fallbackReviews } from '../data/mockData';
+import mediaService from '../services/mediaService';
+import productService, { ProductDTO } from '../services/productService';
+import reviewService from '../services/reviewService';
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,8 +23,108 @@ export function ProductDetailPage() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [_loading, setLoading] = useState(true);
 
-  const product = productData[productId as keyof typeof productData] || productData['1'];
+  // API data states
+  const [apiProduct, setApiProduct] = useState<ProductDTO | null>(null);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [apiReviews, setApiReviews] = useState<{ id: number; user: string; rating: number; date: string; comment: string; verified: boolean }[]>([]);
+  const [relatedProductsList, setRelatedProductsList] = useState<{ id: string; name: string; price: number; image: string; rating: number }[]>([]);
+
+  useEffect(() => {
+    const numericId = Number(productId);
+    if (isNaN(numericId)) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchProductData = async () => {
+      setLoading(true);
+      try {
+        // Fetch product details
+        const productRes = await productService.getProductById(numericId);
+        setApiProduct(productRes.data);
+
+        // Fetch product media (images)
+        try {
+          const mediaRes = await mediaService.getProductMedia(numericId);
+          const images = (mediaRes.data || [])
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((m) => m.url);
+          setProductImages(images.length > 0 ? images : []);
+        } catch {
+          setProductImages([]);
+        }
+
+        // Fetch reviews
+        try {
+          const reviewsRes = await reviewService.getReviews({ productId: numericId, page: 0, size: 5 });
+          const mapped = (reviewsRes.content || []).map((r) => ({
+            id: r.reviewId,
+            user: r.userFullName,
+            rating: r.rating,
+            date: r.reviewDate,
+            comment: r.comment,
+            verified: true,
+          }));
+          setApiReviews(mapped);
+        } catch {
+          setApiReviews([]);
+        }
+
+        // Fetch related products
+        try {
+          const relatedRes = await productService.getProducts({ page: 0, size: 4 });
+          const related = (relatedRes.data.content || [])
+            .filter((p) => p.productId !== numericId)
+            .slice(0, 4)
+            .map((p) => ({
+              id: String(p.productId),
+              name: p.productName,
+              price: p.price,
+              image: '',
+              rating: 0,
+            }));
+          setRelatedProductsList(related);
+        } catch {
+          setRelatedProductsList([]);
+        }
+      } catch {
+        // API failed — will fallback to mock data
+        setApiProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductData();
+  }, [productId]);
+
+  // Build a unified product object: prefer API data, fallback to mock
+  const fallback = fallbackProductData[productId as keyof typeof fallbackProductData] || fallbackProductData['1'];
+  const product = apiProduct
+    ? {
+        name: apiProduct.productName,
+        price: apiProduct.price,
+        originalPrice: null as number | null,
+        rating: 0,
+        reviews: 0,
+        sold: 0,
+        images: productImages.length > 0 ? productImages : fallback.images,
+        brand: apiProduct.brandName,
+        category: apiProduct.categoryName,
+        inStock: apiProduct.status === 'ACTIVE' && apiProduct.quantity > 0,
+        stockQuantity: apiProduct.quantity,
+        sku: '',
+        warranty: '12 tháng',
+        description: apiProduct.description,
+        specs: {} as Record<string, string>,
+        features: [] as string[],
+      }
+    : fallback;
+
+  const reviews = apiReviews.length > 0 ? apiReviews : fallbackReviews;
+  const relatedProducts = relatedProductsList.length > 0 ? relatedProductsList : fallbackRelatedProducts;
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
@@ -227,7 +330,7 @@ export function ProductDetailPage() {
                   </button>
                 </div>
               </div>
-              <span className="text-sm text-gray-600">Còn {Math.floor(Math.random() * 50 + 20)} sản phẩm</span>
+              <span className="text-sm text-gray-600">Còn {'stockQuantity' in product ? product.stockQuantity : Math.floor(Math.random() * 50 + 20)} sản phẩm</span>
             </div>
 
             <div className="flex gap-3">
