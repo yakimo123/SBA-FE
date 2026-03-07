@@ -1,58 +1,55 @@
-import { ApiResponse, PageableResponse } from '../types';
 import api from './api';
+import {
+  ApiResponse,
+  CreateProductRequest,
+  Product,
+  ProductFilterParams,
+  ProductPage,
+  UpdateProductRequest,
+} from '../types/product';
 
-// Matches ProductResponse from backend API docs
-export interface ProductDTO {
-  productId: number;
-  productName: string;
-  description: string;
-  price: number;
-  categoryId: number;
-  categoryName: string;
-  brandId: number;
-  brandName: string;
-  quantity: number;
-  status: string; // "ACTIVE" | "INACTIVE"
-  createdDate: string;
-  supplierId: number;
-  supplierName: string;
-}
+const BASE = '/api/v1/products';
 
-export interface ProductListParams {
-  keyword?: string;
-  categoryId?: number;
-  brandId?: number;
-  page?: number;
-  size?: number;
-  sort?: string;
-}
+export const productService = {
+  async createProduct(data: CreateProductRequest): Promise<Product> {
+    const res = await api.post<ApiResponse<Product>>(BASE, data);
+    return res.data.data;
+  },
 
-class ProductService {
-  private readonly BASE_PATH = '/api/v1/products';
+  async getProducts(params: ProductFilterParams = {}): Promise<ProductPage> {
+    const query: Record<string, unknown> = {
+      page: params.page ?? 0,
+      size: params.size ?? 10,
+    };
+    if (params.keyword) query.keyword = params.keyword;
+    if (params.categoryId) query.categoryId = params.categoryId;
+    if (params.brandId) query.brandId = params.brandId;
+    const res = await api.get<ApiResponse<ProductPage>>(BASE, { params: query });
+    return res.data.data;
+  },
 
-  /**
-   * Get all products with pagination and filters
-   */
-  async getProducts(
-    params?: ProductListParams
-  ): Promise<ApiResponse<PageableResponse<ProductDTO>>> {
+  async getProductById(id: number): Promise<Product> {
+    const res = await api.get<ApiResponse<Product>>(`${BASE}/${id}`);
+    return res.data.data;
+  },
 
-    const response = await api.get<ApiResponse<PageableResponse<ProductDTO>>>(this.BASE_PATH, {
-      params,
-    });
+  async updateProduct(id: number, data: UpdateProductRequest): Promise<Product> {
+    const res = await api.put<ApiResponse<Product>>(`${BASE}/${id}`, data);
+    return res.data.data;
+  },
 
-    return response.data;
-  }
+  async deleteProduct(id: number): Promise<void> {
+    await api.delete(`${BASE}/${id}`);
+  },
 
-  /**
-   * Get a specific product by ID
-   */
-  async getProductById(id: number): Promise<ApiResponse<ProductDTO>> {
-    const response = await api.get<ApiResponse<ProductDTO>>(`${this.BASE_PATH}/${id}`);
-    return response.data;
-  }
-}
+  async updateStock(id: number, quantity: number): Promise<Product> {
+    const res = await api.patch<ApiResponse<Product>>(
+      `${BASE}/${id}/stock`,
+      null,
+      { params: { quantity } }
+    );
+    return res.data.data;
+  },
+};
 
-const productService = new ProductService();
 export default productService;
-

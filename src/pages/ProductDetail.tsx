@@ -1,8 +1,20 @@
-import { Award, CheckCircle,ChevronLeft, ChevronRight, Heart, Share2, Shield, ShoppingCart, Star, Truck } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate,useParams } from 'react-router-dom';
+import {
+  Award,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Share2,
+  Shield,
+  ShoppingCart,
+  Star,
+  Truck,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { ProductDetailSkeleton } from '../components/ProductSkeleton';
 import { Avatar } from '../components/ui/avatar';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -10,141 +22,130 @@ import { Card } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useCart } from '../contexts/CartContext';
-import { productData as fallbackProductData, relatedProducts as fallbackRelatedProducts, reviews as fallbackReviews } from '../data/mockData';
-import mediaService from '../services/mediaService';
-import productService, { ProductDTO } from '../services/productService';
+import { productService } from '../services/productService';
+import { mediaService } from '../services/mediaService';
+import { productAttributeService } from '../services/attributeService';
 import reviewService from '../services/reviewService';
+import { Product, Media, ProductAttribute } from '../types/product';
+import { reviews as fallbackReviews } from '../data/mockData';
+
+const PLACEHOLDER_IMG =
+  'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?w=800&q=80';
+
+const ratingDistribution = [
+  { stars: 5, count: 156, percentage: 64 },
+  { stars: 4, count: 65, percentage: 27 },
+  { stars: 3, count: 18, percentage: 7 },
+  { stars: 2, count: 4, percentage: 1 },
+  { stars: 1, count: 2, percentage: 1 },
+];
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const productId = id || '1';
 
+  const [product, setProduct] = useState<Product | null>(null);
+  const [mediaList, setMediaList] = useState<Media[]>([]);
+  const [attributes, setAttributes] = useState<ProductAttribute[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [_loading, setLoading] = useState(true);
 
-  // API data states
-  const [apiProduct, setApiProduct] = useState<ProductDTO | null>(null);
-  const [productImages, setProductImages] = useState<string[]>([]);
+
   const [apiReviews, setApiReviews] = useState<{ id: number; user: string; rating: number; date: string; comment: string; verified: boolean }[]>([]);
-  const [relatedProductsList, setRelatedProductsList] = useState<{ id: string; name: string; price: number; image: string; rating: number }[]>([]);
+
+  const loadProduct = useCallback(async () => {
+    if (!id) return;
+    const numericId = Number(id);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [productData, mediaData, attrData] = await Promise.all([
+        productService.getProductById(numericId),
+        mediaService.getProductMedia(numericId).catch(() => [] as Media[]),
+        productAttributeService.getProductAttributes(numericId).catch(() => [] as ProductAttribute[]),
+      ]);
+      setProduct(productData);
+      setMediaList(mediaData ?? []);
+      setAttributes(attrData ?? []);
+
+      // Fetch reviews
+      try {
+        const reviewsRes = await reviewService.getReviews({ productId: numericId, page: 0, size: 5 });
+        const mapped = (reviewsRes.content || []).map((r: any) => ({
+          id: r.reviewId,
+          user: r.userFullName,
+          rating: r.rating,
+          date: r.reviewDate,
+          comment: r.comment,
+          verified: true,
+        }));
+        setApiReviews(mapped);
+      } catch {
+        setApiReviews(fallbackReviews);
+      }
+
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể tải sản phẩm';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const numericId = Number(productId);
-    if (isNaN(numericId)) {
-      setLoading(false);
-      return;
-    }
+    loadProduct();
+    window.scrollTo(0, 0);
+  }, [loadProduct]);
 
-    const fetchProductData = async () => {
-      setLoading(true);
-      try {
-        // Fetch product details
-        const productRes = await productService.getProductById(numericId);
-        setApiProduct(productRes.data);
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="h-4 w-48 rounded bg-gray-200 animate-pulse mb-6" />
+          <ProductDetailSkeleton />
+        </div>
+      </div>
+    );
+  }
 
-        // Fetch product media (images)
-        try {
-          const mediaRes = await mediaService.getProductMedia(numericId);
-          const images = (mediaRes.data || [])
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-            .map((m) => m.url);
-          setProductImages(images.length > 0 ? images : []);
-        } catch {
-          setProductImages([]);
-        }
+  if (error || !product) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center py-16">
+          <div className="text-5xl mb-4">😕</div>
+          <h2 className="text-2xl font-bold mb-2">Không tìm thấy sản phẩm</h2>
+          <p className="text-gray-600 mb-6">{error ?? 'Sản phẩm không tồn tại hoặc đã bị xóa.'}</p>
+          <Button onClick={() => navigate('/products')} className="bg-red-600 hover:bg-red-700">
+            Quay lại danh sách
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-        // Fetch reviews
-        try {
-          const reviewsRes = await reviewService.getReviews({ productId: numericId, page: 0, size: 5 });
-          const mapped = (reviewsRes.content || []).map((r) => ({
-            id: r.reviewId,
-            user: r.userFullName,
-            rating: r.rating,
-            date: r.reviewDate,
-            comment: r.comment,
-            verified: true,
-          }));
-          setApiReviews(mapped);
-        } catch {
-          setApiReviews([]);
-        }
+  // Build image gallery from media list; fallback to placeholder
+  const imageUrls: string[] =
+    mediaList.filter((m) => m.type === 'IMAGE').map((m) => m.url).length > 0
+      ? mediaList.filter((m) => m.type === 'IMAGE').map((m) => m.url)
+      : [PLACEHOLDER_IMG];
 
-        // Fetch related products
-        try {
-          const relatedRes = await productService.getProducts({ page: 0, size: 4 });
-          const related = (relatedRes.data.content || [])
-            .filter((p) => p.productId !== numericId)
-            .slice(0, 4)
-            .map((p) => ({
-              id: String(p.productId),
-              name: p.productName,
-              price: p.price,
-              image: '',
-              rating: 0,
-            }));
-          setRelatedProductsList(related);
-        } catch {
-          setRelatedProductsList([]);
-        }
-      } catch {
-        // API failed — will fallback to mock data
-        setApiProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProductData();
-  }, [productId]);
-
-  // Build a unified product object: prefer API data, fallback to mock
-  const fallback = fallbackProductData[productId as keyof typeof fallbackProductData] || fallbackProductData['1'];
-  const product = apiProduct
-    ? {
-        name: apiProduct.productName,
-        price: apiProduct.price,
-        originalPrice: null as number | null,
-        rating: 0,
-        reviews: 0,
-        sold: 0,
-        images: productImages.length > 0 ? productImages : fallback.images,
-        brand: apiProduct.brandName,
-        category: apiProduct.categoryName,
-        inStock: apiProduct.status === 'ACTIVE' && apiProduct.quantity > 0,
-        stockQuantity: apiProduct.quantity,
-        sku: '',
-        warranty: '12 tháng',
-        description: apiProduct.description,
-        specs: {} as Record<string, string>,
-        features: [] as string[],
-      }
-    : fallback;
-
+  const isInStock = product.status === 'AVAILABLE' && product.quantity > 0;
   const reviews = apiReviews.length > 0 ? apiReviews : fallbackReviews;
-  const relatedProducts = relatedProductsList.length > 0 ? relatedProductsList : fallbackRelatedProducts;
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart({
-        id: productId,
-        name: product.name,
+        id: String(product.productId),
+        name: product.productName,
         price: product.price,
-        image: product.images[0],
-        category: product.category
+        image: imageUrls[0],
+        category: product.categoryName ?? '',
       });
     }
   };
-
-  const ratingDistribution = [
-    { stars: 5, count: 156, percentage: 64 },
-    { stars: 4, count: 65, percentage: 27 },
-    { stars: 3, count: 18, percentage: 7 },
-    { stars: 2, count: 4, percentage: 1 },
-    { stars: 1, count: 2, percentage: 1 },
-  ];
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -155,11 +156,14 @@ export function ProductDetailPage() {
             Trang chủ
           </button>
           <span className="text-gray-400">/</span>
-          <button onClick={() => navigate('/products')} className="text-gray-600 hover:text-red-600">
-            {product.category}
+          <button
+            onClick={() => navigate('/products')}
+            className="text-gray-600 hover:text-red-600"
+          >
+            {product.categoryName ?? 'Sản phẩm'}
           </button>
           <span className="text-gray-400">/</span>
-          <span className="text-gray-900">{product.name}</span>
+          <span className="text-gray-900 line-clamp-1">{product.productName}</span>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
@@ -168,25 +172,31 @@ export function ProductDetailPage() {
             <Card className="overflow-hidden mb-4">
               <div className="relative aspect-square bg-gray-100">
                 <ImageWithFallback
-                  src={product.images[currentImageIndex]}
-                  alt={product.name}
+                  src={imageUrls[currentImageIndex]}
+                  alt={product.productName}
                   className="w-full h-full object-cover"
                 />
-                {product.originalPrice && (
-                  <Badge className="absolute top-4 left-4 bg-red-600 text-lg px-3 py-1">
-                    -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-                  </Badge>
+                {!isInStock && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <span className="text-white text-xl font-bold">Hết hàng</span>
+                  </div>
                 )}
-                {product.images.length > 1 && (
+                {imageUrls.length > 1 && (
                   <>
                     <button
-                      onClick={() => setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length)}
+                      onClick={() =>
+                        setCurrentImageIndex(
+                          (prev) => (prev - 1 + imageUrls.length) % imageUrls.length
+                        )
+                      }
                       className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => setCurrentImageIndex((prev) => (prev + 1) % product.images.length)}
+                      onClick={() =>
+                        setCurrentImageIndex((prev) => (prev + 1) % imageUrls.length)
+                      }
                       className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg"
                     >
                       <ChevronRight className="w-5 h-5" />
@@ -195,18 +205,18 @@ export function ProductDetailPage() {
                 )}
               </div>
             </Card>
+            {/* Thumbnails */}
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
+              {imageUrls.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                    currentImageIndex === index ? 'border-red-600' : 'border-transparent'
-                  }`}
+                  className={`aspect-square rounded-lg overflow-hidden border-2 ${currentImageIndex === index ? 'border-red-600' : 'border-transparent'
+                    }`}
                 >
                   <ImageWithFallback
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
+                    src={img}
+                    alt={`${product.productName} ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -218,28 +228,27 @@ export function ProductDetailPage() {
           <div>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <Badge variant="outline" className="mb-2">{product.brand}</Badge>
-                <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+                {product.brandName && (
+                  <Badge variant="outline" className="mb-2">
+                    {product.brandName}
+                  </Badge>
+                )}
+                <h1 className="text-3xl font-bold mb-2">{product.productName}</h1>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(product.rating)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
+                        className={`w-5 h-5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                          }`}
                       />
                     ))}
-                    <span className="font-medium ml-1">{product.rating}</span>
+                    <span className="font-medium ml-1">4.8</span>
                   </div>
                   <span className="text-gray-400">•</span>
-                  <button className="text-gray-600 hover:text-red-600">
-                    {product.reviews} đánh giá
-                  </button>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-600">{product.sold} đã bán</span>
+                  <span className="text-gray-600">
+                    Còn {product.quantity} sản phẩm
+                  </span>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -252,31 +261,14 @@ export function ProductDetailPage() {
               </div>
             </div>
 
+            {/* Price */}
             <Card className="p-6 mb-4 bg-gray-50">
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold text-red-600">
                   {product.price.toLocaleString('vi-VN')}₫
                 </span>
-                {product.originalPrice && (
-                  <span className="text-xl text-gray-400 line-through">
-                    {product.originalPrice.toLocaleString('vi-VN')}₫
-                  </span>
-                )}
               </div>
               <p className="text-sm text-gray-600">Giá đã bao gồm VAT</p>
-            </Card>
-
-            {/* Features */}
-            <Card className="p-6 mb-4">
-              <h3 className="font-bold mb-3">Tính năng nổi bật</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
             </Card>
 
             {/* Benefits */}
@@ -295,7 +287,7 @@ export function ProductDetailPage() {
                   <Shield className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="text-sm">
-                  <div className="font-medium">Bảo hành {product.warranty}</div>
+                  <div className="font-medium">Bảo hành 12 tháng</div>
                   <div className="text-xs text-gray-600">Chính hãng</div>
                 </div>
               </div>
@@ -323,20 +315,21 @@ export function ProductDetailPage() {
                   </button>
                   <span className="w-12 text-center font-medium">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
                     className="w-10 h-10 flex items-center justify-center hover:bg-gray-100"
                   >
                     +
                   </button>
                 </div>
               </div>
-              <span className="text-sm text-gray-600">Còn {'stockQuantity' in product ? product.stockQuantity : Math.floor(Math.random() * 50 + 20)} sản phẩm</span>
+              <span className="text-sm text-gray-600">Còn {product.quantity} sản phẩm</span>
             </div>
 
             <div className="flex gap-3">
               <Button
                 size="lg"
                 className="flex-1 bg-red-600 hover:bg-red-700 h-12 text-lg"
+                disabled={!isInStock}
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
@@ -346,6 +339,7 @@ export function ProductDetailPage() {
                 size="lg"
                 variant="outline"
                 className="flex-1 h-12 text-lg"
+                disabled={!isInStock}
                 onClick={() => {
                   handleAddToCart();
                   navigate('/checkout');
@@ -362,47 +356,57 @@ export function ProductDetailPage() {
           <Tabs defaultValue="description" className="p-6">
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="description">Mô tả</TabsTrigger>
-              <TabsTrigger value="specs">Thông số kỹ thuật</TabsTrigger>
-              <TabsTrigger value="reviews">Đánh giá ({product.reviews})</TabsTrigger>
+              <TabsTrigger value="specs">
+                Thông số ({attributes.length})
+              </TabsTrigger>
+              <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
             </TabsList>
 
+            {/* Description */}
             <TabsContent value="description">
               <div className="prose max-w-none">
                 <h3 className="text-xl font-bold mb-4">Mô tả sản phẩm</h3>
-                <p className="text-gray-700 leading-relaxed">{product.description}</p>
+                <p className="text-gray-700 leading-relaxed">
+                  {product.description ?? 'Chưa có mô tả cho sản phẩm này.'}
+                </p>
               </div>
             </TabsContent>
 
+            {/* Specs — from product attributes API */}
             <TabsContent value="specs">
               <h3 className="text-xl font-bold mb-4">Thông số kỹ thuật</h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                {Object.entries(product.specs).map(([key, value]) => (
-                  <div key={key} className="flex py-3 border-b">
-                    <span className="w-40 text-gray-600">{key}</span>
-                    <span className="font-medium flex-1">{value}</span>
-                  </div>
-                ))}
-              </div>
+              {attributes.length === 0 ? (
+                <p className="text-gray-500">Chưa có thông số kỹ thuật.</p>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {attributes.map((attr) => (
+                    <div key={attr.productAttributeId} className="flex py-3 border-b">
+                      <span className="w-40 text-gray-600">
+                        {attr.attributeName ?? `Thuộc tính #${attr.attributeId}`}
+                      </span>
+                      <span className="font-medium flex-1">{attr.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
+            {/* Reviews — still uses mock data */}
             <TabsContent value="reviews">
               <div className="grid md:grid-cols-3 gap-8 mb-8">
                 <div className="md:col-span-1">
                   <div className="text-center mb-6">
-                    <div className="text-5xl font-bold text-red-600 mb-2">{product.rating}</div>
+                    <div className="text-5xl font-bold text-red-600 mb-2">4.8</div>
                     <div className="flex items-center justify-center gap-1 mb-2">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-5 h-5 ${
-                            i < Math.floor(product.rating)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
+                          className={`w-5 h-5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                            }`}
                         />
                       ))}
                     </div>
-                    <p className="text-gray-600">{product.reviews} đánh giá</p>
+                    <p className="text-gray-600">245 đánh giá</p>
                   </div>
                   <div className="space-y-2">
                     {ratingDistribution.map((item) => (
@@ -436,11 +440,10 @@ export function ProductDetailPage() {
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`w-4 h-4 ${
-                                      i < review.rating
-                                        ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-gray-300'
-                                    }`}
+                                    className={`w-4 h-4 ${i < review.rating
+                                      ? 'fill-yellow-400 text-yellow-400'
+                                      : 'text-gray-300'
+                                      }`}
                                   />
                                 ))}
                               </div>
@@ -460,45 +463,6 @@ export function ProductDetailPage() {
             </TabsContent>
           </Tabs>
         </Card>
-
-        {/* Related Products */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6">Sản phẩm liên quan</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {relatedProducts.map((relatedProduct) => (
-              <button
-                key={relatedProduct.id}
-                onClick={() => {
-                  navigate(`/product/${relatedProduct.id}`);
-                  window.scrollTo(0, 0);
-                }}
-                className="group text-left"
-              >
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="relative aspect-square overflow-hidden bg-gray-100">
-                    <ImageWithFallback
-                      src={relatedProduct.image}
-                      alt={relatedProduct.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium mb-2 line-clamp-2 h-12 text-sm">
-                      {relatedProduct.name}
-                    </h3>
-                    <div className="flex items-center gap-1 mb-2">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm">{relatedProduct.rating}</span>
-                    </div>
-                    <span className="text-red-600 font-bold">
-                      {relatedProduct.price.toLocaleString('vi-VN')}₫
-                    </span>
-                  </div>
-                </Card>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

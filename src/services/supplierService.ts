@@ -1,15 +1,10 @@
 import api from './api';
-import { ApiResponse, PageResponse } from '../types/auth';
-
-// Matches SupplierResponse from backend API docs
-export interface SupplierResponse {
-    supplierId: number;
-    supplierName: string;
-    contactPerson: string;
-    email: string;
-    phoneNumber: string;
-    address: string;
-}
+import {
+    ApiResponse,
+    CreateSupplierRequest,
+    Supplier,
+    SupplierPage,
+} from '../types/product';
 
 export interface SupplierProductResponse {
     productId: number;
@@ -27,27 +22,33 @@ export interface SupplierProductResponse {
     supplierName: string;
 }
 
-export interface SupplierListParams {
-    keyword?: string;
-    page?: number;
-    size?: number;
-    sort?: string;
-}
-
-const ENDPOINTS = {
-    SUPPLIERS: '/api/v1/suppliers',
-    SUPPLIER_PRODUCTS: (supplierId: string | number) => `/api/v1/suppliers/${supplierId}/products`,
-};
+const BASE = '/api/v1/suppliers';
 
 export const supplierService = {
-    async getSuppliers(params?: SupplierListParams): Promise<PageResponse<SupplierResponse>> {
-        const response = await api.get<ApiResponse<PageResponse<SupplierResponse>>>(ENDPOINTS.SUPPLIERS, { params });
-        return response.data.data;
+    async createSupplier(data: CreateSupplierRequest): Promise<Supplier> {
+        const res = await api.post<ApiResponse<Supplier>>(BASE, data);
+        return res.data.data;
     },
 
-    async getSupplierProducts(supplierId: string | number, params?: { page?: number; size?: number; sort?: string }): Promise<PageResponse<SupplierProductResponse>> {
-        const response = await api.get<ApiResponse<PageResponse<SupplierProductResponse>>>(
-            ENDPOINTS.SUPPLIER_PRODUCTS(supplierId),
+    async getSuppliers(page = 0, size = 100, keyword?: string): Promise<SupplierPage> {
+        const params: Record<string, unknown> = { page, size };
+        if (keyword) params.keyword = keyword;
+        const res = await api.get<ApiResponse<SupplierPage>>(BASE, { params });
+        return res.data.data;
+    },
+
+    async getSupplierById(id: number): Promise<Supplier> {
+        const res = await api.get<ApiResponse<Supplier>>(`${BASE}/${id}`);
+        return res.data.data;
+    },
+
+    async deleteSupplier(id: number): Promise<void> {
+        await api.delete(`${BASE}/${id}`);
+    },
+
+    async getSupplierProducts(supplierId: string | number, params?: { page?: number; size?: number; sort?: string }): Promise<any> {
+        const response = await api.get<ApiResponse<any>>(
+            `${BASE}/${supplierId}/products`,
             { params }
         );
         return response.data.data;
@@ -55,4 +56,3 @@ export const supplierService = {
 };
 
 export default supplierService;
-
