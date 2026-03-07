@@ -24,3 +24,9 @@ build/
 *.njsproj
 *.sln
 *.sw?
+
+
+### Environments ###
+.env
+.env.*
+*.env
