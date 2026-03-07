@@ -1,7 +1,8 @@
-import { Edit, Mail,Phone, Plus, Trash2, Truck } from 'lucide-react';
-import { useState } from 'react';
+import { Edit, Mail, Phone, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { Column, DataTable } from '../../components/admin/DataTable';
+import { supplierService, SupplierResponse } from '../../services/supplierService';
 
 interface Supplier {
   id: string;
@@ -9,30 +10,41 @@ interface Supplier {
   contactPerson: string;
   phone: string;
   email: string;
-  status: 'Active' | 'Inactive';
+  address: string;
 }
 
-const mockSuppliers: Supplier[] = [
-  { id: '1', name: 'Tech Distribution Inc.', contactPerson: 'John Doe', phone: '+1 234 567 890', email: 'contact@techdist.com', status: 'Active' },
-  { id: '2', name: 'Global Electronics Ltd.', contactPerson: 'Jane Smith', phone: '+44 20 7123 4567', email: 'sales@globalelec.com', status: 'Active' },
-  { id: '3', name: 'Asia Components Co.', contactPerson: 'Li Wei', phone: '+86 10 1234 5678', email: 'info@asiacomp.cn', status: 'Active' },
-];
-
 export function SupplierList() {
-  const [suppliers] = useState<Supplier[]>(mockSuppliers);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      setLoading(true);
+      try {
+        const data = await supplierService.getSuppliers({ size: 100 });
+        const mapped: Supplier[] = data.content.map((s: SupplierResponse) => ({
+          id: String(s.supplierId),
+          name: s.supplierName,
+          contactPerson: s.contactPerson,
+          phone: s.phoneNumber,
+          email: s.email,
+          address: s.address,
+        }));
+        setSuppliers(mapped);
+      } catch (err) {
+        console.error('Error fetching suppliers:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSuppliers();
+  }, []);
 
   const columns: Column<Supplier>[] = [
     { header: 'Supplier Name', accessor: 'name', render: (s) => <div className="font-medium text-purple-900">{s.name}<br/><span className="text-xs text-gray-500 font-normal">{s.contactPerson}</span></div> },
     { header: 'Contact', accessor: 'phone', render: (s) => <div className="text-sm"><div className="flex items-center gap-1"><Phone className="h-3 w-3"/> {s.phone}</div><div className="flex items-center gap-1 text-gray-500"><Mail className="h-3 w-3"/> {s.email}</div></div> },
-    { 
-      header: 'Status', 
-      accessor: 'status',
-      render: (s) => (
-        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${s.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-          {s.status}
-        </span>
-      )
-    },
+    { header: 'Address', accessor: 'address' },
     {
       header: 'Actions',
       accessor: 'id',
@@ -45,6 +57,14 @@ export function SupplierList() {
       ),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

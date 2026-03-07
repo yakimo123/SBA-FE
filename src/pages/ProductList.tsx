@@ -11,7 +11,35 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Slider } from '../components/ui/slider';
 import { useCart } from '../contexts/CartContext';
-import { allProducts, brands,categories } from '../data/mockData';
+import { allProducts as fallbackProducts, brands as fallbackBrands, categories as fallbackCategories } from '../data/mockData';
+import productService, { ProductDTO } from '../services/productService';
+
+// Map API product to local display format
+interface DisplayProduct {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice: number | null;
+  image: string;
+  category: string;
+  brand: string;
+  rating: number;
+  reviews: number;
+  inStock: boolean;
+}
+
+const mapApiProduct = (p: ProductDTO): DisplayProduct => ({
+  id: String(p.productId),
+  name: p.productName,
+  price: p.price,
+  originalPrice: null,
+  image: '', // Will be populated from media or fallback
+  category: p.categoryName,
+  brand: p.brandName,
+  rating: 0,
+  reviews: 0,
+  inStock: p.status === 'ACTIVE' && p.quantity > 0,
+});
 
 export function ProductListPage() {
   const navigate = useNavigate();
@@ -25,6 +53,30 @@ export function ProductListPage() {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [showFilters, setShowFilters] = useState(true);
+
+  // API data with fallback
+  const [allProducts, setAllProducts] = useState<DisplayProduct[]>(fallbackProducts);
+  const [categories] = useState<string[]>(fallbackCategories);
+  const [brands] = useState<string[]>(fallbackBrands);
+  const [_loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await productService.getProducts({ page: 0, size: 100 });
+        const products = (res.data.content || []).map(mapApiProduct);
+        if (products.length > 0) {
+          setAllProducts(products);
+        }
+      } catch (err) {
+        console.error('Error fetching products, using fallback:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     if (initialCategory) {
