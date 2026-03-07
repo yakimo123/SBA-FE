@@ -1,6 +1,7 @@
-import { createContext, ReactNode,useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 
 import { CartItem } from '../types';
+import { cartService } from '../services/cartService';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -13,35 +14,26 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // Initialise from localStorage on mount
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => cartService.getCart());
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
-    setCartItems(prev => {
-      const existing = prev.find(i => i.id === item.id);
-      if (existing) {
-        return prev.map(i => 
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
+    const updated = cartService.addToCart(item);
+    setCartItems([...updated]);
   };
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      setCartItems(prev => prev.filter(i => i.id !== id));
-    } else {
-      setCartItems(prev => prev.map(i => 
-        i.id === id ? { ...i, quantity } : i
-      ));
-    }
+    const updated = cartService.updateQuantity(id, quantity);
+    setCartItems([...updated]);
   };
 
   const removeFromCart = (id: string) => {
-    setCartItems(prev => prev.filter(i => i.id !== id));
+    const updated = cartService.removeFromCart(id);
+    setCartItems([...updated]);
   };
 
   const clearCart = () => {
+    cartService.clearCart();
     setCartItems([]);
   };
 
