@@ -9,8 +9,10 @@ export * from './reviewService';
 export { default as wishlistService } from './wishlistService';
 export * from './wishlistService';
 // Product Catalog Services
-export { default as attributeService, productAttributeService } from './attributeService';
-export * from './attributeService';
+export { default as productService } from './productService';
+export * from './productService';
+export { default as categoryService } from './categoryService';
+export * from './categoryService';
 export { default as brandService } from './brandService';
 export * from './brandService';
 export { default as categoryService } from './categoryService';

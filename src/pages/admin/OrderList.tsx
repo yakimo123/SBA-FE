@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Column, DataTable } from '../../components/admin/DataTable';
-import { OrderResponse, orderService, OrderStatus } from '../../services/orderService';
+import { orderService, OrderResponse, OrderStatus } from '../../services/orderService';
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
   PENDING:    'bg-yellow-100 text-yellow-800',

@@ -12,7 +12,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { OrderResponse, orderService, OrderStatus } from '../../services/orderService';
+import { orderService, OrderResponse, OrderStatus } from '../../services/orderService';
 
 const STATUS_BADGE: Record<OrderStatus, string> = {
   PENDING:    'bg-yellow-100 text-yellow-800',
