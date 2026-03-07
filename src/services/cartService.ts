@@ -1,57 +1,55 @@
-import { CartItem } from '../types';
+import { AddToCartRequest, ApiResponse, CartResponse } from '../types';
+import api from './api';
 
-const CART_KEY = 'sba_cart';
+const cartService = {
+  /**
+   * GET /api/v1/cart/{userId}
+   * Fetch (or auto-create) the cart for the given user.
+   */
+  getCart: (userId: number) =>
+    api
+      .get<ApiResponse<CartResponse>>(`/api/v1/cart/${userId}`)
+      .then((r) => r.data),
 
-export const cartService = {
-    getCart(): CartItem[] {
-        try {
-            const raw = localStorage.getItem(CART_KEY);
-            return raw ? (JSON.parse(raw) as CartItem[]) : [];
-        } catch {
-            return [];
-        }
-    },
+  /**
+   * POST /api/v1/cart/{userId}/items
+   * Add an item (or increment quantity if already in cart).
+   */
+  addItem: (userId: number, request: AddToCartRequest) =>
+    api
+      .post<ApiResponse<CartResponse>>(`/api/v1/cart/${userId}/items`, request)
+      .then((r) => r.data),
 
-    saveCart(items: CartItem[]): void {
-        localStorage.setItem(CART_KEY, JSON.stringify(items));
-    },
+  /**
+   * PATCH /api/v1/cart/{userId}/items/{productId}?quantity={qty}
+   * Set the exact quantity for a cart item.
+   */
+  updateItemQuantity: (userId: number, productId: number, quantity: number) =>
+    api
+      .patch<ApiResponse<CartResponse>>(
+        `/api/v1/cart/${userId}/items/${productId}`,
+        null,
+        { params: { quantity } },
+      )
+      .then((r) => r.data),
 
-    addToCart(product: Omit<CartItem, 'quantity'>): CartItem[] {
-        const items = cartService.getCart();
-        const idx = items.findIndex((i) => i.id === product.id);
-        if (idx >= 0) {
-            items[idx].quantity += 1;
-        } else {
-            items.push({ ...product, quantity: 1 });
-        }
-        cartService.saveCart(items);
-        return items;
-    },
+  /**
+   * DELETE /api/v1/cart/{userId}/items/{productId}
+   * Remove a single item from the cart.
+   */
+  removeItem: (userId: number, productId: number) =>
+    api
+      .delete<ApiResponse<void>>(`/api/v1/cart/${userId}/items/${productId}`)
+      .then((r) => r.data),
 
-    removeFromCart(productId: string): CartItem[] {
-        const items = cartService.getCart().filter((i) => i.id !== productId);
-        cartService.saveCart(items);
-        return items;
-    },
-
-    updateQuantity(productId: string, quantity: number): CartItem[] {
-        let items = cartService.getCart();
-        if (quantity <= 0) {
-            items = items.filter((i) => i.id !== productId);
-        } else {
-            items = items.map((i) => (i.id === productId ? { ...i, quantity } : i));
-        }
-        cartService.saveCart(items);
-        return items;
-    },
-
-    clearCart(): void {
-        localStorage.removeItem(CART_KEY);
-    },
-
-    getItemCount(): number {
-        return cartService.getCart().reduce((sum, i) => sum + i.quantity, 0);
-    },
+  /**
+   * DELETE /api/v1/cart/{userId}
+   * Remove all items from the cart.
+   */
+  clearCart: (userId: number) =>
+    api
+      .delete<ApiResponse<void>>(`/api/v1/cart/${userId}`)
+      .then((r) => r.data),
 };
 
 export default cartService;

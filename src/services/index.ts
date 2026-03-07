@@ -2,13 +2,13 @@ export { default as api } from './api';
 export * from './api';
 export { default as authService } from './authService';
 export * from './authService';
+export { default as cartService } from './cartService';
+export * from './cartService';
 export { default as reviewService } from './reviewService';
 export * from './reviewService';
 export { default as wishlistService } from './wishlistService';
 export * from './wishlistService';
 // Product Catalog Services
-export { default as cartService } from './cartService';
-export * from './cartService';
 export { default as productService } from './productService';
 export * from './productService';
 export { default as categoryService } from './categoryService';
