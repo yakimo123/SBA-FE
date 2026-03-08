@@ -89,8 +89,11 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // Handle 401 Unauthorized - Token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Handle 401 Unauthorized or 403 Forbidden - Token expired or needs refresh
+    if (
+      (error.response?.status === 401 || error.response?.status === 403) &&
+      !originalRequest._retry
+    ) {
       // Skip refresh attempt for auth endpoints
       if (
         originalRequest.url?.includes('/auth/login') ||
