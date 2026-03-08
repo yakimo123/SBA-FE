@@ -14,18 +14,167 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { orderService, OrderResponse, OrderStatus } from '../../services/orderService';
 
-const STATUS_BADGE: Record<OrderStatus, string> = {
-  PENDING:    'bg-yellow-100 text-yellow-800',
-  CONFIRMED:  'bg-indigo-100 text-indigo-800',
-  PROCESSING: 'bg-purple-100 text-purple-800',
-  SHIPPED:    'bg-blue-100 text-blue-800',
-  DELIVERED:  'bg-green-100 text-green-800',
-  CANCELLED:  'bg-red-100 text-red-800',
-  REFUNDED:   'bg-orange-100 text-orange-800',
-};
-
 const TIMELINE_STEPS: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
 const ALL_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+  .od-root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface-2: #faf9f7;
+    --border: #e8e3da;
+    --ink: #1a1612;
+    --ink-2: #5c5347;
+    --ink-3: #9c9085;
+    --accent: #c9521a;
+    --accent-soft: #fdf1eb;
+    --success: #2d7a4f;
+    --warning: #905a10;
+    --danger: #b03030;
+    --violet: #4a3f8f;
+    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
+    --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
+    --radius: 10px;
+    --radius-lg: 16px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--ink);
+    padding: 32px;
+  }
+
+  .od-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 28px;
+  }
+  .od-back-btn {
+    width: 40px; height: 40px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--ink-2); cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .od-back-btn:hover { background: var(--surface-2); border-color: var(--ink-3); color: var(--ink); }
+  .od-header-left { display: flex; align-items: center; gap: 16px; }
+  .od-title {
+    font-family: 'DM Serif Display', serif; font-size: 1.5rem;
+    font-weight: 400; color: var(--ink); margin: 0 0 4px;
+  }
+  .od-id { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--ink-2); }
+  .od-status {
+    display: inline-flex; padding: 4px 12px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 600; margin-left: 12px;
+  }
+  .od-status-pending { background: #fef6eb; color: var(--warning); }
+  .od-status-confirmed, .od-status-processing { background: #eeecf8; color: var(--violet); }
+  .od-status-shipped { background: #e8f4fd; color: #1a6fa8; }
+  .od-status-delivered { background: #edf7f2; color: var(--success); }
+  .od-status-cancelled, .od-status-refunded { background: #fdf2f2; color: var(--danger); }
+  .od-header-actions { display: flex; gap: 10px; }
+  .od-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .od-btn-outline {
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--ink-2);
+  }
+  .od-btn-outline:hover { background: var(--surface-2); }
+  .od-btn-primary {
+    border: none; background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    color: white; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
+  }
+  .od-btn-primary:hover { transform: translateY(-1px); }
+
+  .od-grid { display: grid; gap: 24px; grid-template-columns: 2fr 1fr; }
+  @media (max-width: 900px) { .od-grid { grid-template-columns: 1fr; } }
+
+  .od-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .od-card-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .od-card-title {
+    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-3); margin: 0;
+  }
+  .od-card-body { padding: 24px; }
+  .od-timeline {
+    position: relative; padding-left: 24px;
+    border-left: 2px solid var(--border);
+  }
+  .od-timeline-step {
+    position: relative; margin-bottom: 24px;
+  }
+  .od-timeline-step:last-child { margin-bottom: 0; }
+  .od-timeline-dot {
+    position: absolute; left: -29px; top: 0;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 4px solid var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .od-timeline-dot.done { background: var(--success); }
+  .od-timeline-dot.current { background: var(--accent); }
+  .od-timeline-dot.pending { background: var(--border); }
+  .od-timeline-label { font-weight: 600; font-size: 0.9rem; }
+
+  .od-modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,22,18,0.45);
+    backdrop-filter: blur(4px); display: flex; align-items: center;
+    justify-content: center; z-index: 1000;
+  }
+  .od-modal {
+    background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); width: 100%; max-width: 360px;
+    margin: 20px; padding: 24px;
+  }
+  .od-modal-title {
+    font-family: 'DM Serif Display', serif; font-size: 1.2rem;
+    margin: 0 0 16px;
+  }
+  .od-select {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid var(--border); border-radius: 9px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    margin-bottom: 20px; cursor: pointer;
+  }
+  .od-select:focus { outline: none; border-color: var(--accent); }
+  .od-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+  .od-loading, .od-error {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 80px 20px; gap: 16px;
+  }
+  .od-spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    animation: od-spin 0.7s linear infinite;
+  }
+  @keyframes od-spin { to { transform: rotate(360deg); } }
+`;
+
+const statusClass = (status: OrderStatus) => {
+  const map: Record<OrderStatus, string> = {
+    PENDING: 'od-status-pending',
+    CONFIRMED: 'od-status-confirmed',
+    PROCESSING: 'od-status-processing',
+    SHIPPED: 'od-status-shipped',
+    DELIVERED: 'od-status-delivered',
+    CANCELLED: 'od-status-cancelled',
+    REFUNDED: 'od-status-refunded',
+  };
+  return map[status] ?? 'od-status-pending';
+};
 
 export function OrderDetail() {
   const { id } = useParams();
@@ -63,16 +212,23 @@ export function OrderDetail() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="font-['Fira_Sans'] text-gray-500">Loading order...</p>
+      <div className="od-root">
+        <style>{css}</style>
+        <div className="od-loading">
+          <div className="od-spinner" />
+          <p style={{ color: 'var(--ink-3)', fontSize: '0.875rem' }}>Loading order…</p>
+        </div>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="font-['Fira_Sans'] text-red-500">{error ?? 'Order not found'}</p>
+      <div className="od-root">
+        <style>{css}</style>
+        <div className="od-error">
+          <p style={{ color: 'var(--danger)', margin: 0 }}>{error ?? 'Order not found'}</p>
+        </div>
       </div>
     );
   }
@@ -81,124 +237,124 @@ export function OrderDetail() {
   const currentIdx = statusOrder.indexOf(order.orderStatus);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="od-root">
+      <style>{css}</style>
+
+      <div className="od-header">
+        <div className="od-header-left">
           <button
+            type="button"
             onClick={() => navigate('/admin/orders')}
-            className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50"
+            className="od-back-btn"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="font-['Fira_Code'] text-2xl font-bold text-purple-900 flex items-center gap-3">
+            <h1 className="od-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               Order #{order.orderId}
-              <span className={`rounded-full px-3 py-1 text-sm font-semibold ${STATUS_BADGE[order.orderStatus]}`}>
+              <span className={`od-status ${statusClass(order.orderStatus)}`}>
                 {order.orderStatus}
               </span>
             </h1>
-            <p className="font-['Fira_Sans'] text-gray-600">
+            <p className="od-id">
               Placed on {new Date(order.orderDate).toLocaleString('vi-VN')}
             </p>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 font-['Fira_Sans'] font-semibold text-gray-700 hover:bg-gray-50">
-            <Printer className="h-5 w-5" /> Print Invoice
+        <div className="od-header-actions">
+          <button type="button" className="od-btn od-btn-outline">
+            <Printer size={16} /> Print Invoice
           </button>
           <button
+            type="button"
             onClick={() => setShowStatusModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 font-['Fira_Sans'] font-semibold text-white shadow-md hover:bg-orange-600"
+            className="od-btn od-btn-primary"
           >
             Update Status
           </button>
         </div>
       </div>
 
-      {/* Update Status Modal */}
       {showStatusModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h3 className="font-['Fira_Code'] text-lg font-bold text-gray-900">Update Order Status</h3>
+        <div
+          className="od-modal-overlay"
+          onClick={() => setShowStatusModal(false)}
+        >
+          <div className="od-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="od-modal-title">Update Order Status</h3>
             <select
+              className="od-select"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
               {ALL_STATUSES.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
-            <div className="flex justify-end gap-3">
+            <div className="od-modal-actions">
               <button
+                type="button"
                 onClick={() => setShowStatusModal(false)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="od-btn od-btn-outline"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleUpdateStatus}
                 disabled={updating}
-                className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+                className="od-btn od-btn-primary"
               >
-                {updating ? 'Saving...' : 'Save'}
+                {updating ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Order Summary */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="font-['Fira_Code'] text-lg font-semibold text-gray-900">
-                Order Summary
-              </h2>
+      <div className="od-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="od-card">
+            <div className="od-card-header">
+              <h2 className="od-card-title">Order Summary</h2>
             </div>
-            <div className="p-6">
-              <div className="space-y-2">
-                {order.voucherCode && (
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>Voucher</span>
-                    <span className="font-medium text-green-700">{order.voucherCode}</span>
-                  </div>
-                )}
-                <div className="flex justify-between border-t border-gray-100 pt-2 text-lg font-bold text-gray-900">
-                  <span>Total</span>
-                  <span>₫{order.totalAmount.toLocaleString()}</span>
+            <div className="od-card-body">
+              {order.voucherCode && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.9rem', color: 'var(--ink-2)' }}>
+                  <span>Voucher</span>
+                  <span style={{ fontWeight: 600, color: 'var(--success)' }}>{order.voucherCode}</span>
                 </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: '1.1rem', fontWeight: 700 }}>
+                <span>Total</span>
+                <span>₫{order.totalAmount.toLocaleString('vi-VN')}</span>
               </div>
             </div>
           </div>
 
-          {/* Timeline */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="font-['Fira_Code'] text-lg font-semibold text-gray-900">
-                Order Timeline
-              </h2>
+          <div className="od-card">
+            <div className="od-card-header">
+              <h2 className="od-card-title">Order Timeline</h2>
             </div>
-            <div className="p-6">
-              <div className="relative space-y-6 pl-4 border-l-2 border-gray-200">
+            <div className="od-card-body">
+              <div className="od-timeline">
                 {TIMELINE_STEPS.map((s) => {
                   const stepIdx = statusOrder.indexOf(s);
                   const isDone = currentIdx >= stepIdx;
                   const isCurrent = order.orderStatus === s;
                   return (
-                    <div key={s} className="relative">
-                      <div className={`absolute -left-[21px] flex h-10 w-10 items-center justify-center rounded-full border-4 border-white text-white
-                        ${isCurrent ? 'bg-orange-500' : isDone ? 'bg-green-500' : 'bg-gray-200'}`}>
-                        {s === 'SHIPPED' ? <Truck className="h-5 w-5" /> :
-                          s === 'DELIVERED' ? <CheckCircle className="h-5 w-5" /> :
-                          s === 'CANCELLED' ? <XCircle className="h-5 w-5" /> :
-                          <Clock className="h-5 w-5" />}
+                    <div key={s} className="od-timeline-step">
+                      <div
+                        className={`od-timeline-dot ${
+                          isCurrent ? 'current' : isDone ? 'done' : 'pending'
+                        }`}
+                      >
+                        {s === 'SHIPPED' ? <Truck size={16} /> :
+                          s === 'DELIVERED' ? <CheckCircle size={16} /> :
+                          <Clock size={16} />}
                       </div>
-                      <div className="pl-6 pt-2">
-                        <h4 className={`font-semibold ${isDone ? 'text-gray-900' : 'text-gray-400'}`}>{s}</h4>
+                      <div className="od-timeline-label" style={{ color: isDone ? 'var(--ink)' : 'var(--ink-3)' }}>
+                        {s}
                       </div>
                     </div>
                   );
@@ -208,56 +364,46 @@ export function OrderDetail() {
           </div>
         </div>
 
-        {/* Sidebar Info */}
-        <div className="space-y-6">
-          {/* Customer Info */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="font-['Fira_Code'] text-lg font-semibold text-gray-900">
-                Customer
-              </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="od-card">
+            <div className="od-card-header">
+              <h2 className="od-card-title">Customer</h2>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                  <User className="h-5 w-5" />
+            <div className="od-card-body">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)' }}>
+                  <User size={20} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{order.userFullName}</p>
-                  <p className="text-xs text-gray-500">User ID: {order.userId}</p>
+                  <p style={{ margin: 0, fontWeight: 600 }}>{order.userFullName}</p>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--ink-3)' }}>User ID: {order.userId}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Shipping Info */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="font-['Fira_Code'] text-lg font-semibold text-gray-900">
-                Shipping Address
-              </h2>
+          <div className="od-card">
+            <div className="od-card-header">
+              <h2 className="od-card-title">Shipping Address</h2>
             </div>
-            <div className="p-6">
-              <div className="flex gap-3 text-sm text-gray-600">
-                <MapPin className="h-5 w-5 flex-shrink-0" />
-                <p>{order.shippingAddress}</p>
+            <div className="od-card-body">
+              <div style={{ display: 'flex', gap: 12, fontSize: '0.9rem', color: 'var(--ink-2)' }}>
+                <MapPin size={18} style={{ flexShrink: 0, color: 'var(--ink-3)' }} />
+                <p style={{ margin: 0 }}>{order.shippingAddress}</p>
               </div>
             </div>
           </div>
 
-          {/* Payment Info */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="font-['Fira_Code'] text-lg font-semibold text-gray-900">
-                Payment Info
-              </h2>
+          <div className="od-card">
+            <div className="od-card-header">
+              <h2 className="od-card-title">Payment Info</h2>
             </div>
-            <div className="p-6 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <CreditCard className="h-4 w-4" />
+            <div className="od-card-body">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
+                <CreditCard size={18} style={{ color: 'var(--ink-3)' }} />
                 {order.paymentMethod}
               </div>
-              <p className="text-sm text-gray-500">
+              <p style={{ margin: '12px 0 0', fontSize: '0.85rem', color: 'var(--ink-3)' }}>
                 Ordered on {new Date(order.orderDate).toLocaleDateString('vi-VN')}
               </p>
             </div>

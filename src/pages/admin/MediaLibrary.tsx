@@ -9,10 +9,295 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { Modal } from '../../components/admin/Modal';
 import { mediaService } from '../../services/mediaService';
 import { productService } from '../../services/productService';
 import { Media, MediaType, Product } from '../../types/product';
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+  .ml-root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface-2: #faf9f7;
+    --surface-3: #f2efe9;
+    --border: #e8e3da;
+    --border-strong: #c9bfad;
+    --ink: #1a1612;
+    --ink-2: #5c5347;
+    --ink-3: #9c9085;
+    --accent: #c9521a;
+    --accent-soft: #fdf1eb;
+    --violet: #4a3f8f;
+    --violet-soft: #eeecf8;
+    --danger: #b03030;
+    --danger-soft: #fdf2f2;
+    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
+    --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
+    --radius: 10px;
+    --radius-lg: 16px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--ink);
+    padding: 32px;
+  }
+
+  .ml-header {
+    display: flex; align-items: flex-end;
+    justify-content: space-between; gap: 16px; margin-bottom: 28px;
+  }
+  .ml-header-left { display: flex; align-items: center; gap: 16px; }
+  .ml-icon-badge {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+  }
+  .ml-icon-badge svg { color: white; width: 24px; height: 24px; }
+  .ml-title {
+    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-weight: 400; color: var(--ink); line-height: 1;
+    margin: 0 0 4px; letter-spacing: -0.5px;
+  }
+  .ml-count-pill {
+    display: inline-flex; align-items: center;
+    background: var(--violet-soft); color: var(--violet);
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    font-weight: 500; padding: 2px 8px; border-radius: 20px;
+    margin-left: 8px; letter-spacing: 0.02em;
+  }
+  .ml-subtitle { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
+  .ml-divider {
+    width: 32px; height: 2px;
+    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+    border-radius: 2px; margin: 4px 0 0 68px;
+  }
+  .ml-add-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    color: white; border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .ml-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,82,26,0.38); }
+
+  .ml-error {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--danger-soft); border: 1px solid #f5c2c2;
+    border-left: 3px solid var(--danger); color: var(--danger);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 0.875rem; margin-bottom: 20px;
+  }
+
+  .ml-toolbar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+    padding: 16px 20px; margin-bottom: 20px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+  }
+  .ml-search-wrap { position: relative; display: flex; align-items: center; }
+  .ml-search-wrap svg {
+    position: absolute; left: 10px; color: var(--ink-3);
+    width: 14px; height: 14px; pointer-events: none;
+  }
+  .ml-search {
+    padding: 7px 12px 7px 32px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface-2);
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    color: var(--ink); outline: none; width: 220px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .ml-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .ml-select {
+    padding: 7px 32px 7px 12px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface-2);
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    color: var(--ink); outline: none; cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239c9085' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  .ml-select:focus { border-color: var(--accent); }
+  .ml-view-toggle {
+    display: flex; align-items: center; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface-2); padding: 2px;
+  }
+  .ml-view-btn {
+    padding: 6px 10px; border: none; background: transparent;
+    color: var(--ink-3); cursor: pointer; border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .ml-view-btn:hover { color: var(--ink-2); }
+  .ml-view-btn.active { background: var(--surface); color: var(--accent); box-shadow: var(--shadow-sm); }
+
+  .ml-prompt {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 80px 20px;
+    border: 2px dashed var(--border); border-radius: var(--radius-lg);
+    background: var(--surface-2); gap: 12px;
+  }
+  .ml-prompt-icon { color: var(--ink-3); }
+  .ml-prompt-text { font-size: 0.9rem; color: var(--ink-3); margin: 0; }
+
+  .ml-loading {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 80px 0; gap: 16px;
+  }
+  .ml-spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    animation: ml-spin 0.7s linear infinite;
+  }
+  .ml-loading-text { font-size: 0.875rem; color: var(--ink-3); }
+  @keyframes ml-spin { to { transform: rotate(360deg); } }
+
+  .ml-grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .ml-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .ml-card:hover { box-shadow: var(--shadow-sm); border-color: var(--border-strong); }
+  .ml-card-img {
+    width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+  }
+  .ml-card-video {
+    width: 100%; aspect-ratio: 1; display: flex;
+    align-items: center; justify-content: center;
+    background: var(--surface-3); color: var(--ink-3);
+  }
+  .ml-card-info {
+    padding: 10px 12px; display: flex; align-items: center;
+    justify-content: space-between; gap: 8px;
+  }
+  .ml-card-url {
+    font-size: 0.72rem; color: var(--ink-3);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .ml-card-meta {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    color: var(--ink-3); background: var(--surface-3);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px 6px; white-space: nowrap;
+  }
+  .ml-card-delete {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--danger); cursor: pointer; transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .ml-card-delete:hover { background: var(--danger-soft); border-color: #f5c2c2; }
+
+  .ml-table { width: 100%; border-collapse: collapse; }
+  .ml-table thead tr { border-bottom: 1px solid var(--border); }
+  .ml-table th {
+    padding: 11px 20px; text-align: left;
+    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); background: var(--surface-2);
+  }
+  .ml-table td {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    vertical-align: middle; transition: background 0.12s;
+  }
+  .ml-table tbody tr:hover td { background: var(--accent-soft); }
+  .ml-type-badge {
+    display: inline-flex; padding: 2px 8px; border-radius: 5px;
+    font-size: 0.73rem; font-weight: 600;
+  }
+  .ml-type-image { background: var(--violet-soft); color: var(--violet); }
+  .ml-type-video { background: var(--accent-soft); color: var(--accent); }
+
+  .ml-modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,22,18,0.45);
+    backdrop-filter: blur(4px); display: flex; align-items: center;
+    justify-content: center; z-index: 1000; animation: ml-fade 0.15s ease;
+  }
+  @keyframes ml-fade { from { opacity: 0; } to { opacity: 1; } }
+  .ml-modal {
+    background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); width: 100%; max-width: 440px;
+    margin: 20px; animation: ml-slide 0.2s ease; overflow: hidden;
+  }
+  @keyframes ml-slide {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .ml-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 18px; border-bottom: 1px solid var(--border);
+  }
+  .ml-modal-title {
+    font-family: 'DM Serif Display', serif; font-size: 1.3rem;
+    font-weight: 400; color: var(--ink); margin: 0;
+  }
+  .ml-modal-close {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--ink-3); cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 1.1rem; transition: all 0.15s; line-height: 1;
+  }
+  .ml-modal-close:hover { background: var(--surface-2); color: var(--ink); }
+  .ml-modal-body { padding: 22px 24px 26px; }
+  .ml-field { margin-bottom: 16px; }
+  .ml-label {
+    display: block; font-size: 0.8rem; font-weight: 600;
+    color: var(--ink-2); margin-bottom: 7px;
+  }
+  .ml-label span { color: var(--danger); margin-left: 2px; }
+  .ml-input, .ml-select-full {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid var(--border-strong); border-radius: 9px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    color: var(--ink); background: var(--surface); outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+  }
+  .ml-select-full { cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239c9085' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 36px;
+  }
+  .ml-input:focus, .ml-select-full:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12);
+  }
+  .ml-form-error {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--danger-soft); border: 1px solid #f5c2c2;
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 0.83rem; color: var(--danger); margin-top: 12px;
+  }
+  .ml-modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .ml-btn-cancel {
+    padding: 9px 18px; border: 1px solid var(--border-strong);
+    border-radius: 9px; background: var(--surface);
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    font-weight: 500; color: var(--ink-2); cursor: pointer;
+  }
+  .ml-btn-cancel:hover { background: var(--surface-2); }
+  .ml-btn-save {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 20px; border: none; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    color: white; font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer;
+    box-shadow: 0 3px 10px rgba(201,82,26,0.3);
+  }
+  .ml-btn-save:hover:not(:disabled) { transform: translateY(-1px); }
+  .ml-btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+  .ml-save-spinner {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4); border-top-color: white;
+    animation: ml-spin 0.6s linear infinite;
+  }
+`;
 
 export function MediaLibrary() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -24,7 +309,6 @@ export function MediaLibrary() {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [search, setSearch] = useState('');
 
-  // Modal for adding media
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({
     productId: '',
@@ -100,13 +384,11 @@ export function MediaLibrary() {
       });
       setIsModalOpen(false);
       setForm({ productId: '', type: 'IMAGE', url: '', sortOrder: '1' });
-      // If product is already filtered, reload
       if (selectedProductId === form.productId) {
         fetchMedia();
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to add media';
-      setFormError(msg);
+      setFormError(err instanceof Error ? err.message : 'Failed to add media');
     } finally {
       setIsSaving(false);
     }
@@ -119,11 +401,26 @@ export function MediaLibrary() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-['Fira_Code'] text-3xl font-bold text-purple-900">Media Library</h1>
-          <p className="mt-1 font-['Fira_Sans'] text-gray-600">Manage your images and files</p>
+    <div className="ml-root">
+      <style>{css}</style>
+
+      <div className="ml-header">
+        <div className="ml-header-left">
+          <div className="ml-icon-badge">
+            <ImageIcon />
+          </div>
+          <div>
+            <h1 className="ml-title">
+              Media Library
+              {mediaList.length > 0 && (
+                <span className="ml-count-pill">{mediaList.length}</span>
+              )}
+            </h1>
+            <div className="ml-divider" />
+            <p className="ml-subtitle" style={{ marginTop: 6 }}>
+              Manage your images and files
+            </p>
+          </div>
         </div>
         <button
           type="button"
@@ -132,186 +429,181 @@ export function MediaLibrary() {
             setFormError(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 font-['Fira_Sans'] font-semibold text-white shadow-md hover:bg-orange-600"
+          className="ml-add-btn"
         >
-          <Plus className="h-5 w-5" /> Upload Media
+          <Plus size={17} /> Upload Media
         </button>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-lg bg-white p-4 shadow-sm border border-gray-200">
-        {/* Product selector */}
+      {error && <div className="ml-error">⚠ {error}</div>}
+
+      <div className="ml-toolbar">
         <select
           value={selectedProductId}
           onChange={(e) => setSelectedProductId(e.target.value)}
-          className="rounded-lg border border-gray-300 py-1.5 px-3 text-sm outline-none focus:border-purple-600 min-w-[180px]"
+          className="ml-select"
+          style={{ minWidth: 180 }}
         >
-          <option value="">Select a product...</option>
+          <option value="">Select a product…</option>
           {products.map((p) => (
             <option key={p.productId} value={p.productId}>
               {p.productName}
             </option>
           ))}
         </select>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <div className="ml-search-wrap">
+          <Search />
           <input
             type="text"
+            className="ml-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by URL..."
-            className="w-56 rounded-lg border border-gray-300 py-1.5 pl-9 pr-4 text-sm outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600"
+            placeholder="Search by URL…"
           />
         </div>
-
-        {/* Filter type */}
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="rounded-lg border border-gray-300 py-1.5 px-3 text-sm outline-none focus:border-purple-600"
+          className="ml-select"
         >
           <option value="">All Types</option>
           <option value="IMAGE">Images</option>
           <option value="VIDEO">Videos</option>
         </select>
-
-        {/* View toggle */}
-        <div className="ml-auto flex items-center rounded-lg border border-gray-300 bg-gray-50 p-1">
+        <div className="ml-view-toggle" style={{ marginLeft: 'auto' }}>
           <button
             type="button"
             onClick={() => setViewMode('grid')}
-            className={`rounded p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-purple-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`ml-view-btn ${viewMode === 'grid' ? 'active' : ''}`}
           >
-            <Grid className="h-4 w-4" />
+            <Grid size={16} />
           </button>
           <button
             type="button"
             onClick={() => setViewMode('list')}
-            className={`rounded p-1.5 transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-purple-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`ml-view-btn ${viewMode === 'list' ? 'active' : ''}`}
           >
-            <ListIcon className="h-4 w-4" />
+            <ListIcon size={16} />
           </button>
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* Loading */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
-        </div>
-      )}
-
-      {/* Prompt */}
       {!selectedProductId && !isLoading && (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 py-20 text-center">
-          <ImageIcon className="h-12 w-12 text-gray-300 mb-3" />
-          <p className="font-['Fira_Sans'] text-gray-500">Select a product to view its media</p>
+        <div className="ml-prompt">
+          <ImageIcon size={48} className="ml-prompt-icon" />
+          <p className="ml-prompt-text">Select a product to view its media</p>
         </div>
       )}
 
-      {/* Media Grid */}
+      {selectedProductId && isLoading && (
+        <div className="ml-loading">
+          <div className="ml-spinner" />
+          <p className="ml-loading-text">Loading media…</p>
+        </div>
+      )}
+
       {selectedProductId && !isLoading && (
         <>
           {filteredMedia.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 py-16 text-center">
-              <p className="font-['Fira_Sans'] text-gray-500">No media found for this product.</p>
+            <div className="ml-prompt">
+              <ImageIcon size={48} className="ml-prompt-icon" />
+              <p className="ml-prompt-text">No media found for this product.</p>
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="ml-grid">
               {filteredMedia.map((m) => (
-                <div
-                  key={m.mediaId}
-                  className="group relative cursor-pointer rounded-lg border border-gray-200 bg-white p-2 transition-all hover:border-purple-300 hover:shadow-md"
-                >
-                  <div className="aspect-square w-full rounded-md bg-gray-100 overflow-hidden relative">
-                    {m.type === 'IMAGE' ? (
-                      <img
-                        src={m.url}
-                        alt="media"
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-gray-400">
-                        <Video className="h-10 w-10" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(m.mediaId)}
-                        className="rounded-full bg-white p-1.5 text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                <div key={m.mediaId} className="ml-card">
+                  {m.type === 'IMAGE' ? (
+                    <img
+                      src={m.url}
+                      alt="media"
+                      className="ml-card-img"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="ml-card-video">
+                      <Video size={32} />
                     </div>
-                  </div>
-                  <div className="mt-2 px-1">
-                    <p className="truncate text-xs font-medium text-gray-700">
-                      {m.type} #{m.mediaId}
-                    </p>
-                    <p className="text-xs text-gray-500">Sort: {m.sortOrder}</p>
+                  )}
+                  <div className="ml-card-info">
+                    <span className="ml-card-url">{m.url}</span>
+                    <span className="ml-card-meta">#{m.sortOrder}</span>
+                    <button
+                      type="button"
+                      className="ml-card-delete"
+                      onClick={() => handleDelete(m.mediaId)}
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-lg bg-white shadow-md overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+            <div
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <table className="ml-table">
+                <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">ID</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Type</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">URL</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Sort</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-600">Actions</th>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>URL</th>
+                    <th>Sort</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {filteredMedia.map((m) => (
-                    <tr key={m.mediaId} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-['Fira_Code'] text-xs text-gray-500">
+                    <tr key={m.mediaId}>
+                      <td
+                        style={{
+                          fontFamily: "'DM Mono', monospace",
+                          fontSize: '0.78rem',
+                          color: 'var(--ink-3)',
+                        }}
+                      >
                         #{m.mediaId}
                       </td>
-                      <td className="px-4 py-3">
+                      <td>
                         <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${m.type === 'IMAGE'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-purple-100 text-purple-700'
-                            }`}
+                          className={`ml-type-badge ${
+                            m.type === 'IMAGE' ? 'ml-type-image' : 'ml-type-video'
+                          }`}
                         >
                           {m.type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 max-w-xs">
+                      <td>
                         <a
                           href={m.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="truncate text-purple-600 hover:underline block"
+                          style={{
+                            fontSize: '0.85rem',
+                            color: 'var(--violet)',
+                            textDecoration: 'none',
+                          }}
                         >
                           {m.url}
                         </a>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{m.sortOrder}</td>
-                      <td className="px-4 py-3 text-center">
+                      <td>{m.sortOrder}</td>
+                      <td>
                         <button
                           type="button"
+                          className="ml-card-delete"
                           onClick={() => handleDelete(m.mediaId)}
-                          className="rounded p-1.5 text-red-600 hover:bg-red-50"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 size={12} />
                         </button>
                       </td>
                     </tr>
@@ -323,91 +615,100 @@ export function MediaLibrary() {
         </>
       )}
 
-      {/* Add Media Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Add Media"
-        size="md"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Product <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={form.productId}
-              onChange={(e) => setForm({ ...form, productId: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-purple-600"
-            >
-              <option value="">Select product...</option>
-              {products.map((p) => (
-                <option key={p.productId} value={p.productId}>
-                  {p.productName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Type</label>
-              <select
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value as MediaType })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-purple-600"
+      {isModalOpen && (
+        <div
+          className="ml-modal-overlay"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div className="ml-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ml-modal-header">
+              <h2 className="ml-modal-title">Add Media</h2>
+              <button
+                type="button"
+                className="ml-modal-close"
+                onClick={() => setIsModalOpen(false)}
               >
-                <option value="IMAGE">IMAGE</option>
-                <option value="VIDEO">VIDEO</option>
-              </select>
+                ✕
+              </button>
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Sort Order</label>
-              <input
-                type="number"
-                min={1}
-                value={form.sortOrder}
-                onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-purple-600"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.url}
-              onChange={(e) => setForm({ ...form, url: e.target.value })}
-              placeholder="https://example.com/image.jpg"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-purple-600"
-            />
-          </div>
-          {formError && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</p>
-          )}
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleAddMedia}
-              disabled={isSaving}
-              className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
-            >
-              {isSaving && (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <div className="ml-modal-body">
+              <div className="ml-field">
+                <label className="ml-label">Product <span>*</span></label>
+                <select
+                  className="ml-select-full"
+                  value={form.productId}
+                  onChange={(e) =>
+                    setForm({ ...form, productId: e.target.value })
+                  }
+                >
+                  <option value="">Select product…</option>
+                  {products.map((p) => (
+                    <option key={p.productId} value={p.productId}>
+                      {p.productName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="ml-field">
+                <label className="ml-label">Type</label>
+                <select
+                  className="ml-select-full"
+                  value={form.type}
+                  onChange={(e) =>
+                    setForm({ ...form, type: e.target.value as MediaType })
+                  }
+                >
+                  <option value="IMAGE">IMAGE</option>
+                  <option value="VIDEO">VIDEO</option>
+                </select>
+              </div>
+              <div className="ml-field">
+                <label className="ml-label">Sort Order</label>
+                <input
+                  type="number"
+                  min={1}
+                  className="ml-input"
+                  value={form.sortOrder}
+                  onChange={(e) =>
+                    setForm({ ...form, sortOrder: e.target.value })
+                  }
+                />
+              </div>
+              <div className="ml-field">
+                <label className="ml-label">URL <span>*</span></label>
+                <input
+                  type="text"
+                  className="ml-input"
+                  value={form.url}
+                  onChange={(e) => setForm({ ...form, url: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              {formError && (
+                <div className="ml-form-error">⚠ {formError}</div>
               )}
-              Upload
-            </button>
+              <div className="ml-modal-footer">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="ml-btn-cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddMedia}
+                  disabled={isSaving}
+                  className="ml-btn-save"
+                >
+                  {isSaving && <span className="ml-save-spinner" />}
+                  Upload
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }
