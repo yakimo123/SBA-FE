@@ -1,22 +1,22 @@
-import { Copy, Edit, Plus, Search, Tag, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Copy, Edit, Plus, Search, Tag, Trash2, UserPlus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-interface Voucher {
-  id: string;
-  code: string;
-  discount: string;
-  type: 'Percentage' | 'Fixed';
-  usage: number;
-  limit: number;
-  expiry: string;
-  status: 'Active' | 'Expired';
-}
+import { Column, DataTable } from '../../components/admin/DataTable';
+import { VoucherAssignModal } from '../../components/admin/VoucherAssignModal';
+import { VoucherFormModal } from '../../components/admin/VoucherFormModal';
+import {
+  VoucherRequest,
+  VoucherResponse,
+  voucherService,
+} from '../../services/voucherService';
 
-const mockVouchers: Voucher[] = [
-  { id: '1', code: 'WELCOME2024', discount: '10%', type: 'Percentage', usage: 154, limit: 1000, expiry: '2024-12-31', status: 'Active' },
-  { id: '2', code: 'SUMMERSALE', discount: '₫50,000', type: 'Fixed', usage: 45, limit: 200, expiry: '2024-06-30', status: 'Active' },
-  { id: '3', code: 'FLASH50', discount: '50%', type: 'Percentage', usage: 100, limit: 100, expiry: '2024-01-01', status: 'Expired' },
-];
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(value);
+};
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
@@ -188,14 +188,207 @@ const css = `
 `;
 
 export function VoucherList() {
-  const [vouchers] = useState<Voucher[]>(mockVouchers);
+  const [vouchers, setVouchers] = useState<VoucherResponse[]>([]);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [editingVoucher, setEditingVoucher] = useState<VoucherResponse | null>(null);
+  const [assigningVoucher, setAssigningVoucher] = useState<VoucherResponse | null>(null);
   const [search, setSearch] = useState('');
+
+  const fetchVouchers = useCallback(async () => {
+    try {
+      const data = await voucherService.getVouchers({ size: 100 });
+      setVouchers(data.content);
+    } catch (error) {
+      console.error('Error fetching vouchers:', error);
+      toast.error('Không thể tải danh sách voucher');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVouchers();
+  }, [fetchVouchers]);
+
+  const handleCreateVoucher = async (data: VoucherRequest) => {
+    try {
+      await voucherService.createVoucher(data);
+      toast.success('Đã tạo voucher mới thành công');
+      fetchVouchers();
+    } catch (error) {
+      console.error('Error creating voucher:', error);
+      toast.error('Lỗi khi tạo voucher');
+      throw error;
+    }
+  };
+
+  const handleUpdateVoucher = async (data: VoucherRequest) => {
+    if (!editingVoucher) return;
+    try {
+      await voucherService.updateVoucher(editingVoucher.voucherId, data);
+      toast.success('Đã cập nhật voucher thành công');
+      fetchVouchers();
+    } catch (error) {
+      console.error('Error updating voucher:', error);
+      toast.error('Lỗi khi cập nhật voucher');
+      throw error;
+    }
+  };
+
+  const handleDeleteVoucher = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa voucher này?')) return;
+    try {
+      await voucherService.deleteVoucher(id);
+      toast.success('Đã xóa voucher');
+      fetchVouchers();
+    } catch (error) {
+      console.error('Error deleting voucher:', error);
+      toast.error('Lỗi khi xóa voucher');
+    }
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.info(`Đã sao chép mã: ${code}`);
+  };
 
   const filtered = vouchers.filter(
     (v) =>
-      v.code.toLowerCase().includes(search.toLowerCase()) ||
-      v.discount.toLowerCase().includes(search.toLowerCase())
+      v.voucherCode.toLowerCase().includes(search.toLowerCase()) ||
+      v.discountValue.toString().includes(search.toLowerCase())
   );
+
+  const columns: Column<VoucherResponse>[] = [
+    {
+      header: 'Mã',
+      accessor: 'voucherCode',
+      render: (v) => (
+        <span className="vl-code-text">{v.voucherCode}</span>
+      ),
+    },
+    {
+      header: 'Giảm giá',
+      accessor: 'discountValue',
+      render: (v) => (
+        <span className="vl-discount-text">
+          {v.discountType === 'PERCENT'
+            ? `${v.discountValue}%`
+            : formatCurrency(v.discountValue)}
+        </span>
+      ),
+    },
+    {
+      header: 'Loại',
+      accessor: 'discountType',
+      render: (v) => (
+        <span style={{ fontSize: '0.9rem', color: 'var(--ink-2)' }}>
+          {v.discountType === 'PERCENT' ? 'Phần trăm' : 'Cố định'}
+        </span>
+      ),
+    },
+    {
+      header: 'Sử dụng',
+      accessor: 'usedCount',
+      render: (v) => (
+        <div style={{ minWidth: 120 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4 }}>
+            <span>{v.usedCount} đã dùng</span>
+            <span>{v.usageLimit} giới hạn</span>
+          </div>
+          <div style={{ height: 6, background: '#eee', borderRadius: 3, overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                background: v.usedCount >= v.usageLimit ? 'var(--danger)' : 'var(--accent)',
+                width: `${Math.min((v.usedCount / v.usageLimit) * 100, 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Hết hạn',
+      accessor: 'validTo',
+      render: (v) => (
+        <span className="vl-expiry-text">
+          {new Date(v.validTo).toLocaleDateString('vi-VN')}
+        </span>
+      ),
+    },
+    {
+      header: 'Trạng thái',
+      accessor: 'isActive',
+      render: (v) => {
+        const isExpired = new Date(v.validTo) < new Date();
+        const isFull = v.usedCount >= v.usageLimit;
+
+        let statusText = 'Hoạt động';
+        let statusClass = 'vl-status-active';
+
+        if (isExpired) {
+          statusText = 'Hết hạn';
+          statusClass = 'vl-status-expired';
+        } else if (isFull) {
+          statusText = 'Hết lượt';
+          statusClass = 'vl-status-expired';
+        } else if (!v.isActive) {
+          statusText = 'Tạm ngưng';
+          statusClass = 'vl-status-expired';
+        }
+
+        return (
+          <span className={statusClass}>
+            <span className="vl-status-dot" />
+            {statusText}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Thao tác',
+      accessor: 'voucherId',
+      sortable: false,
+      render: (v) => (
+        <div className="vl-actions">
+          <button
+            onClick={() => handleCopyCode(v.voucherCode)}
+            className="vl-btn vl-btn-copy"
+            title="Copy Code"
+          >
+            <Copy size={14} />
+          </button>
+          <button
+            onClick={() => {
+              setAssigningVoucher(v);
+              setIsAssignModalOpen(true);
+            }}
+            className="vl-btn"
+            style={{ color: 'var(--accent)' }}
+            title="Tặng cho khách hàng"
+          >
+            <UserPlus size={14} />
+          </button>
+          <button
+            onClick={() => {
+              setEditingVoucher(v);
+              setIsFormModalOpen(true);
+            }}
+            className="vl-btn vl-btn-edit"
+            title="Sửa"
+          >
+            <Edit size={14} />
+          </button>
+          <button
+            onClick={() => handleDeleteVoucher(v.voucherId)}
+            className="vl-btn vl-btn-delete"
+            title="Xóa"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="vl-root">
@@ -219,7 +412,14 @@ export function VoucherList() {
             </p>
           </div>
         </div>
-        <button type="button" className="vl-add-btn">
+        <button
+          type="button"
+          className="vl-add-btn"
+          onClick={() => {
+            setEditingVoucher(null);
+            setIsFormModalOpen(true);
+          }}
+        >
           <Plus size={17} /> Create Voucher
         </button>
       </div>
@@ -240,95 +440,36 @@ export function VoucherList() {
           </span>
         </div>
 
-        {filtered.length === 0 ? (
-          <div className="vl-empty">
-            <div className="vl-empty-icon">
-              <Tag size={22} />
-            </div>
-            <p className="vl-empty-text">No vouchers found</p>
-          </div>
-        ) : (
-          <table className="vl-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Discount</th>
-                <th>Type</th>
-                <th>Usage</th>
-                <th>Expiry</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((v) => (
-                <tr key={v.id}>
-                  <td>
-                    <span className="vl-code-text">{v.code}</span>
-                  </td>
-                  <td>
-                    <span className="vl-discount-text">{v.discount}</span>
-                  </td>
-                  <td>{v.type}</td>
-                  <td>
-                    <span className="vl-expiry-text">
-                      {v.usage} / {v.limit}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className={
-                        v.status === 'Expired'
-                          ? 'vl-expiry-text vl-expiry-expired'
-                          : 'vl-expiry-text'
-                      }
-                    >
-                      {v.expiry}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className={
-                        v.status === 'Active'
-                          ? 'vl-status-active'
-                          : 'vl-status-expired'
-                      }
-                    >
-                      <span className="vl-status-dot" />
-                      {v.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="vl-actions">
-                      <button
-                        type="button"
-                        className="vl-btn vl-btn-copy"
-                        title="Copy Code"
-                      >
-                        <Copy size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="vl-btn vl-btn-edit"
-                        title="Edit"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="vl-btn vl-btn-delete"
-                        title="Delete"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <DataTable
+          columns={columns}
+          data={filtered}
+          keyField="voucherId"
+          pageSize={10}
+        />
       </div>
+
+      <VoucherFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => {
+          setIsFormModalOpen(false);
+          setEditingVoucher(null);
+        }}
+        onSubmit={editingVoucher ? handleUpdateVoucher : handleCreateVoucher}
+        initialData={editingVoucher}
+        title={editingVoucher ? 'Chỉnh sửa Voucher' : 'Tạo Voucher mới'}
+      />
+
+      {assigningVoucher && (
+        <VoucherAssignModal
+          isOpen={isAssignModalOpen}
+          onClose={() => {
+            setIsAssignModalOpen(false);
+            setAssigningVoucher(null);
+          }}
+          voucherId={assigningVoucher.voucherId}
+          voucherCode={assigningVoucher.voucherCode}
+        />
+      )}
     </div>
   );
 }

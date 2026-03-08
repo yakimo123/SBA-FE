@@ -162,8 +162,8 @@ export function DataTable<T extends Record<string, any>>({
   }
 
   // ── Paginate ──
-  const totalPages  = Math.max(1, Math.ceil(sortedData.length / pageSize));
-  const startIndex  = (currentPage - 1) * pageSize;
+  const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
   const currentData = sortedData.slice(startIndex, startIndex + pageSize);
 
   // ── Select ──
@@ -174,18 +174,24 @@ export function DataTable<T extends Record<string, any>>({
       setSelectedIds(new Set());
       onSelectionChange?.([]);
     } else {
-      const ids = new Set(currentData.map((i) => i[keyField]));
-      setSelectedIds(ids);
+      const newSelectedIds = new Set(currentData.map((item) => item[keyField]));
+      setSelectedIds(newSelectedIds);
       onSelectionChange?.(currentData);
     }
   };
 
   const toggleSelectItem = (item: T) => {
-    const next = new Set(selectedIds);
-    const id   = item[keyField];
-    next.has(id) ? next.delete(id) : next.add(id);
-    setSelectedIds(next);
-    onSelectionChange?.(data.filter((d) => next.has(d[keyField])));
+    const newSelectedIds = new Set(selectedIds);
+    const id = item[keyField];
+
+    if (newSelectedIds.has(id)) {
+      newSelectedIds.delete(id);
+    } else {
+      newSelectedIds.add(id);
+    }
+
+    setSelectedIds(newSelectedIds);
+    onSelectionChange?.(data.filter((d) => newSelectedIds.has(d[keyField])));
   };
 
   // ── Sort toggle ──
@@ -310,7 +316,7 @@ export function DataTable<T extends Record<string, any>>({
             <button
               type="button"
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               className="dt-page-btn"
             >
               <ChevronRight />

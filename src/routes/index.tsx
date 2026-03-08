@@ -34,6 +34,7 @@ import { ProductDetailPage } from '../pages/ProductDetail';
 import { ProductListPage } from '../pages/ProductList';
 import { RegisterPage } from '../pages/Register';
 import { UnauthorizedPage } from '../pages/Unauthorized';
+import { VNPayReturnPage } from '../pages/VNPayReturn';
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: 'register', element: <RegisterPage /> },
       { path: 'unauthorized', element: <UnauthorizedPage /> },
       { path: 'approval-pending', element: <BusinessApprovalPendingPage /> },
+      { path: 'payment/vnpay/return', element: <VNPayReturnPage /> },
       // Protected routes (chỉ cần đăng nhập, không yêu cầu role cụ thể)
       {
         element: <ProtectedRoute />,
