@@ -36,7 +36,11 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Parse JWT to get user info (without verification - just decode)
-const parseJwt = (token: string): Partial<AuthUser> | null => {
+interface JwtPayload extends Partial<AuthUser> {
+  roles?: string[];
+}
+
+const parseJwt = (token: string): JwtPayload | null => {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -51,7 +55,6 @@ const parseJwt = (token: string): Partial<AuthUser> | null => {
     return null;
   }
 };
-
 // Get stored auth state from localStorage
 const getStoredAuthState = (): Partial<AuthState> => {
   const accessToken = getAccessToken();
@@ -68,7 +71,7 @@ const getStoredAuthState = (): Partial<AuthState> => {
           userId: decoded.userId || 0,
           email: decoded.email || '',
           fullName: decoded.fullName || '',
-          role: decoded.role || 'USER',
+          role: Array.isArray(decoded.roles) ? decoded.roles[0] : 'USER',
           phoneNumber: decoded.phoneNumber,
           // Backward compatible aliases
           name: decoded.fullName || '',
@@ -93,20 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     accessToken: null,
     refreshToken: null,
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: false,
     error: null,
     ...getStoredAuthState(),
   }));
-
-  // Initialize auth state from localStorage on mount
-  useEffect(() => {
-    const storedState = getStoredAuthState();
-    setState((prev) => ({
-      ...prev,
-      ...storedState,
-      isLoading: false,
-    }));
-  }, []);
 
   // Listen for auth:logout event from API interceptor
   useEffect(() => {

@@ -25,7 +25,6 @@ build/
 *.sln
 *.sw?
 
-
 ### Environments ###
 .env
 .env.*
