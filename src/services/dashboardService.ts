@@ -1,3 +1,4 @@
+import { ApiResponse } from '../types/auth';
 import api from './api';
 
 export interface KPIStats {
@@ -15,6 +16,7 @@ export interface RevenueTrendItem {
 export interface OrderStatusStatItem {
   name: string;
   value: number;
+  color?: string;
 }
 
 export interface TopProductItem {
@@ -37,46 +39,60 @@ export interface RecentOrderItem {
 }
 
 export const dashboardService = {
-  getKPIs: () => {
-    return api.get<KPIStats>('/api/v1/admin/dashboard/kpis');
+  getKPIs: async () => {
+    const response = await api.get<ApiResponse<KPIStats>>(
+      '/api/v1/admin/dashboard/kpis'
+    );
+    return response.data.data;
   },
 
-  getRevenueTrend: (days: number = 30) => {
-    return api.get<RevenueTrendItem[]>(
+  getRevenueTrend: async (days: number = 30) => {
+    const response = await api.get<ApiResponse<RevenueTrendItem[]>>(
       '/api/v1/admin/dashboard/revenue-trend',
       {
         params: { days },
       }
     );
+    return response.data.data;
   },
 
-  getOrderStatusStats: (startDate?: string, endDate?: string) => {
-    return api.get<OrderStatusStatItem[]>(
+  getOrderStatusStats: async (startDate?: string, endDate?: string) => {
+    const response = await api.get<ApiResponse<OrderStatusStatItem[]>>(
       '/api/v1/admin/dashboard/order-status-stats',
       {
         params: { startDate, endDate },
       }
     );
+    return response.data.data;
   },
 
-  getTopProducts: (limit: number = 8) => {
-    return api.get<TopProductItem[]>('/api/v1/admin/dashboard/top-products', {
-      params: { limit },
-    });
+  getTopProducts: async (limit: number = 8) => {
+    const response = await api.get<ApiResponse<TopProductItem[]>>(
+      '/api/v1/admin/dashboard/top-products',
+      {
+        params: { limit },
+      }
+    );
+    return response.data.data;
   },
 
-  getCustomerGrowth: (months: number = 6) => {
-    return api.get<CustomerGrowthItem[]>(
+  getCustomerGrowth: async (months: number = 6) => {
+    const response = await api.get<ApiResponse<CustomerGrowthItem[]>>(
       '/api/v1/admin/dashboard/customer-growth',
       {
         params: { months },
       }
     );
+    return response.data.data;
   },
 
-  getRecentOrders: (limit: number = 5) => {
-    return api.get<RecentOrderItem[]>('/api/v1/admin/dashboard/orders/recent', {
-      params: { limit },
-    });
+  getRecentOrders: async (limit: number = 5) => {
+    const response = await api.get<ApiResponse<RecentOrderItem[]>>(
+      '/api/v1/admin/dashboard/orders/recent',
+      {
+        params: { limit },
+      }
+    );
+    return response.data.data;
   },
 };
