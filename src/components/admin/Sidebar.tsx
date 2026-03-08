@@ -10,9 +10,6 @@ import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -21,6 +18,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavigationItem {
   title: string;
@@ -82,25 +80,25 @@ const navigation: NavigationItem[] = [
 
 export function Sidebar() {
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <ShadcnSidebar 
       collapsible="icon"
       style={{
-        '--sidebar-background': 'transparent',
+        '--sidebar': '#59168B',
         '--sidebar-foreground': '#ffffff',
         '--sidebar-border': 'transparent',
-        '--sidebar-accent': 'rgba(255, 255, 255, 0.1)',
+        '--sidebar-accent': 'rgba(255, 255, 255, 0.15)',
         '--sidebar-accent-foreground': '#ffffff',
         '--sidebar-ring': '#f97316',
-        background: 'linear-gradient(to bottom, #581c87, #3b0764)',
       } as React.CSSProperties}
       className="border-none text-white min-h-screen"
     >
-      <SidebarHeader className="h-16 border-b border-purple-800 px-6 justify-center">
+      <SidebarHeader className="h-16 border-b border-white/20 px-6 justify-center">
         <div className="flex items-center gap-2">
           <LayoutDashboard className="h-6 w-6 text-orange-400" />
-          <span className="font-['Fira_Code'] text-lg font-semibold">
+          <span className="font-['Fira_Code'] text-lg font-semibold text-white">
             Admin Panel
           </span>
         </div>
@@ -114,7 +112,7 @@ export function Sidebar() {
                 <SidebarMenuButton 
                   asChild 
                   isActive={location.pathname === item.href}
-                  className="hover:bg-purple-800/50 data-[active=true]:bg-orange-500 data-[active=true]:text-white font-['Fira_Sans'] font-medium"
+                  className="hover:bg-white/10 data-[active=true]:bg-orange-500 data-[active=true]:text-white text-white font-['Fira_Sans'] font-medium"
                 >
                   <NavLink to={item.href}>
                     <item.icon className="h-5 w-5" />
@@ -124,7 +122,7 @@ export function Sidebar() {
               ) : (
                 <Collapsible defaultOpen className="group/collapsible">
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="hover:bg-purple-800/50 font-['Fira_Sans'] font-medium text-purple-200 hover:text-white">
+                    <SidebarMenuButton className="hover:bg-white/10 font-['Fira_Sans'] font-medium text-white/80 hover:text-white">
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -137,7 +135,7 @@ export function Sidebar() {
                           <SidebarMenuSubButton 
                             asChild 
                             isActive={location.pathname === subItem.href}
-                            className="hover:bg-purple-800/50 data-[active=true]:text-orange-400 text-purple-200"
+                            className="hover:bg-white/10 data-[active=true]:text-orange-400 text-white/70"
                           >
                             <NavLink to={subItem.href}>
                               <subItem.icon className="h-4 w-4" />
@@ -155,15 +153,17 @@ export function Sidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-purple-800 p-4">
+      <SidebarFooter className="border-t border-white/20 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-700">
-            <Users className="h-4 w-4" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+            <Users className="h-4 w-4 text-white" />
           </div>
-          <div className="flex-1">
-            <p className="font-['Fira_Sans'] text-sm font-medium">Admin</p>
-            <p className="font-['Fira_Sans'] text-xs text-purple-300">
-              admin@example.com
+          <div className="flex-1 min-w-0">
+            <p className="font-['Fira_Sans'] text-sm font-medium text-white">
+              {user?.fullName || 'Admin'}
+            </p>
+            <p className="font-['Fira_Sans'] text-xs text-white/70 truncate">
+              {user?.email || 'admin@example.com'}
             </p>
           </div>
         </div>
