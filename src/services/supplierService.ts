@@ -6,6 +6,14 @@ import {
 } from '../types/product';
 import api from './api';
 
+export interface UpdateSupplierRequest {
+    supplierName: string;
+    contactPerson?: string;
+    email?: string;
+    phoneNumber?: string;
+    address?: string;
+}
+
 export interface SupplierProductResponse {
     productId: number;
     productName: string;
@@ -39,6 +47,11 @@ export const supplierService = {
 
     async getSupplierById(id: number): Promise<Supplier> {
         const res = await api.get<ApiResponse<Supplier>>(`${BASE}/${id}`);
+        return res.data.data;
+    },
+
+    async updateSupplier(id: number, data: UpdateSupplierRequest): Promise<Supplier> {
+        const res = await api.put<ApiResponse<Supplier>>(`${BASE}/${id}`, data);
         return res.data.data;
     },
 

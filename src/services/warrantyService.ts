@@ -12,6 +12,20 @@ export interface WarrantyDTO {
   endDate: string;
 }
 
+export interface CreateWarrantyRequest {
+  productId: number;
+  warrantyPeriodMonths: number;
+  warrantyTerms: string;
+  startDate: string;
+}
+
+export interface UpdateWarrantyRequest {
+  productId: number;
+  warrantyPeriodMonths: number;
+  warrantyTerms: string;
+  startDate: string;
+}
+
 export interface WarrantyListParams {
   page?: number;
   size?: number;
@@ -19,6 +33,7 @@ export interface WarrantyListParams {
 }
 
 const ENDPOINTS = {
+  WARRANTIES_BASE: '/api/v1/warranties',
   PRODUCT_WARRANTIES: (productId: string | number) => `/api/v1/warranties/product/${productId}`,
   WARRANTY_BY_ID: (id: string | number) => `/api/v1/warranties/${id}`,
   VALIDATE: (id: string | number) => `/api/v1/warranties/${id}/validate`,
@@ -42,6 +57,29 @@ export const warrantyService = {
   async getWarrantyById(id: string | number): Promise<WarrantyDTO> {
     const response = await api.get<ApiResponse<WarrantyDTO>>(ENDPOINTS.WARRANTY_BY_ID(id));
     return response.data.data;
+  },
+
+  /**
+   * Create a new warranty
+   */
+  async createWarranty(data: CreateWarrantyRequest): Promise<WarrantyDTO> {
+    const response = await api.post<ApiResponse<WarrantyDTO>>(ENDPOINTS.WARRANTIES_BASE, data);
+    return response.data.data;
+  },
+
+  /**
+   * Update a warranty by ID
+   */
+  async updateWarranty(id: string | number, data: UpdateWarrantyRequest): Promise<WarrantyDTO> {
+    const response = await api.put<ApiResponse<WarrantyDTO>>(ENDPOINTS.WARRANTY_BY_ID(id), data);
+    return response.data.data;
+  },
+
+  /**
+   * Delete a warranty by ID
+   */
+  async deleteWarranty(id: string | number): Promise<void> {
+    await api.delete(ENDPOINTS.WARRANTY_BY_ID(id));
   },
 
   /**

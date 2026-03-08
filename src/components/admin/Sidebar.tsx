@@ -9,9 +9,18 @@ import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import {
-  Sidebar as ShadcnSidebar, SidebarContent, SidebarFooter,
-  SidebarHeader, SidebarMenu, SidebarMenuItem,
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavigationItem {
   title: string;
@@ -247,25 +256,31 @@ const css = `
 
 export function Sidebar() {
   const location = useLocation();
+  const { user } = useAuth();
 
   const isActive = (href: string) => location.pathname === href;
   const isGroupActive = (item: NavigationItem) =>
     item.children?.some((c) => isActive(c.href)) || isActive(item.href);
 
   return (
-    <>
-      <style>{css}</style>
-      <aside className="sb-root">
-
-        {/* ── Header ── */}
-        <div className="sb-header">
-          <div className="sb-logo-mark">
-            <LayoutDashboard />
-          </div>
-          <div>
-            <div className="sb-logo-text">Admin</div>
-            <div className="sb-logo-sub">Control Panel</div>
-          </div>
+    <ShadcnSidebar 
+      collapsible="icon"
+      style={{
+        '--sidebar': '#59168B',
+        '--sidebar-foreground': '#ffffff',
+        '--sidebar-border': 'transparent',
+        '--sidebar-accent': 'rgba(255, 255, 255, 0.15)',
+        '--sidebar-accent-foreground': '#ffffff',
+        '--sidebar-ring': '#f97316',
+      } as React.CSSProperties}
+      className="border-none text-white min-h-screen"
+    >
+      <SidebarHeader className="h-16 border-b border-white/20 px-6 justify-center">
+        <div className="flex items-center gap-2">
+          <LayoutDashboard className="h-6 w-6 text-orange-400" />
+          <span className="font-['Fira_Code'] text-lg font-semibold text-white">
+            Admin Panel
+          </span>
         </div>
 
         {/* ── Nav ── */}
@@ -278,10 +293,10 @@ export function Sidebar() {
               )}
 
               {!item.children ? (
-                /* ── Single link ── */
-                <NavLink
-                  to={item.href}
-                  className={({ isActive: a }) => `sb-link${a ? ' active' : ''}`}
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={location.pathname === item.href}
+                  className="hover:bg-white/10 data-[active=true]:bg-orange-500 data-[active=true]:text-white text-white font-['Fira_Sans'] font-medium"
                 >
                   <item.icon size={16} />
                   <span>{item.title}</span>
@@ -290,20 +305,20 @@ export function Sidebar() {
                 /* ── Collapsible group ── */
                 <Collapsible defaultOpen={isGroupActive(item)}>
                   <CollapsibleTrigger asChild>
-                    <button type="button" className="sb-trigger">
-                      <item.icon size={16} className="icon" />
+                    <SidebarMenuButton className="hover:bg-white/10 font-['Fira_Sans'] font-medium text-white/80 hover:text-white">
+                      <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
                       <ChevronRight className="sb-chevron" />
                     </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="sb-sub">
-                      <div className="sb-sub-line">
-                        {item.children.map((sub) => (
-                          <NavLink
-                            key={sub.href}
-                            to={sub.href}
-                            className={({ isActive: a }) => `sb-sub-link${a ? ' active' : ''}`}
+                    <SidebarMenuSub>
+                      {item.children.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton 
+                            asChild 
+                            isActive={location.pathname === subItem.href}
+                            className="hover:bg-white/10 data-[active=true]:text-orange-400 text-white/70"
                           >
                             <sub.icon size={13} />
                             <span>{sub.title}</span>
@@ -319,15 +334,18 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* ── Footer ── */}
-        <div className="sb-footer">
-          <div className="sb-user">
-            <div className="sb-avatar">AD</div>
-            <div>
-              <div className="sb-user-name">Admin</div>
-              <div className="sb-user-email">admin@example.com</div>
-            </div>
-            <ChevronRight size={13} className="sb-user-chevron" />
+      <SidebarFooter className="border-t border-white/20 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+            <Users className="h-4 w-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-['Fira_Sans'] text-sm font-medium text-white">
+              {user?.fullName || 'Admin'}
+            </p>
+            <p className="font-['Fira_Sans'] text-xs text-white/70 truncate">
+              {user?.email || 'admin@example.com'}
+            </p>
           </div>
         </div>
 
