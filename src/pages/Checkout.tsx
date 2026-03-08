@@ -1,4 +1,4 @@
-import { Banknote, CheckCircle, CreditCard, Wallet } from 'lucide-react';
+import { Banknote, CheckCircle, CreditCard, Tag, Ticket, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -6,6 +6,12 @@ import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
@@ -20,7 +26,7 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { cartItems, clearCart } = useCart();
+  const { cartItems } = useCart();
 
   const [step, setStep] = useState<'info' | 'payment' | 'success'>('info');
   const [deliveryMethod, setDeliveryMethod] = useState('standard');
@@ -56,12 +62,30 @@ export function CheckoutPage() {
     }
   }, [location.state]);
 
-  const [voucherCode, setVoucherCode] = useState('');
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherResponse | null>(
     null
   );
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
   const [voucherError, setVoucherError] = useState<string | null>(null);
+  const [availableVouchers, setAvailableVouchers] = useState<VoucherResponse[]>([]);
+  const [showVoucherModal, setShowVoucherModal] = useState(false);
+  const [isFetchingVouchers, setIsFetchingVouchers] = useState(false);
+  const [voucherSearch, setVoucherSearch] = useState('');
+
+  const openVoucherModal = async () => {
+    setVoucherSearch('');
+    setShowVoucherModal(true);
+    if (availableVouchers.length > 0) return;
+    setIsFetchingVouchers(true);
+    try {
+      const result = await voucherService.getVouchers({ validOnly: true, size: 50 });
+      setAvailableVouchers(result.content ?? []);
+    } catch {
+      // silently fail
+    } finally {
+      setIsFetchingVouchers(false);
+    }
+  };
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -88,12 +112,7 @@ export function CheckoutPage() {
     setStep('payment');
   };
 
-  const handleApplyVoucher = async () => {
-    if (!voucherCode.trim()) {
-      toast.error('Vui lòng nhập mã giảm giá');
-      return;
-    }
-
+  const applyVoucherByCode = async (code: string) => {
     if (!user?.userId) {
       toast.error('Vui lòng đăng nhập để sử dụng mã giảm giá');
       return;
@@ -103,12 +122,13 @@ export function CheckoutPage() {
     setIsApplyingVoucher(true);
     try {
       const voucher = await voucherService.validateAndGetVoucher(
-        voucherCode,
+        code,
         user.userId,
         subtotal
       );
       setAppliedVoucher(voucher);
       setVoucherError(null);
+      setShowVoucherModal(false);
       toast.success('Áp dụng mã giảm giá thành công');
     } catch (error: unknown) {
       const errorMessage =
@@ -126,7 +146,7 @@ export function CheckoutPage() {
           : 'Mã giảm giá không hợp lệ hoặc không đủ điều kiện';
 
       console.error(
-        `Failed to apply voucher [${voucherCode}]:`,
+        `Failed to apply voucher [${code}]:`,
         errorMessage,
         error
       );
@@ -178,8 +198,8 @@ export function CheckoutPage() {
       const result = await orderService.createOrder(userId, orderData);
 
       // VNPay: redirect to payment gateway instead of showing success screen
+      // Cart is NOT cleared here — it will only be cleared after confirmed SUCCESS on return
       if (paymentMethod === 'vnpay') {
-        clearCart();
         const vnpayResponse = await vnpayService.createPaymentUrl(result.orderId);
         window.location.href = vnpayResponse.paymentUrl;
         return;
@@ -187,7 +207,6 @@ export function CheckoutPage() {
 
       setOrderResult(result);
       setStep('success');
-      clearCart();
     } catch (error: unknown) {
       console.error('Error placing order:', error);
       const errorMessage =
@@ -645,59 +664,116 @@ export function CheckoutPage() {
 
               {/* Voucher section */}
               <div className="space-y-3 mb-4">
-                <Label htmlFor="voucher" className="text-sm font-medium">
-                  Mã giảm giá
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="voucher"
-                    placeholder="Nhập mã giảm giá..."
-                    value={voucherCode}
-                    onChange={(e) => {
-                      setVoucherCode(e.target.value);
-                      if (voucherError) setVoucherError(null);
-                    }}
-                    disabled={!!appliedVoucher}
-                    className={`flex-1 ${voucherError ? 'border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.5)]' : ''}`}
-                  />
-                  <Button
-                    type="button"
-                    variant={appliedVoucher ? 'outline' : 'default'}
-                    onClick={
-                      appliedVoucher
-                        ? () => {
-                            setAppliedVoucher(null);
-                            setVoucherCode('');
-                            setVoucherError(null);
-                          }
-                        : handleApplyVoucher
-                    }
-                    disabled={isApplyingVoucher}
-                    className={
-                      appliedVoucher
-                        ? 'text-red-600 border-red-200 hover:bg-red-50'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                    }
-                  >
-                    {isApplyingVoucher
-                      ? '...'
-                      : appliedVoucher
-                        ? 'Hủy'
-                        : 'Áp dụng'}
-                  </Button>
-                </div>
-                {voucherError && (
-                  <div className="text-xs text-red-600 font-medium mt-1">
-                    {voucherError}
+                <Label className="text-sm font-medium">Mã giảm giá</Label>
+
+                {appliedVoucher ? (
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Tag className="w-4 h-4 text-green-600 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="text-sm font-semibold text-green-700">{appliedVoucher.voucherCode}</span>
+                        <p className="text-xs text-green-600 truncate">{appliedVoucher.description}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAppliedVoucher(null);
+                        setVoucherError(null);
+                      }}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium shrink-0 ml-2"
+                    >
+                      Hủy
+                    </button>
                   </div>
-                )}
-                {appliedVoucher && (
-                  <div className="text-sm text-green-600 font-medium">
-                    ✓ Đã áp dụng mã: {appliedVoucher.voucherCode} (
-                    {appliedVoucher.description})
-                  </div>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={openVoucherModal}
+                      className="w-full justify-start gap-2 text-gray-600 border-dashed"
+                    >
+                      <Ticket className="w-4 h-4 text-red-500" />
+                      Chọn mã giảm giá
+                    </Button>
+                    {voucherError && (
+                      <div className="text-xs text-red-600 font-medium">{voucherError}</div>
+                    )}
+                  </>
                 )}
               </div>
+
+              {/* Voucher Modal */}
+              <Dialog open={showVoucherModal} onOpenChange={setShowVoucherModal}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Ticket className="w-5 h-5 text-red-500" />
+                      Chọn mã giảm giá
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  {/* Search inside modal */}
+                  <div className="relative mb-1">
+                    <Input
+                      placeholder="Tìm theo mã..."
+                      value={voucherSearch}
+                      onChange={(e) => setVoucherSearch(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto -mx-6 px-6">
+                    {isFetchingVouchers ? (
+                      <div className="py-10 text-center text-sm text-gray-500">Đang tải...</div>
+                    ) : availableVouchers.length === 0 ? (
+                      <div className="py-10 text-center text-sm text-gray-500">
+                        Không có mã giảm giá khả dụng
+                      </div>
+                    ) : (
+                      <div className="space-y-2 py-1">
+                        {availableVouchers
+                          .filter((v) =>
+                            voucherSearch
+                              ? v.voucherCode.toLowerCase().includes(voucherSearch.toLowerCase()) ||
+                                v.description.toLowerCase().includes(voucherSearch.toLowerCase())
+                              : true
+                          )
+                          .map((v) => (
+                            <button
+                              key={v.voucherId}
+                              type="button"
+                              disabled={isApplyingVoucher}
+                              onClick={() => applyVoucherByCode(v.voucherCode)}
+                              className="w-full flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-red-400 hover:bg-red-50 text-left transition-colors disabled:opacity-50"
+                            >
+                              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                                <Tag className="w-5 h-5 text-red-500" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-bold text-sm text-gray-900">{v.voucherCode}</span>
+                                  <span className="text-sm font-semibold text-red-600 shrink-0">
+                                    {v.discountType === 'PERCENT'
+                                      ? `Giảm ${v.discountValue}%`
+                                      : `Giảm ${v.discountValue.toLocaleString('vi-VN')}₫`}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{v.description}</p>
+                                {v.minOrderValue > 0 && (
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    Đơn hàng tối thiểu {v.minOrderValue.toLocaleString('vi-VN')}₫
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               <Separator className="my-4" />
 
