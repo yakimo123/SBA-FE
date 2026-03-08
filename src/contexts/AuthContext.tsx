@@ -121,6 +121,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     };
 
+    const handleRefreshed = (
+      event: CustomEvent<{ accessToken: string; refreshToken: string }>
+    ) => {
+      setState((prev) => ({
+        ...prev,
+        accessToken: event.detail.accessToken,
+        refreshToken: event.detail.refreshToken,
+        isAuthenticated: true,
+      }));
+    };
+
     const handleForbidden = (event: CustomEvent<{ message: string }>) => {
       setState((prev) => ({
         ...prev,
@@ -130,12 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('auth:logout', handleLogout);
     window.addEventListener('auth:forbidden', handleForbidden as EventListener);
+    window.addEventListener('auth:refreshed', handleRefreshed as EventListener);
 
     return () => {
       window.removeEventListener('auth:logout', handleLogout);
       window.removeEventListener(
         'auth:forbidden',
         handleForbidden as EventListener
+      );
+      window.removeEventListener(
+        'auth:refreshed',
+        handleRefreshed as EventListener
       );
     };
   }, []);

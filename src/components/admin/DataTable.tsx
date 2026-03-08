@@ -63,9 +63,7 @@ export function DataTable<T extends Record<string, any>>({
       setSelectedIds(new Set());
       onSelectionChange?.([]);
     } else {
-      const newSelectedIds = new Set(
-        currentData.map((item) => item[keyField])
-      );
+      const newSelectedIds = new Set(currentData.map((item) => item[keyField]));
       setSelectedIds(newSelectedIds);
       onSelectionChange?.(currentData);
     }
@@ -82,9 +80,7 @@ export function DataTable<T extends Record<string, any>>({
     }
 
     setSelectedIds(newSelectedIds);
-    onSelectionChange?.(
-      data.filter((d) => newSelectedIds.has(d[keyField]))
-    );
+    onSelectionChange?.(data.filter((d) => newSelectedIds.has(d[keyField])));
   };
 
   const handleSort = (accessor: string) => {
@@ -128,7 +124,7 @@ export function DataTable<T extends Record<string, any>>({
               {columns.map((column, index) => (
                 <th
                   key={index}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900"
+                  className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-purple-900"
                 >
                   {column.sortable !== false ? (
                     <button
@@ -162,9 +158,7 @@ export function DataTable<T extends Record<string, any>>({
                   key={item[keyField]}
                   onClick={() => onRowClick?.(item)}
                   className={`transition-colors ${
-                    onRowClick
-                      ? 'cursor-pointer hover:bg-purple-50'
-                      : ''
+                    onRowClick ? 'cursor-pointer hover:bg-purple-50' : ''
                   } ${selectedIds.has(item[keyField]) ? 'bg-orange-50' : ''}`}
                 >
                   {selectable && (
@@ -190,7 +184,7 @@ export function DataTable<T extends Record<string, any>>({
                   {columns.map((column, colIndex) => (
                     <td
                       key={colIndex}
-                      className="px-4 py-3 text-sm text-gray-700"
+                      className="px-4 py-4 text-base text-gray-700"
                     >
                       {column.render
                         ? column.render(item)
@@ -224,9 +218,7 @@ export function DataTable<T extends Record<string, any>>({
               Page {currentPage} of {totalPages}
             </span>
             <button
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
