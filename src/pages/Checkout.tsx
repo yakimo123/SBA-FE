@@ -1,6 +1,6 @@
 import { Banknote, CheckCircle, CreditCard, Wallet } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -13,10 +13,12 @@ import { Separator } from '../components/ui/separator';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { OrderResponse, orderService } from '../services/orderService';
+import { vnpayService } from '../services/vnpayService';
 import { VoucherResponse, voucherService } from '../services/voucherService';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { cartItems, clearCart } = useCart();
 
@@ -35,6 +37,24 @@ export function CheckoutPage() {
     ward: '',
     note: '',
   });
+
+  // Handle redirect back from VNPay gateway
+  useEffect(() => {
+    const state = location.state as {
+      vnpaySuccess?: boolean;
+      orderId?: number;
+      totalAmount?: number;
+    } | null;
+    if (state?.vnpaySuccess) {
+      setOrderResult({
+        orderId: state.orderId ?? 0,
+        totalAmount: state.totalAmount ?? 0,
+      } as OrderResponse);
+      setStep('success');
+      // Clear navigation state to avoid re-triggering on refresh
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   const [voucherCode, setVoucherCode] = useState('');
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherResponse | null>(
@@ -124,6 +144,7 @@ export function CheckoutPage() {
       const paymentMethodMap: Record<string, string> = {
         cod: 'COD',
         card: 'CREDIT_CARD',
+        vnpay: 'VNPAY',
         ewallet: 'E_WALLET',
         installment: 'INSTALLMENT',
       };
@@ -155,6 +176,15 @@ export function CheckoutPage() {
       }
 
       const result = await orderService.createOrder(userId, orderData);
+
+      // VNPay: redirect to payment gateway instead of showing success screen
+      if (paymentMethod === 'vnpay') {
+        clearCart();
+        const vnpayResponse = await vnpayService.createPaymentUrl(result.orderId);
+        window.location.href = vnpayResponse.paymentUrl;
+        return;
+      }
+
       setOrderResult(result);
       setStep('success');
       clearCart();
@@ -518,12 +548,26 @@ export function CheckoutPage() {
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <RadioGroupItem value="vnpay" id="vnpay" />
+                        <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                          <span className="bg-[#005BAA] text-white text-[9px] font-bold px-1 py-0.5 rounded leading-none">
+                            VNPay
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">VNPay</div>
+                          <div className="text-sm text-gray-600">
+                            Thanh toán qua cổng VNPay (ATM, Visa, QR Code)
+                          </div>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                         <RadioGroupItem value="ewallet" id="ewallet" />
                         <Wallet className="w-5 h-5 text-gray-600" />
                         <div className="flex-1">
                           <div className="font-medium">Ví điện tử</div>
                           <div className="text-sm text-gray-600">
-                            MoMo, ZaloPay, VNPay
+                            MoMo, ZaloPay
                           </div>
                         </div>
                       </label>
@@ -554,7 +598,11 @@ export function CheckoutPage() {
                     disabled={isPlacingOrder}
                     className="flex-1 bg-red-600 hover:bg-red-700"
                   >
-                    {isPlacingOrder ? 'Đang xử lý...' : 'Đặt hàng'}
+                    {isPlacingOrder
+                      ? 'Đang xử lý...'
+                      : paymentMethod === 'vnpay'
+                        ? 'Thanh toán qua VNPay'
+                        : 'Đặt hàng'}
                   </Button>
                 </div>
               </div>
