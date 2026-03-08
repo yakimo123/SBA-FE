@@ -29,7 +29,6 @@ export function VNPayReturnPage() {
         const result = await vnpayService.processReturn(params);
         setTransaction(result);
         if (result.status === 'SUCCESS') {
-          // Redirect to checkout success screen with order info
           navigate('/checkout', {
             replace: true,
             state: {
