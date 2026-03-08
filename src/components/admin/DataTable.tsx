@@ -1,4 +1,4 @@
-import { ArrowUpDown, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 export interface Column<T> {
@@ -18,6 +18,125 @@ export interface DataTableProps<T> {
   pageSize?: number;
 }
 
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+
+  .dt-wrap {
+    --surface: #ffffff;
+    --surface-2: #faf9f7;
+    --border: #e8e3da;
+    --ink: #1a1612;
+    --ink-2: #5c5347;
+    --ink-3: #9c9085;
+    --accent: #c9521a;
+    --accent-soft: #fdf1eb;
+    --accent-mid: #f4c4a8;
+    --violet: #4a3f8f;
+    --violet-soft: #eeecf8;
+    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── Table ── */
+  .dt-scroll { overflow-x: auto; }
+  .dt-table { width: 100%; border-collapse: collapse; }
+
+  /* ── Head ── */
+  .dt-thead { background: var(--surface-2); }
+  .dt-th {
+    padding: 11px 18px; text-align: left;
+    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .dt-th-select { width: 44px; padding: 11px 0 11px 16px; }
+
+  .dt-sort-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 0;
+    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); transition: color 0.15s;
+  }
+  .dt-sort-btn:hover { color: var(--accent); }
+  .dt-sort-btn.active { color: var(--accent); }
+  .dt-sort-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+  /* ── Checkbox ── */
+  .dt-checkbox {
+    display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 1.5px solid var(--border); background: var(--surface);
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  }
+  .dt-checkbox:hover { border-color: var(--accent); }
+  .dt-checkbox.checked {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .dt-checkbox svg { width: 10px; height: 10px; color: white; }
+
+  /* ── Body ── */
+  .dt-tbody tr { transition: background 0.1s; }
+  .dt-tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  .dt-tbody tr:hover td { background: var(--accent-soft); }
+  .dt-tbody tr.selected td { background: #fff8f5; }
+  .dt-tbody tr.clickable { cursor: pointer; }
+
+  .dt-td {
+    padding: 13px 18px; font-size: 0.875rem;
+    color: var(--ink-2); vertical-align: middle;
+  }
+  .dt-td-select { padding: 13px 0 13px 16px; }
+
+  /* ── Empty ── */
+  .dt-empty {
+    padding: 56px 20px; text-align: center;
+    font-size: 0.875rem; color: var(--ink-3);
+  }
+
+  /* ── Footer / Pagination ── */
+  .dt-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-top: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .dt-results {
+    font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--ink-3);
+  }
+  .dt-results strong { color: var(--ink-2); font-weight: 500; }
+  .dt-page-controls { display: flex; align-items: center; gap: 6px; }
+  .dt-page-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--ink-2); cursor: pointer; transition: all 0.15s;
+  }
+  .dt-page-btn:hover:not(:disabled) {
+    border-color: var(--accent); color: var(--accent); background: var(--accent-soft);
+  }
+  .dt-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .dt-page-btn svg { width: 14px; height: 14px; }
+  .dt-page-info {
+    font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--ink-3);
+    padding: 0 4px; user-select: none;
+  }
+
+  /* ── Selection count pill ── */
+  .dt-sel-pill {
+    display: inline-flex; align-items: center;
+    background: var(--accent-soft); border: 1px solid var(--accent-mid);
+    color: var(--accent); font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; font-weight: 500;
+    padding: 2px 8px; border-radius: 20px; margin-left: 10px;
+  }
+`;
+
 export function DataTable<T extends Record<string, any>>({
   columns,
   data,
@@ -29,209 +148,172 @@ export function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<any>>(new Set());
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: 'asc' | 'desc';
-  } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
-  // Sorting
+  // ── Sort ──
   const sortedData = [...data];
   if (sortConfig) {
     sortedData.sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-
-      if (aValue < bValue) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
+      const av = a[sortConfig.key], bv = b[sortConfig.key];
+      if (av < bv) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (av > bv) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
   }
 
-  // Pagination
-  const totalPages = Math.ceil(sortedData.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentData = sortedData.slice(startIndex, endIndex);
+  // ── Paginate ──
+  const totalPages  = Math.max(1, Math.ceil(sortedData.length / pageSize));
+  const startIndex  = (currentPage - 1) * pageSize;
+  const currentData = sortedData.slice(startIndex, startIndex + pageSize);
 
-  // Selection
+  // ── Select ──
+  const allSelected = currentData.length > 0 && selectedIds.size === currentData.length;
+
   const toggleSelectAll = () => {
-    if (selectedIds.size === currentData.length) {
+    if (allSelected) {
       setSelectedIds(new Set());
       onSelectionChange?.([]);
     } else {
-      const newSelectedIds = new Set(
-        currentData.map((item) => item[keyField])
-      );
-      setSelectedIds(newSelectedIds);
+      const ids = new Set(currentData.map((i) => i[keyField]));
+      setSelectedIds(ids);
       onSelectionChange?.(currentData);
     }
   };
 
   const toggleSelectItem = (item: T) => {
-    const newSelectedIds = new Set(selectedIds);
-    const id = item[keyField];
-
-    if (newSelectedIds.has(id)) {
-      newSelectedIds.delete(id);
-    } else {
-      newSelectedIds.add(id);
-    }
-
-    setSelectedIds(newSelectedIds);
-    onSelectionChange?.(
-      data.filter((d) => newSelectedIds.has(d[keyField]))
-    );
+    const next = new Set(selectedIds);
+    const id   = item[keyField];
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedIds(next);
+    onSelectionChange?.(data.filter((d) => next.has(d[keyField])));
   };
 
+  // ── Sort toggle ──
   const handleSort = (accessor: string) => {
-    setSortConfig((prev) => {
-      if (prev?.key === accessor) {
-        return {
-          key: accessor,
-          direction: prev.direction === 'asc' ? 'desc' : 'asc',
-        };
-      }
-      return { key: accessor, direction: 'asc' };
-    });
+    setSortConfig((prev) =>
+      prev?.key === accessor
+        ? { key: accessor, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+        : { key: accessor, direction: 'asc' }
+    );
+    setCurrentPage(1);
+  };
+
+  const SortIcon = ({ accessor }: { accessor: string }) => {
+    if (sortConfig?.key !== accessor) return <ArrowUpDown />;
+    return sortConfig.direction === 'asc' ? <ArrowUp /> : <ArrowDown />;
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-purple-200 bg-white shadow-sm">
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full font-['Fira_Sans']">
-          <thead className="bg-purple-50">
+    <div className="dt-wrap">
+      <style>{css}</style>
+
+      <div className="dt-scroll">
+        <table className="dt-table">
+          <thead className="dt-thead">
             <tr>
               {selectable && (
-                <th className="w-12 px-4 py-3">
+                <th className="dt-th dt-th-select">
                   <button
-                    onClick={toggleSelectAll}
-                    className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
-                      selectedIds.size === currentData.length &&
-                      currentData.length > 0
-                        ? 'border-purple-600 bg-purple-600'
-                        : 'border-gray-300 bg-white hover:border-purple-600'
-                    }`}
                     type="button"
+                    onClick={toggleSelectAll}
+                    className={`dt-checkbox${allSelected ? ' checked' : ''}`}
                   >
-                    {selectedIds.size === currentData.length &&
-                      currentData.length > 0 && (
-                        <Check className="h-3 w-3 text-white" />
-                      )}
+                    {allSelected && <Check />}
                   </button>
                 </th>
               )}
-              {columns.map((column, index) => (
-                <th
-                  key={index}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900"
-                >
-                  {column.sortable !== false ? (
+              {columns.map((col, i) => (
+                <th key={i} className="dt-th">
+                  {col.sortable !== false ? (
                     <button
-                      onClick={() => handleSort(column.accessor as string)}
-                      className="flex items-center gap-1 hover:text-purple-700"
                       type="button"
+                      onClick={() => handleSort(col.accessor as string)}
+                      className={`dt-sort-btn${sortConfig?.key === col.accessor ? ' active' : ''}`}
                     >
-                      {column.header}
-                      <ArrowUpDown className="h-3 w-3" />
+                      {col.header}
+                      <SortIcon accessor={col.accessor as string} />
                     </button>
                   ) : (
-                    column.header
+                    col.header
                   )}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-purple-100">
+
+          <tbody className="dt-tbody">
             {currentData.length === 0 ? (
               <tr>
-                <td
-                  colSpan={columns.length + (selectable ? 1 : 0)}
-                  className="px-4 py-8 text-center text-gray-500"
-                >
+                <td colSpan={columns.length + (selectable ? 1 : 0)} className="dt-empty">
                   No data available
                 </td>
               </tr>
             ) : (
-              currentData.map((item) => (
-                <tr
-                  key={item[keyField]}
-                  onClick={() => onRowClick?.(item)}
-                  className={`transition-colors ${
-                    onRowClick
-                      ? 'cursor-pointer hover:bg-purple-50'
-                      : ''
-                  } ${selectedIds.has(item[keyField]) ? 'bg-orange-50' : ''}`}
-                >
-                  {selectable && (
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSelectItem(item);
-                        }}
-                        className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
-                          selectedIds.has(item[keyField])
-                            ? 'border-purple-600 bg-purple-600'
-                            : 'border-gray-300 bg-white hover:border-purple-600'
-                        }`}
-                        type="button"
-                      >
-                        {selectedIds.has(item[keyField]) && (
-                          <Check className="h-3 w-3 text-white" />
-                        )}
-                      </button>
-                    </td>
-                  )}
-                  {columns.map((column, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className="px-4 py-3 text-sm text-gray-700"
-                    >
-                      {column.render
-                        ? column.render(item)
-                        : (item[column.accessor as keyof T] as React.ReactNode)}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              currentData.map((item) => {
+                const isSelected = selectedIds.has(item[keyField]);
+                return (
+                  <tr
+                    key={item[keyField]}
+                    onClick={() => onRowClick?.(item)}
+                    className={[
+                      onRowClick ? 'clickable' : '',
+                      isSelected ? 'selected' : '',
+                    ].filter(Boolean).join(' ')}
+                  >
+                    {selectable && (
+                      <td className="dt-td dt-td-select">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); toggleSelectItem(item); }}
+                          className={`dt-checkbox${isSelected ? ' checked' : ''}`}
+                        >
+                          {isSelected && <Check />}
+                        </button>
+                      </td>
+                    )}
+                    {columns.map((col, ci) => (
+                      <td key={ci} className="dt-td">
+                        {col.render
+                          ? col.render(item)
+                          : (item[col.accessor as keyof T] as React.ReactNode)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* ── Footer ── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-purple-200 bg-white px-4 py-3">
-          <div className="text-sm text-gray-700">
-            Showing {startIndex + 1} to {Math.min(endIndex, data.length)} of{' '}
-            {data.length} results
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="dt-footer">
+          <span className="dt-results">
+            Showing{' '}
+            <strong>{startIndex + 1}–{Math.min(startIndex + pageSize, data.length)}</strong>
+            {' '}of <strong>{data.length}</strong>
+            {selectable && selectedIds.size > 0 && (
+              <span className="dt-sel-pill">{selectedIds.size} selected</span>
+            )}
+          </span>
+          <div className="dt-page-controls">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              type="button"
               disabled={currentPage === 1}
-              className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              type="button"
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="dt-page-btn"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft />
             </button>
-            <span className="text-sm text-gray-700">
-              Page {currentPage} of {totalPages}
-            </span>
+            <span className="dt-page-info">{currentPage} / {totalPages}</span>
             <button
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
-              disabled={currentPage === totalPages}
-              className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="dt-page-btn"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight />
             </button>
           </div>
         </div>

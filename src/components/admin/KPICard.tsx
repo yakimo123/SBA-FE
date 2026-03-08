@@ -1,56 +1,69 @@
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface KPICardProps {
   title: string;
   value: string | number;
   change?: number;
   icon: LucideIcon;
-  color?: 'purple' | 'blue' | 'green' | 'orange';
+  color?: 'amber' | 'blue' | 'green' | 'rose';
 }
+
+const colorMap = {
+  amber: 'bg-accent/10 text-accent',
+  blue: 'bg-admin-info/10 text-admin-info',
+  green: 'bg-admin-success/10 text-admin-success',
+  rose: 'bg-admin-danger/10 text-admin-danger',
+};
+
+const iconBgMap = {
+  amber: 'bg-accent',
+  blue: 'bg-admin-info',
+  green: 'bg-admin-success',
+  rose: 'bg-admin-danger',
+};
 
 export function KPICard({
   title,
   value,
   change,
   icon: Icon,
-  color = 'purple',
+  color = 'amber',
 }: KPICardProps) {
-  const colorClasses = {
-    purple: 'from-purple-500 to-purple-600',
-    blue: 'from-blue-500 to-blue-600',
-    green: 'from-green-500 to-green-600',
-    orange: 'from-orange-500 to-orange-600',
-  };
-
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-md transition-all duration-200 hover:shadow-lg">
+    <div className="group relative overflow-hidden rounded-xl bg-card admin-card-shadow transition-all duration-300 hover:admin-card-shadow-hover border border-border/50">
       <div className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="font-['Fira_Sans'] text-sm font-medium text-gray-600">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">
               {title}
             </p>
-            <p className="mt-2 font-['Fira_Code'] text-3xl font-bold text-gray-900">
+            <p className="font-mono-display text-3xl font-bold text-foreground tracking-tight">
               {value}
             </p>
             {change !== undefined && (
-              <p
-                className={`mt-2 font-['Fira_Sans'] text-sm font-medium ${
-                  change >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {change >= 0 ? '+' : ''}
-                {change}% from last period
-              </p>
+              <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                change >= 0
+                  ? 'bg-admin-success/10 text-admin-success'
+                  : 'bg-admin-danger/10 text-admin-danger'
+              }`}>
+                {change >= 0 ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : (
+                  <TrendingDown className="h-3 w-3" />
+                )}
+                {change >= 0 ? '+' : ''}{change}%
+              </div>
             )}
           </div>
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br ${colorClasses[color]} shadow-md`}
+            className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBgMap[color]} transition-transform duration-300 group-hover:scale-110`}
           >
-            <Icon className="h-7 w-7 text-white" />
+            <Icon className="h-6 w-6 text-card" />
           </div>
         </div>
       </div>
+      {/* Subtle bottom accent line */}
+      <div className={`h-1 w-full ${iconBgMap[color]} opacity-80`} />
     </div>
   );
 }
