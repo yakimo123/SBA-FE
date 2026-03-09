@@ -1,7 +1,8 @@
-import { ShoppingCart, Star } from 'lucide-react';
+import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext';
 import { Product } from '../types/product';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Badge } from './ui/badge';
@@ -19,7 +20,9 @@ interface ProductCardProps {
 export function ProductCard({ product, imageUrl = PLACEHOLDER_IMG }: ProductCardProps) {
     const navigate = useNavigate();
     const { addToCart } = useCart();
+    const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
+    const wishlisted = isInWishlist(product.productId);
     const isInStock = product.status === 'AVAILABLE' && product.quantity > 0;
 
     const handleAddToCart = (e: React.MouseEvent) => {
@@ -55,6 +58,22 @@ export function ProductCard({ product, imageUrl = PLACEHOLDER_IMG }: ProductCard
                     {product.status === 'AVAILABLE' && (
                         <Badge className="absolute top-2 left-2 bg-green-600">Còn hàng</Badge>
                     )}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            wishlisted
+                                ? removeFromWishlist(product.productId)
+                                : addToWishlist(product.productId);
+                        }}
+                        className="absolute top-2 right-2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-colors"
+                    >
+                        <Heart
+                            className={`w-4 h-4 transition-colors ${
+                                wishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                            }`}
+                        />
+                    </button>
                 </div>
                 <div className="p-4">
                     <p className="text-xs text-gray-400 mb-1">

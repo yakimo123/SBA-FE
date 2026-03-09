@@ -14,6 +14,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ROLES } from '../constants/roles';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
@@ -29,8 +30,10 @@ export function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
+  const { wishlistItems } = useWishlist();
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const wishlistCount = wishlistItems.length;
   const isAdminOrCompany =
     user?.role === ROLES.ADMIN || user?.role === ROLES.COMPANY;
 
@@ -107,8 +110,14 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="relative hidden md:flex"
+              onClick={() => navigate('/wishlist')}
             >
               <Heart className="w-5 h-5" />
+              {wishlistCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-600">
+                  {wishlistCount}
+                </Badge>
+              )}
             </Button>
 
             <Button

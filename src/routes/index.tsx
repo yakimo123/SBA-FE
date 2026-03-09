@@ -35,6 +35,7 @@ import { ProductListPage } from '../pages/ProductList';
 import { RegisterPage } from '../pages/Register';
 import { UnauthorizedPage } from '../pages/Unauthorized';
 import { VNPayReturnPage } from '../pages/VNPayReturn';
+import { WishlistPage } from '../pages/Wishlist';
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
+          { path: 'wishlist', element: <WishlistPage /> },
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CheckoutPage /> },
           { path: 'account', element: <AccountPage /> },
