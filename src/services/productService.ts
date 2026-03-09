@@ -24,6 +24,7 @@ export const productService = {
     if (params.keyword) query.keyword = params.keyword;
     if (params.categoryId) query.categoryId = params.categoryId;
     if (params.brandId) query.brandId = params.brandId;
+    if (params.sort) query.sort = params.sort;
     const res = await api.get<ApiResponse<ProductPage>>(BASE, {
       params: query,
     });

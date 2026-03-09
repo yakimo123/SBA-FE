@@ -1,362 +1,137 @@
-import { ChevronLeft, ChevronRight, Edit, FolderOpen, Plus, Search, Trash2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  FolderOpen,
+  Image as ImageIcon,
+  Loader2,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { FILE_TYPES } from '../../constants/FILE_TYPES';
 import { categoryService } from '../../services/categoryService';
+import { mediaService } from '../../services/mediaService';
 import { Category } from '../../types/product';
 
 const PAGE_SIZE = 10;
 
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-
-  .cl-root {
-    --bg: #f5f3ef;
-    --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --border-strong: #c9bfad;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --accent-mid: #f4c4a8;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
-    --danger: #b03030;
-    --danger-soft: #fdf2f2;
-    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
-    --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
-    --radius: 10px;
-    --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    color: var(--ink);
-    padding: 32px;
-  }
-
-  /* ── Header ── */
-  .cl-header {
-    display: flex; align-items: flex-end;
-    justify-content: space-between; gap: 16px; margin-bottom: 28px;
-  }
-  .cl-header-left { display: flex; align-items: center; gap: 16px; }
-  .cl-icon-badge {
-    width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
-  }
-  .cl-icon-badge svg { color: white; width: 24px; height: 24px; }
-  .cl-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
-    font-weight: 400; color: var(--ink); line-height: 1;
-    margin: 0 0 4px; letter-spacing: -0.5px;
-  }
-  .cl-count-pill {
-    display: inline-flex; align-items: center;
-    background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
-    font-weight: 500; padding: 2px 8px; border-radius: 20px;
-    margin-left: 8px; letter-spacing: 0.02em;
-  }
-  .cl-subtitle { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
-  .cl-divider {
-    width: 32px; height: 2px;
-    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
-    border-radius: 2px; margin: 4px 0 0 68px;
-  }
-  .cl-add-btn {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    color: white; border: none; border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
-    cursor: pointer; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
-    transition: all 0.2s; white-space: nowrap;
-  }
-  .cl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,82,26,0.38); }
-  .cl-add-btn:active { transform: translateY(0); }
-
-  /* ── Error ── */
-  .cl-error {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
-    border-left: 3px solid var(--danger); color: var(--danger);
-    border-radius: var(--radius); padding: 12px 16px;
-    font-size: 0.875rem; margin-bottom: 20px;
-  }
-
-  /* ── Loading ── */
-  .cl-loading {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 80px 0; gap: 16px;
-  }
-  .cl-spinner {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 3px solid var(--border); border-top-color: var(--accent);
-    animation: cl-spin 0.7s linear infinite;
-  }
-  .cl-loading-text { font-size: 0.875rem; color: var(--ink-3); }
-  @keyframes cl-spin { to { transform: rotate(360deg); } }
-
-  /* ── Table card ── */
-  .cl-table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
-  }
-  .cl-table-toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
-  }
-  .cl-search-wrap { position: relative; display: flex; align-items: center; }
-  .cl-search-wrap svg {
-    position: absolute; left: 10px; color: var(--ink-3);
-    width: 14px; height: 14px; pointer-events: none;
-  }
-  .cl-search {
-    padding: 7px 12px 7px 32px; border: 1px solid var(--border);
-    border-radius: 8px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
-    color: var(--ink); outline: none; width: 220px;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .cl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-  .cl-table-meta { font-size: 0.8rem; color: var(--ink-3); }
-
-  /* ── Table ── */
-  .cl-table { width: 100%; border-collapse: collapse; }
-  .cl-table thead tr { border-bottom: 1px solid var(--border); }
-  .cl-table th {
-    padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
-    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-3); background: var(--surface-2);
-  }
-  .cl-table td {
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-    vertical-align: middle; transition: background 0.12s;
-  }
-  .cl-table tbody tr:last-child td { border-bottom: none; }
-  .cl-table tbody tr:hover td { background: var(--accent-soft); }
-
-  .cl-name-cell { display: flex; align-items: center; gap: 10px; }
-  .cl-folder-icon {
-    width: 32px; height: 32px; border-radius: 8px;
-    background: var(--violet-soft); display: flex;
-    align-items: center; justify-content: center;
-    color: var(--violet); flex-shrink: 0;
-  }
-  .cl-folder-icon svg { width: 15px; height: 15px; }
-  .cl-name-text { font-weight: 600; color: var(--ink); font-size: 0.88rem; }
-
-  .cl-desc-text {
-    font-size: 0.83rem; color: var(--ink-3); line-height: 1.4;
-    max-width: 340px;
-  }
-  .cl-id-text {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
-    color: var(--ink-3); background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: 5px;
-    padding: 2px 7px; display: inline-block;
-  }
-
-  .cl-actions { display: flex; gap: 6px; align-items: center; }
-  .cl-btn-edit {
-    display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--surface);
-    color: var(--violet); cursor: pointer; transition: all 0.15s;
-  }
-  .cl-btn-edit:hover { background: var(--violet-soft); border-color: var(--violet); }
-  .cl-btn-delete {
-    display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--surface);
-    color: var(--danger); cursor: pointer; transition: all 0.15s;
-  }
-  .cl-btn-delete:hover { background: var(--danger-soft); border-color: #f5c2c2; }
-
-  /* ── Empty ── */
-  .cl-empty {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 64px 20px; gap: 12px;
-  }
-  .cl-empty-icon {
-    width: 56px; height: 56px; border-radius: 14px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center; color: var(--ink-3);
-  }
-  .cl-empty-text { font-size: 0.9rem; color: var(--ink-3); margin: 0; }
-
-  /* ── Pagination ── */
-  .cl-pagination {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 20px 0 0;
-  }
-  .cl-page-btn {
-    display: flex; align-items: center; gap: 4px;
-    padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--surface); font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem; font-weight: 500; color: var(--ink-2);
-    cursor: pointer; transition: all 0.15s;
-  }
-  .cl-page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-  .cl-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .cl-page-info {
-    font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--ink-3); padding: 0 8px;
-  }
-
-  /* ── Modal ── */
-  .cl-overlay {
-    position: fixed; inset: 0; background: rgba(26,22,18,0.45);
-    backdrop-filter: blur(4px); display: flex; align-items: center;
-    justify-content: center; z-index: 1000; animation: cl-fade 0.15s ease;
-  }
-  @keyframes cl-fade { from { opacity: 0; } to { opacity: 1; } }
-  .cl-modal {
-    background: var(--surface); border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg); width: 100%; max-width: 460px;
-    margin: 20px; animation: cl-slide 0.2s ease; overflow: hidden;
-  }
-  @keyframes cl-slide {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .cl-modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 24px 18px; border-bottom: 1px solid var(--border);
-  }
-  .cl-modal-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.3rem;
-    font-weight: 400; color: var(--ink); margin: 0;
-  }
-  .cl-modal-close {
-    width: 32px; height: 32px; border-radius: 8px;
-    border: 1px solid var(--border); background: transparent;
-    color: var(--ink-3); cursor: pointer; display: flex;
-    align-items: center; justify-content: center;
-    font-size: 1.1rem; transition: all 0.15s; line-height: 1;
-  }
-  .cl-modal-close:hover { background: var(--surface-2); color: var(--ink); }
-  .cl-modal-body { padding: 22px 24px 26px; }
-  .cl-m-label {
-    display: block; font-size: 0.8rem; font-weight: 600;
-    color: var(--ink-2); margin-bottom: 7px; letter-spacing: 0.01em;
-  }
-  .cl-m-label span { color: var(--accent); margin-left: 2px; }
-  .cl-m-input {
-    width: 100%; padding: 10px 14px;
-    border: 1px solid var(--border-strong); border-radius: 9px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-    color: var(--ink); background: var(--surface); outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
-  }
-  .cl-m-input::placeholder { color: var(--ink-3); }
-  .cl-m-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-  .cl-m-textarea {
-    width: 100%; padding: 10px 14px;
-    border: 1px solid var(--border-strong); border-radius: 9px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-    color: var(--ink); background: var(--surface); outline: none;
-    resize: vertical; min-height: 80px; line-height: 1.6;
-    transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
-  }
-  .cl-m-textarea::placeholder { color: var(--ink-3); }
-  .cl-m-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-  .cl-m-error {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
-    border-radius: 8px; padding: 10px 14px;
-    font-size: 0.83rem; color: var(--danger); margin-top: 12px;
-  }
-  .cl-modal-footer {
-    display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
-  }
-  .cl-btn-cancel {
-    padding: 9px 18px; border: 1px solid var(--border-strong);
-    border-radius: 9px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
-    font-weight: 500; color: var(--ink-2); cursor: pointer; transition: all 0.15s;
-  }
-  .cl-btn-cancel:hover { background: var(--surface-2); border-color: var(--ink-3); }
-  .cl-btn-save {
-    display: flex; align-items: center; gap: 8px;
-    padding: 9px 20px; border: none; border-radius: 9px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    color: white; font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem; font-weight: 600; cursor: pointer;
-    box-shadow: 0 3px 10px rgba(201,82,26,0.3); transition: all 0.15s;
-  }
-  .cl-btn-save:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(201,82,26,0.38); }
-  .cl-btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
-  .cl-save-spinner {
-    width: 14px; height: 14px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.4); border-top-color: white;
-    animation: cl-spin 0.6s linear infinite;
-  }
-`;
-
 export function CategoryList() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading]   = useState(false);
-  const [error, setError]           = useState<string | null>(null);
-  const [search, setSearch]         = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
-  const [page, setPage]                     = useState(0);
-  const [totalPages, setTotalPages]         = useState(0);
-  const [totalElements, setTotalElements]   = useState(0);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  const [isModalOpen, setIsModalOpen]           = useState(false);
-  const [editingCategory, setEditingCategory]   = useState<Category | null>(null);
-  const [form, setForm]                         = useState({ categoryName: '', description: '' });
-  const [formError, setFormError]               = useState<string | null>(null);
-  const [isSaving, setIsSaving]                 = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [form, setForm] = useState({
+    categoryName: '',
+    description: '',
+    imageUrl: '',
+  });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchCategories = useCallback(async () => {
-    setIsLoading(true); setError(null);
+    setIsLoading(true);
+    setError(null);
     try {
       const data = await categoryService.getCategories(page, PAGE_SIZE);
       setCategories(data.content ?? (data as unknown as Category[]));
       setTotalPages((data as { totalPages?: number }).totalPages ?? 1);
       setTotalElements((data as { totalElements?: number }).totalElements ?? 0);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load categories');
-    } finally { setIsLoading(false); }
+      setError(
+        err instanceof Error ? err.message : 'Failed to load categories'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }, [page]);
 
-  useEffect(() => { fetchCategories(); }, [fetchCategories]);
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const openCreate = () => {
     setEditingCategory(null);
-    setForm({ categoryName: '', description: '' });
+    setForm({ categoryName: '', description: '', imageUrl: '' });
     setFormError(null);
     setIsModalOpen(true);
   };
 
   const openEdit = (cat: Category) => {
     setEditingCategory(cat);
-    setForm({ categoryName: cat.categoryName, description: cat.description ?? '' });
+    setForm({
+      categoryName: cat.categoryName,
+      description: cat.description ?? '',
+      imageUrl: cat.imageUrl ?? '',
+    });
     setFormError(null);
     setIsModalOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!form.categoryName.trim()) { setFormError('Category name is required'); return; }
-    setIsSaving(true); setFormError(null);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setFormError(null);
     try {
+      const publicUrl = await mediaService.uploadFile(
+        file,
+        FILE_TYPES.CATEGORY
+      );
+      setForm((prev) => ({ ...prev, imageUrl: publicUrl }));
+    } catch (err: unknown) {
+      setFormError(
+        err instanceof Error ? err.message : 'Failed to upload image'
+      );
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.categoryName.trim()) {
+      setFormError('Category name is required');
+      return;
+    }
+    setIsSaving(true);
+    setFormError(null);
+    try {
+      const payload = {
+        categoryName: form.categoryName,
+        description: form.description || undefined,
+        imageUrl: form.imageUrl || undefined,
+      };
+
       if (editingCategory) {
-        await categoryService.updateCategory(editingCategory.categoryId, form);
+        await categoryService.updateCategory(
+          editingCategory.categoryId,
+          payload
+        );
       } else {
-        await categoryService.createCategory(form);
+        await categoryService.createCategory(payload);
       }
       setIsModalOpen(false);
       fetchCategories();
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : 'Failed to save category');
-    } finally { setIsSaving(false); }
+      setFormError(
+        err instanceof Error ? err.message : 'Failed to save category'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = async (cat: Category) => {
@@ -364,99 +139,155 @@ export function CategoryList() {
     try {
       await categoryService.deleteCategory(cat.categoryId);
       fetchCategories();
-    } catch { alert('Failed to delete category'); }
+    } catch {
+      alert('Failed to delete category');
+    }
   };
 
-  const filtered = categories.filter((c) =>
-    c.categoryName.toLowerCase().includes(search.toLowerCase()) ||
-    (c.description ?? '').toLowerCase().includes(search.toLowerCase())
+  const filtered = categories.filter(
+    (c) =>
+      c.categoryName.toLowerCase().includes(search.toLowerCase()) ||
+      (c.description ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="cl-root">
-      <style>{css}</style>
-
+    <div className="min-h-screen bg-[#f5f3ef] p-8 font-sans text-[#1a1612]">
       {/* ── Header ── */}
-      <div className="cl-header">
-        <div className="cl-header-left">
-          <div className="cl-icon-badge"><FolderOpen /></div>
+      <div className="mb-7 flex items-end justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#c9521a] to-[#e07040] text-white shadow-lg shadow-[#c9521a]/35">
+            <FolderOpen size={24} />
+          </div>
           <div>
-            <h1 className="cl-title">
+            <h1 className="font-serif text-3xl tracking-tight text-[#1a1612]">
               Categories
-              {totalElements > 0 && <span className="cl-count-pill">{totalElements}</span>}
+              {totalElements > 0 && (
+                <span className="ml-2 inline-flex items-center rounded-full bg-[#eeecf8] px-2 py-0.5 font-mono text-[0.7rem] font-medium tracking-wide text-[#4a3f8f]">
+                  {totalElements}
+                </span>
+              )}
             </h1>
-            <div className="cl-divider" />
-            <p className="cl-subtitle" style={{ marginTop: 6 }}>Manage product categories</p>
+            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#c9521a] to-transparent ml-[1px]" />
+            <p className="mt-1.5 text-sm text-[#9c9085]">
+              Manage product categories
+            </p>
           </div>
         </div>
-        <button type="button" onClick={openCreate} className="cl-add-btn">
+        <button
+          type="button"
+          onClick={openCreate}
+          className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.9rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-[#c9521a]/38 active:translate-y-0"
+        >
           <Plus size={17} /> Add Category
         </button>
       </div>
 
       {/* ── Error ── */}
-      {error && <div className="cl-error">⚠ {error}</div>}
+      {error && (
+        <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-[#f5c2c2] border-l-3 border-l-[#b03030] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b03030]">
+          ⚠ {error}
+        </div>
+      )}
 
       {/* ── Table card ── */}
-      <div className="cl-table-card">
-        <div className="cl-table-toolbar">
-          <div className="cl-search-wrap">
-            <Search />
+      <div className="overflow-hidden rounded-2xl border border-[#e8e3da] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#e8e3da] bg-[#faf9f7] px-5 py-4">
+          <div className="relative flex items-center">
+            <Search className="absolute left-2.5 h-3.5 w-3.5 text-[#9c9085]" />
             <input
-              className="cl-search"
+              className="w-[220px] rounded-lg border border-[#e8e3da] bg-white py-1.5 pl-8 pr-3 text-[0.85rem] text-[#1a1612] outline-hidden transition-all focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
               placeholder="Search categories…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <span className="cl-table-meta">
+          <span className="text-[0.8rem] text-[#9c9085]">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''}
           </span>
         </div>
 
         {isLoading ? (
-          <div className="cl-loading">
-            <div className="cl-spinner" />
-            <p className="cl-loading-text">Loading categories…</p>
+          <div className="flex flex-col items-center justify-center gap-4 py-20">
+            <Loader2 className="h-9 w-9 animate-spin text-[#c9521a]" />
+            <p className="text-sm text-[#9c9085]">Loading categories…</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="cl-empty">
-            <div className="cl-empty-icon"><FolderOpen size={22} /></div>
-            <p className="cl-empty-text">No categories found</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[#e8e3da] bg-[#faf9f7] text-[#9c9085]">
+              <FolderOpen size={22} />
+            </div>
+            <p className="text-[0.9rem] text-[#9c9085]">No categories found</p>
           </div>
         ) : (
-          <table className="cl-table">
+          <table className="w-full border-collapse">
             <thead>
-              <tr>
-                <th>Category</th>
-                <th>Description</th>
-                <th>ID</th>
-                <th>Actions</th>
+              <tr className="border-b border-[#e8e3da]">
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  Category
+                </th>
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  Description
+                </th>
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  ID
+                </th>
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((cat) => (
-                <tr key={cat.categoryId}>
-                  <td>
-                    <div className="cl-name-cell">
-                      <div className="cl-folder-icon"><FolderOpen /></div>
-                      <span className="cl-name-text">{cat.categoryName}</span>
+                <tr
+                  key={cat.categoryId}
+                  className="group border-bottom border-[#e8e3da] last:border-bottom-0 hover:bg-[#fdf1eb]/50"
+                >
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#eeecf8] text-[#4a3f8f] overflow-hidden">
+                        {cat.imageUrl ? (
+                          <img
+                            src={cat.imageUrl}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <FolderOpen size={18} />
+                        )}
+                      </div>
+                      <span className="text-[0.88rem] font-semibold text-[#1a1612]">
+                        {cat.categoryName}
+                      </span>
                     </div>
                   </td>
-                  <td>
-                    <span className="cl-desc-text">
-                      {cat.description ?? <span style={{ color: 'var(--ink-3)' }}>—</span>}
+                  <td className="px-5 py-3.5">
+                    <span className="line-clamp-2 max-w-[340px] text-[0.83rem] leading-relaxed text-[#9c9085]">
+                      {cat.description ?? (
+                        <span className="text-[#9c9085]/60">—</span>
+                      )}
                     </span>
                   </td>
-                  <td>
-                    <span className="cl-id-text">#{cat.categoryId}</span>
+                  <td className="px-5 py-3.5">
+                    <span className="inline-block rounded-md border border-[#e8e3da] bg-[#faf9f7] px-2 py-0.5 font-mono text-[0.75rem] text-[#9c9085]">
+                      #{cat.categoryId}
+                    </span>
                   </td>
-                  <td>
-                    <div className="cl-actions">
-                      <button type="button" className="cl-btn-edit" title="Edit" onClick={() => openEdit(cat)}>
+                  <td className="px-5 py-3.5">
+                    <div className="flex gap-1.5 align-center">
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#4a3f8f] transition-all hover:border-[#4a3f8f] hover:bg-[#eeecf8]"
+                        title="Edit"
+                        onClick={() => openEdit(cat)}
+                      >
                         <Edit size={14} />
                       </button>
-                      <button type="button" className="cl-btn-delete" title="Delete" onClick={() => handleDelete(cat)}>
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:border-[#f5c2c2] hover:bg-[#fdf2f2]"
+                        title="Delete"
+                        onClick={() => handleDelete(cat)}
+                      >
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -470,14 +301,24 @@ export function CategoryList() {
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
-        <div className="cl-pagination">
-          <button type="button" disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)} className="cl-page-btn">
+        <div className="mt-5 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+          >
             <ChevronLeft size={15} /> Previous
           </button>
-          <span className="cl-page-info">{page + 1} / {totalPages}</span>
-          <button type="button" disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)} className="cl-page-btn">
+          <span className="px-2 font-mono text-[0.78rem] text-[#9c9085]">
+            {page + 1} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+          >
             Next <ChevronRight size={15} />
           </button>
         </div>
@@ -485,44 +326,141 @@ export function CategoryList() {
 
       {/* ── Modal ── */}
       {isModalOpen && (
-        <div className="cl-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="cl-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="cl-modal-header">
-              <h2 className="cl-modal-title">
+        <div
+          className="fixed inset-0 z-1000 flex items-center justify-center bg-[#1a1612]/45 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="m-5 w-full max-w-[460px] overflow-hidden rounded-2xl bg-white shadow-2xl animate-in slide-in-from-bottom-3 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#e8e3da] px-6 py-4.5">
+              <h2 className="font-serif text-xl text-[#1a1612]">
                 {editingCategory ? 'Edit Category' : 'New Category'}
               </h2>
-              <button type="button" className="cl-modal-close" onClick={() => setIsModalOpen(false)}>✕</button>
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] text-[1.1rem] text-[#9c9085] transition-all hover:bg-[#faf9f7] hover:text-[#1a1612]"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="cl-modal-body">
-              <div style={{ marginBottom: 16 }}>
-                <label className="cl-m-label">Category Name <span>*</span></label>
+            <div className="px-6 py-5.5">
+              {/* Image Upload Area */}
+              <div className="mb-5">
+                <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
+                  Category Image
+                </label>
+                <div className="flex gap-4">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[#e8e3da] bg-[#faf9f7]">
+                    {form.imageUrl ? (
+                      <>
+                        <img
+                          src={form.imageUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((prev) => ({ ...prev, imageUrl: '' }))
+                          }
+                          className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1a1612]/60 text-white backdrop-blur-xs transition-colors hover:bg-[#b03030]"
+                        >
+                          <X size={12} />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center text-[#9c9085]">
+                        <ImageIcon size={20} />
+                        <span className="mt-1 text-[0.65rem]">No image</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-1 flex-col justify-center">
+                    <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[#c9bfad] bg-[#faf9f7] px-4 py-3 text-[0.8rem] font-medium text-[#c9521a] transition-all hover:border-[#c9521a]/50 hover:bg-[#fdf1eb]">
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={16} className="mr-2" />
+                          Choose Image
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={isUploading}
+                      />
+                    </label>
+                    <p className="mt-1.5 text-[0.7rem] leading-relaxed text-[#9c9085]">
+                      Support JPG, PNG, WEBP. Max size 2MB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
+                  Category Name <span className="text-[#c9521a]">*</span>
+                </label>
                 <input
-                  type="text" className="cl-m-input" autoFocus
+                  type="text"
+                  className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                  autoFocus
                   value={form.categoryName}
-                  onChange={(e) => setForm({ ...form, categoryName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, categoryName: e.target.value })
+                  }
                   placeholder="e.g. Smartphones"
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                 />
               </div>
+
               <div>
-                <label className="cl-m-label">Description</label>
+                <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
+                  Description
+                </label>
                 <textarea
-                  className="cl-m-textarea" rows={3}
+                  className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] leading-relaxed text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                  rows={3}
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
                   placeholder="Short description of this category…"
                 />
               </div>
 
-              {formError && <div className="cl-m-error">⚠ {formError}</div>}
+              {formError && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#f5c2c2] bg-[#fdf2f2] px-3.5 py-2.5 text-[0.83rem] text-[#b03030]">
+                  ⚠ {formError}
+                </div>
+              )}
 
-              <div className="cl-modal-footer">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="cl-btn-cancel">
+              <div className="mt-5 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-lg border border-[#c9bfad] bg-white px-4.5 py-2.5 text-[0.88rem] font-medium text-[#5c5347] transition-all hover:border-[#9c9085] hover:bg-[#faf9f7]"
+                >
                   Cancel
                 </button>
-                <button type="button" onClick={handleSave} disabled={isSaving} className="cl-btn-save">
-                  {isSaving && <span className="cl-save-spinner" />}
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving || isUploading}
+                  className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.88rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 transition-all hover:not-disabled:-translate-y-px hover:not-disabled:shadow-lg hover:not-disabled:shadow-[#c9521a]/38 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {editingCategory ? 'Save Changes' : 'Create'}
                 </button>
               </div>

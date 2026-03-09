@@ -261,9 +261,9 @@ export function StockInventoryPage() {
                     </td>
                   </tr>
                 ) : (
-                  inventory.map((item) => (
+                  inventory.map((item, index) => (
                     <tr
-                      key={item.productId}
+                      key={`${item.productId}-${index}`}
                       className="hover:bg-slate-50/30 transition-all cursor-default group"
                     >
                       <td className="px-6 py-4">

@@ -1,16 +1,31 @@
-import { Grid3x3, List, ShoppingCart, SlidersHorizontal, Star } from 'lucide-react';
+import {
+  Grid3x3,
+  List,
+  ShoppingCart,
+  SlidersHorizontal,
+  Star,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { ProductCard } from '../components/ProductCard';
-import { ProductCardSkeleton, ProductListSkeleton } from '../components/ProductSkeleton';
+import {
+  ProductCardSkeleton,
+  ProductListSkeleton,
+} from '../components/ProductSkeleton';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
 import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { Slider } from '../components/ui/slider';
 import { useCart } from '../contexts/CartContext';
 import { brandService } from '../services/brandService';
@@ -96,10 +111,13 @@ export function ProductListPage() {
     try {
       const params: Record<string, unknown> = { page, size: PAGE_SIZE };
       if (keyword.trim()) params.keyword = keyword.trim();
-      if (selectedCategoryIds.length === 1) params.categoryId = selectedCategoryIds[0];
+      if (selectedCategoryIds.length === 1)
+        params.categoryId = selectedCategoryIds[0];
       if (selectedBrandIds.length === 1) params.brandId = selectedBrandIds[0];
 
-      const data = await productService.getProducts(params as Parameters<typeof productService.getProducts>[0]);
+      const data = await productService.getProducts(
+        params as Parameters<typeof productService.getProducts>[0]
+      );
       setProducts(data.content ?? []);
       setTotalElements(data.totalElements ?? 0);
       setTotalPages(data.totalPages ?? 1);
@@ -110,8 +128,6 @@ export function ProductListPage() {
       setIsLoading(false);
     }
   }, [page, keyword, selectedCategoryIds, selectedBrandIds]);
-
-
 
   useEffect(() => {
     fetchProducts();
@@ -166,7 +182,10 @@ export function ProductListPage() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm mb-6">
-          <button onClick={() => navigate('/')} className="text-gray-600 hover:text-red-600">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-600 hover:text-red-600"
+          >
             Trang chủ
           </button>
           <span className="text-gray-400">/</span>
@@ -213,18 +232,27 @@ export function ProductListPage() {
                     {isLoadingFilters ? (
                       <div className="space-y-2">
                         {[1, 2, 3].map((i) => (
-                          <div key={i} className="h-4 w-full rounded bg-gray-200 animate-pulse" />
+                          <div
+                            key={i}
+                            className="h-4 w-full rounded bg-gray-200 animate-pulse"
+                          />
                         ))}
                       </div>
                     ) : categories.length === 0 ? (
-                      <p className="text-sm text-gray-500 italic">Chưa có danh mục</p>
+                      <p className="text-sm text-gray-500 italic">
+                        Chưa có danh mục
+                      </p>
                     ) : (
                       categories.map((cat) => (
                         <div key={cat.categoryId} className="flex items-center">
                           <Checkbox
                             id={`cat-${cat.categoryId}`}
-                            checked={selectedCategoryIds.includes(cat.categoryId)}
-                            onCheckedChange={() => toggleCategory(cat.categoryId)}
+                            checked={selectedCategoryIds.includes(
+                              cat.categoryId
+                            )}
+                            onCheckedChange={() =>
+                              toggleCategory(cat.categoryId)
+                            }
                           />
                           <Label
                             htmlFor={`cat-${cat.categoryId}`}
@@ -245,11 +273,16 @@ export function ProductListPage() {
                     {isLoadingFilters ? (
                       <div className="space-y-2">
                         {[1, 2, 3].map((i) => (
-                          <div key={i} className="h-4 w-full rounded bg-gray-200 animate-pulse" />
+                          <div
+                            key={i}
+                            className="h-4 w-full rounded bg-gray-200 animate-pulse"
+                          />
                         ))}
                       </div>
                     ) : brands.length === 0 ? (
-                      <p className="text-sm text-gray-500 italic">Chưa có thương hiệu</p>
+                      <p className="text-sm text-gray-500 italic">
+                        Chưa có thương hiệu
+                      </p>
                     ) : (
                       brands.map((brand) => (
                         <div key={brand.brandId} className="flex items-center">
@@ -291,7 +324,10 @@ export function ProductListPage() {
                 <div className="mb-6">
                   <div className="flex items-center">
                     <Checkbox id="instock" defaultChecked />
-                    <Label htmlFor="instock" className="ml-2 text-sm cursor-pointer">
+                    <Label
+                      htmlFor="instock"
+                      className="ml-2 text-sm cursor-pointer"
+                    >
                       Chỉ hiện sản phẩm còn hàng
                     </Label>
                   </div>
@@ -315,12 +351,17 @@ export function ProductListPage() {
                   Bộ lọc
                 </Button>
                 <span className="text-sm text-gray-600">
-                  <span className="font-medium text-gray-900">{totalElements}</span> sản phẩm
+                  <span className="font-medium text-gray-900">
+                    {totalElements}
+                  </span>{' '}
+                  sản phẩm
                 </span>
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600 hidden md:inline">Sắp xếp:</span>
+                <span className="text-sm text-gray-600 hidden md:inline">
+                  Sắp xếp:
+                </span>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-40">
                     <SelectValue />
@@ -352,12 +393,17 @@ export function ProductListPage() {
             </div>
 
             {/* Active Filter Badges */}
-            {(selectedCategoryIds.length > 0 || selectedBrandIds.length > 0 || keyword) && (
+            {(selectedCategoryIds.length > 0 ||
+              selectedBrandIds.length > 0 ||
+              keyword) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {keyword && (
                   <Badge variant="secondary" className="gap-1">
                     Tìm: "{keyword}"
-                    <button onClick={() => setKeyword('')} className="ml-1 hover:text-red-600">
+                    <button
+                      onClick={() => setKeyword('')}
+                      className="ml-1 hover:text-red-600"
+                    >
                       ×
                     </button>
                   </Badge>
@@ -425,7 +471,9 @@ export function ProductListPage() {
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <div className="text-5xl mb-4">📦</div>
                 <h3 className="text-xl font-bold mb-2">Không có sản phẩm</h3>
-                <p className="text-gray-500">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+                <p className="text-gray-500">
+                  Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+                </p>
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -433,7 +481,7 @@ export function ProductListPage() {
                   <ProductCard
                     key={product.productId}
                     product={product}
-                    imageUrl={getProductImage(product)}
+                    imageUrl={product.mainImage}
                   />
                 ))}
               </div>
@@ -446,7 +494,9 @@ export function ProductListPage() {
                   >
                     <div className="flex gap-4 p-4">
                       <button
-                        onClick={() => navigate(`/product/${product.productId}`)}
+                        onClick={() =>
+                          navigate(`/product/${product.productId}`)
+                        }
                         className="w-48 h-48 shrink-0 relative overflow-hidden bg-gray-100 rounded-lg"
                       >
                         <ImageWithFallback
@@ -457,10 +507,14 @@ export function ProductListPage() {
                       </button>
                       <div className="flex-1 flex flex-col">
                         <button
-                          onClick={() => navigate(`/product/${product.productId}`)}
+                          onClick={() =>
+                            navigate(`/product/${product.productId}`)
+                          }
                           className="text-left"
                         >
-                          <h3 className="font-medium text-lg mb-2">{product.productName}</h3>
+                          <h3 className="font-medium text-lg mb-2">
+                            {product.productName}
+                          </h3>
                           <div className="flex items-center gap-2 mb-2">
                             <div className="flex items-center gap-1">
                               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -471,10 +525,14 @@ export function ProductListPage() {
                           </div>
                           <div className="flex items-center gap-2 mb-3">
                             {product.categoryName && (
-                              <Badge variant="secondary">{product.categoryName}</Badge>
+                              <Badge variant="secondary">
+                                {product.categoryName}
+                              </Badge>
                             )}
                             {product.brandName && (
-                              <Badge variant="outline">{product.brandName}</Badge>
+                              <Badge variant="outline">
+                                {product.brandName}
+                              </Badge>
                             )}
                           </div>
                         </button>

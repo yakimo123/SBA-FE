@@ -13,16 +13,19 @@ export interface Category {
   categoryId: number;
   categoryName: string;
   description?: string;
+  imageUrl?: string;
 }
 
 export interface CreateCategoryRequest {
   categoryName: string;
   description?: string;
+  imageUrl?: string;
 }
 
 export interface UpdateCategoryRequest {
   categoryName: string;
   description?: string;
+  imageUrl?: string;
 }
 
 export type CategoryPage = PageableResponse<Category>;
@@ -33,18 +36,22 @@ export interface Brand {
   brandName: string;
   country?: string;
   description?: string;
+  logoUrl?: string;
+  isPartner?: boolean;
 }
 
 export interface CreateBrandRequest {
   brandName: string;
   country?: string;
   description?: string;
+  logoUrl?: string;
 }
 
 export interface UpdateBrandRequest {
   brandName: string;
   country?: string;
   description?: string;
+  logoUrl?: string;
 }
 
 export type BrandPage = PageableResponse<Brand>;
@@ -76,7 +83,12 @@ export interface Product {
   productId: number;
   productName: string;
   description?: string;
+  descriptionDetails?: string;
   price: number;
+  originalPrice?: number;
+  discountPercent?: number;
+  rating?: number;
+  soldCount?: number;
   categoryId?: number;
   categoryName?: string;
   brandId?: number;
@@ -85,28 +97,38 @@ export interface Product {
   supplierName?: string;
   quantity: number;
   status: ProductStatus;
+  mainImage?: string;
+  imageUrls?: string[];
 }
 
 export interface CreateProductRequest {
   productName: string;
   description?: string;
+  descriptionDetails?: string;
   price: number;
+  originalPrice?: number;
+  discountPercent?: number;
   categoryId?: number;
   brandId?: number;
   supplierId?: number;
   quantity?: number;
   status?: ProductStatus;
+  imageUrls?: string[];
 }
 
 export interface UpdateProductRequest {
   productName: string;
   description?: string;
+  descriptionDetails?: string;
   price: number;
+  originalPrice?: number;
+  discountPercent?: number;
   categoryId?: number;
   brandId?: number;
   supplierId?: number;
   quantity?: number;
   status?: ProductStatus;
+  imageUrls?: string[];
 }
 
 export interface ProductFilterParams {
@@ -115,6 +137,7 @@ export interface ProductFilterParams {
   brandId?: number;
   page?: number;
   size?: number;
+  sort?: string;
 }
 
 export type ProductPage = PageableResponse<Product>;
@@ -142,6 +165,11 @@ export interface UpdateMediaRequest {
   type: MediaType;
   url: string;
   sortOrder?: number;
+}
+
+export interface UploadUrlResponse {
+  uploadUrl: string;
+  publicUrl: string;
 }
 
 // ─── ATTRIBUTE ────────────────────────────────────────────────────────────────

@@ -1,4 +1,11 @@
-import { Banknote, CheckCircle, CreditCard, Tag, Ticket, Wallet } from 'lucide-react';
+import {
+  Banknote,
+  CheckCircle,
+  CreditCard,
+  Tag,
+  Ticket,
+  Wallet,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -15,12 +22,21 @@ import {
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { Separator } from '../components/ui/separator';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { OrderResponse, orderService } from '../services/orderService';
+import { provinceService } from '../services/provinceService';
 import { vnpayService } from '../services/vnpayService';
 import { VoucherResponse, voucherService } from '../services/voucherService';
+import { District, Province, Ward } from '../types/address';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -38,11 +54,23 @@ export function CheckoutPage() {
     phone: user?.phone || '',
     email: user?.email || '',
     address: user?.address || '',
-    city: 'TP. Hồ Chí Minh',
+    city: '',
     district: '',
     ward: '',
     note: '',
   });
+
+  // Address lookup state
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState<
+    number | null
+  >(null);
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState<
+    number | null
+  >(null);
 
   // Handle redirect back from VNPay gateway
   useEffect(() => {
@@ -58,16 +86,59 @@ export function CheckoutPage() {
       } as OrderResponse);
       setStep('success');
       // Clear navigation state to avoid re-triggering on refresh
-      window.history.replaceState({}, '');
     }
   }, [location.state]);
+
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const data = await provinceService.getProvinces();
+        setProvinces(data);
+      } catch (error) {
+        console.error('Failed to fetch provinces:', error);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  // Cascading lookups
+  useEffect(() => {
+    if (selectedProvinceCode) {
+      const fetchDistricts = async () => {
+        try {
+          const data = await provinceService.getDistricts(selectedProvinceCode);
+          setDistricts(data);
+          setWards([]);
+        } catch (error) {
+          console.error('Failed to fetch districts:', error);
+        }
+      };
+      fetchDistricts();
+    }
+  }, [selectedProvinceCode]);
+
+  useEffect(() => {
+    if (selectedDistrictCode) {
+      const fetchWards = async () => {
+        try {
+          const data = await provinceService.getWards(selectedDistrictCode);
+          setWards(data);
+        } catch (error) {
+          console.error('Failed to fetch wards:', error);
+        }
+      };
+      fetchWards();
+    }
+  }, [selectedDistrictCode]);
 
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherResponse | null>(
     null
   );
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
   const [voucherError, setVoucherError] = useState<string | null>(null);
-  const [availableVouchers, setAvailableVouchers] = useState<VoucherResponse[]>([]);
+  const [availableVouchers, setAvailableVouchers] = useState<VoucherResponse[]>(
+    []
+  );
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [isFetchingVouchers, setIsFetchingVouchers] = useState(false);
   const [voucherSearch, setVoucherSearch] = useState('');
@@ -78,7 +149,10 @@ export function CheckoutPage() {
     if (availableVouchers.length > 0) return;
     setIsFetchingVouchers(true);
     try {
-      const result = await voucherService.getVouchers({ validOnly: true, size: 50 });
+      const result = await voucherService.getVouchers({
+        validOnly: true,
+        size: 50,
+      });
       setAvailableVouchers(result.content ?? []);
     } catch {
       // silently fail
@@ -145,11 +219,7 @@ export function CheckoutPage() {
           ? error.response.data.message
           : 'Mã giảm giá không hợp lệ hoặc không đủ điều kiện';
 
-      console.error(
-        `Failed to apply voucher [${code}]:`,
-        errorMessage,
-        error
-      );
+      console.error(`Failed to apply voucher [${code}]:`, errorMessage, error);
       setVoucherError(errorMessage);
       toast.error(errorMessage);
       setAppliedVoucher(null);
@@ -200,7 +270,9 @@ export function CheckoutPage() {
       // VNPay: redirect to payment gateway instead of showing success screen
       // Cart is NOT cleared here — it will only be cleared after confirmed SUCCESS on return
       if (paymentMethod === 'vnpay') {
-        const vnpayResponse = await vnpayService.createPaymentUrl(result.orderId);
+        const vnpayResponse = await vnpayService.createPaymentUrl(
+          result.orderId
+        );
         window.location.href = vnpayResponse.paymentUrl;
         return;
       }
@@ -397,40 +469,107 @@ export function CheckoutPage() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="city">Tỉnh/Thành phố *</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) =>
-                          setFormData({ ...formData, city: e.target.value })
+                      <Select
+                        onValueChange={(value) => {
+                          const province = provinces.find(
+                            (p) => String(p.code) === value
+                          );
+                          if (province) {
+                            setFormData({
+                              ...formData,
+                              city: province.name,
+                              district: '',
+                              ward: '',
+                            });
+                            setSelectedProvinceCode(province.code);
+                            setSelectedDistrictCode(null);
+                          }
+                        }}
+                        value={
+                          selectedProvinceCode
+                            ? String(selectedProvinceCode)
+                            : undefined
                         }
-                        required
-                      />
+                      >
+                        <SelectTrigger id="city" className="w-full">
+                          <SelectValue placeholder="Chọn Tỉnh/Thành phố" />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          {provinces.map((p) => (
+                            <SelectItem key={p.code} value={String(p.code)}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="district">Quận/Huyện *</Label>
-                        <Input
-                          id="district"
-                          value={formData.district}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              district: e.target.value,
-                            })
+                        <Select
+                          onValueChange={(value) => {
+                            const district = districts.find(
+                              (d) => String(d.code) === value
+                            );
+                            if (district) {
+                              setFormData({
+                                ...formData,
+                                district: district.name,
+                                ward: '',
+                              });
+                              setSelectedDistrictCode(district.code);
+                            }
+                          }}
+                          value={
+                            selectedDistrictCode
+                              ? String(selectedDistrictCode)
+                              : undefined
                           }
-                          required
-                        />
+                          disabled={!selectedProvinceCode}
+                        >
+                          <SelectTrigger id="district" className="w-full">
+                            <SelectValue placeholder="Chọn Quận/Huyện" />
+                          </SelectTrigger>
+                          <SelectContent position="popper">
+                            {districts.map((d) => (
+                              <SelectItem key={d.code} value={String(d.code)}>
+                                {d.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="ward">Phường/Xã *</Label>
-                        <Input
-                          id="ward"
-                          value={formData.ward}
-                          onChange={(e) =>
-                            setFormData({ ...formData, ward: e.target.value })
+                        <Select
+                          onValueChange={(value) => {
+                            const ward = wards.find(
+                              (w) => String(w.code) === value
+                            );
+                            if (ward) {
+                              setFormData({ ...formData, ward: ward.name });
+                            }
+                          }}
+                          value={
+                            formData.ward
+                              ? wards
+                                  .find((w) => w.name === formData.ward)
+                                  ?.code.toString()
+                              : undefined
                           }
-                          required
-                        />
+                          disabled={!selectedDistrictCode}
+                        >
+                          <SelectTrigger id="ward" className="w-full">
+                            <SelectValue placeholder="Chọn Phường/Xã" />
+                          </SelectTrigger>
+                          <SelectContent position="popper">
+                            {wards.map((w) => (
+                              <SelectItem key={w.code} value={String(w.code)}>
+                                {w.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div>
@@ -671,8 +810,12 @@ export function CheckoutPage() {
                     <div className="flex items-center gap-2 min-w-0">
                       <Tag className="w-4 h-4 text-green-600 shrink-0" />
                       <div className="min-w-0">
-                        <span className="text-sm font-semibold text-green-700">{appliedVoucher.voucherCode}</span>
-                        <p className="text-xs text-green-600 truncate">{appliedVoucher.description}</p>
+                        <span className="text-sm font-semibold text-green-700">
+                          {appliedVoucher.voucherCode}
+                        </span>
+                        <p className="text-xs text-green-600 truncate">
+                          {appliedVoucher.description}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -698,14 +841,19 @@ export function CheckoutPage() {
                       Chọn mã giảm giá
                     </Button>
                     {voucherError && (
-                      <div className="text-xs text-red-600 font-medium">{voucherError}</div>
+                      <div className="text-xs text-red-600 font-medium">
+                        {voucherError}
+                      </div>
                     )}
                   </>
                 )}
               </div>
 
               {/* Voucher Modal */}
-              <Dialog open={showVoucherModal} onOpenChange={setShowVoucherModal}>
+              <Dialog
+                open={showVoucherModal}
+                onOpenChange={setShowVoucherModal}
+              >
                 <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -726,7 +874,9 @@ export function CheckoutPage() {
 
                   <div className="max-h-96 overflow-y-auto -mx-6 px-6">
                     {isFetchingVouchers ? (
-                      <div className="py-10 text-center text-sm text-gray-500">Đang tải...</div>
+                      <div className="py-10 text-center text-sm text-gray-500">
+                        Đang tải...
+                      </div>
                     ) : availableVouchers.length === 0 ? (
                       <div className="py-10 text-center text-sm text-gray-500">
                         Không có mã giảm giá khả dụng
@@ -734,12 +884,14 @@ export function CheckoutPage() {
                     ) : (
                       <div className="space-y-2 py-1">
                         {availableVouchers
-                          .filter((v) =>
-                            voucherSearch
-                              ? v.voucherCode.toLowerCase().includes(voucherSearch.toLowerCase()) ||
-                                v.description.toLowerCase().includes(voucherSearch.toLowerCase())
-                              : true
-                          )
+                          .filter((v) => {
+                            if (!voucherSearch) return true;
+                            const search = voucherSearch.toLowerCase();
+                            return (
+                              v.voucherCode.toLowerCase().includes(search) ||
+                              v.description.toLowerCase().includes(search)
+                            );
+                          })
                           .map((v) => (
                             <button
                               key={v.voucherId}
@@ -753,17 +905,22 @@ export function CheckoutPage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="font-bold text-sm text-gray-900">{v.voucherCode}</span>
+                                  <span className="font-bold text-sm text-gray-900">
+                                    {v.voucherCode}
+                                  </span>
                                   <span className="text-sm font-semibold text-red-600 shrink-0">
                                     {v.discountType === 'PERCENT'
                                       ? `Giảm ${v.discountValue}%`
                                       : `Giảm ${v.discountValue.toLocaleString('vi-VN')}₫`}
                                   </span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{v.description}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                                  {v.description}
+                                </p>
                                 {v.minOrderValue > 0 && (
                                   <p className="text-xs text-gray-400 mt-1">
-                                    Đơn hàng tối thiểu {v.minOrderValue.toLocaleString('vi-VN')}₫
+                                    Đơn hàng tối thiểu{' '}
+                                    {v.minOrderValue.toLocaleString('vi-VN')}₫
                                   </p>
                                 )}
                               </div>
