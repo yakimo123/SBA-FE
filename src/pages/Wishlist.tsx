@@ -14,7 +14,8 @@ const PLACEHOLDER_IMG =
 
 export function WishlistPage() {
   const navigate = useNavigate();
-  const { wishlistItems, removeFromWishlist, clearWishlist, isLoading } = useWishlist();
+  const { wishlistItems, removeFromWishlist, clearWishlist, isLoading } =
+    useWishlist();
   const { addToCart } = useCart();
   const [removingIds, setRemovingIds] = useState<Set<number>>(new Set());
   const [removingAll, setRemovingAll] = useState(false);
@@ -41,7 +42,7 @@ export function WishlistPage() {
     }, 400);
   };
 
-  const handleAddToCart = (item: typeof wishlistItems[0]) => {
+  const handleAddToCart = (item: (typeof wishlistItems)[0]) => {
     addToCart({
       id: String(item.productId),
       name: item.productName,
@@ -58,7 +59,10 @@ export function WishlistPage() {
           <div className="h-8 w-64 rounded bg-gray-200 animate-pulse mb-6" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-72 rounded-lg bg-gray-200 animate-pulse" />
+              <div
+                key={i}
+                className="h-72 rounded-lg bg-gray-200 animate-pulse"
+              />
             ))}
           </div>
         </div>
@@ -72,9 +76,12 @@ export function WishlistPage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-20">
             <Heart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Danh sách yêu thích trống</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              Danh sách yêu thích trống
+            </h2>
             <p className="text-gray-600 mb-6">
-              Hãy thêm những sản phẩm bạn yêu thích để theo dõi và mua sắm dễ dàng hơn!
+              Hãy thêm những sản phẩm bạn yêu thích để theo dõi và mua sắm dễ
+              dàng hơn!
             </p>
             <Button
               onClick={() => navigate('/products')}
@@ -93,7 +100,10 @@ export function WishlistPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm mb-6">
-          <button onClick={() => navigate('/')} className="text-gray-600 hover:text-red-600">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-600 hover:text-red-600"
+          >
             Trang chủ
           </button>
           <span className="text-gray-400">/</span>
@@ -133,7 +143,11 @@ export function WishlistPage() {
                 className={`overflow-hidden group hover:shadow-lg transition-all duration-350 ${
                   isRemoving ? 'removing' : ''
                 }`}
-                style={removingAll ? { transitionDelay: `${index * 60}ms` } : undefined}
+                style={
+                  removingAll
+                    ? { transitionDelay: `${index * 60}ms` }
+                    : undefined
+                }
               >
                 <button
                   onClick={() => navigate(`/product/${item.productId}`)}
@@ -151,7 +165,8 @@ export function WishlistPage() {
                       {item.productName}
                     </h3>
                     <p className="text-xs text-gray-400">
-                      Thêm ngày {new Date(item.createdDate).toLocaleDateString('vi-VN')}
+                      Thêm ngày{' '}
+                      {new Date(item.createdDate).toLocaleDateString('vi-VN')}
                     </p>
                   </div>
                 </button>

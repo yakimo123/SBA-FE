@@ -515,13 +515,23 @@ export function ProductListPage() {
                           <h3 className="font-medium text-lg mb-2">
                             {product.productName}
                           </h3>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-3 mb-2">
                             <div className="flex items-center gap-1">
                               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm text-gray-600">
-                                Tồn kho: {product.quantity}
+                              <span className="font-medium">
+                                {product.rating || 0}
                               </span>
                             </div>
+                            <span className="text-gray-300">|</span>
+                            <span className="text-sm text-gray-600">
+                              Đã bán {product.soldCount || 0}
+                            </span>
+                            <span className="text-gray-300">•</span>
+                            <span
+                              className={`text-sm ${product.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}
+                            >
+                              Kho: {product.quantity}
+                            </span>
                           </div>
                           <div className="flex items-center gap-2 mb-3">
                             {product.categoryName && (
@@ -537,10 +547,25 @@ export function ProductListPage() {
                           </div>
                         </button>
                         <div className="mt-auto flex items-center justify-between">
-                          <div>
-                            <div className="text-red-600 font-bold text-xl">
+                          <div className="flex flex-wrap items-baseline gap-2">
+                            <div className="text-red-600 font-bold text-2xl">
                               {product.price.toLocaleString('vi-VN')}₫
                             </div>
+                            {product.originalPrice &&
+                              product.originalPrice > product.price && (
+                                <span className="text-gray-400 line-through text-sm">
+                                  {product.originalPrice.toLocaleString(
+                                    'vi-VN'
+                                  )}
+                                  ₫
+                                </span>
+                              )}
+                            {product.discountPercent &&
+                              product.discountPercent > 0 && (
+                                <Badge className="bg-red-600">
+                                  -{product.discountPercent}%
+                                </Badge>
+                              )}
                           </div>
                           <Button
                             className="bg-red-600 hover:bg-red-700"

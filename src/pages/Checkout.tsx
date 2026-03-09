@@ -369,10 +369,10 @@ export function CheckoutPage() {
         <h1 className="text-3xl font-bold mb-6">Thanh toán</h1>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center gap-2">
+        <div className="flex max-w-4xl mx-auto items-center justify-center mb-8">
+          <div className="flex items-center gap-4">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 step === 'info'
                   ? 'bg-red-600 text-white'
                   : 'bg-green-600 text-white'
@@ -384,10 +384,10 @@ export function CheckoutPage() {
               Thông tin giao hàng
             </span>
           </div>
-          <Separator className="w-16 mx-4" />
-          <div className="flex items-center gap-2">
+          <Separator className="w-32 xl:w-96 mx-4" />
+          <div className="flex items-center gap-4">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 step === 'payment'
                   ? 'bg-red-600 text-white'
                   : 'bg-gray-300 text-gray-600'
