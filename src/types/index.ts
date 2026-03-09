@@ -60,14 +60,16 @@ export interface PageableResponse<T> {
   totalPages: number;
   size: number;
   number: number;
-  sort: {
-    empty: boolean;
-    sorted: boolean;
-    unsorted: boolean;
+  page?: {
+    size: number;
+    number: number;
+    totalElements: number;
+    totalPages: number;
   };
-  first: boolean;
-  last: boolean;
-  numberOfElements: number;
+  first?: boolean;
+  last?: boolean;
+  numberOfElements?: number;
+  empty?: boolean;
 }
 
 export interface ApiResponse<T = unknown> {
