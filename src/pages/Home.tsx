@@ -1,166 +1,165 @@
-import { ChevronRight, CreditCard, Gamepad2,HardDrive, Headphones, Laptop, Shield, Smartphone, Speaker, Star, Truck } from 'lucide-react';
+import {
+  ArrowRight,
+  ArrowUp,
+  CheckCircle2,
+  ChevronRight,
+  CreditCard,
+  Headphones,
+  MapPin,
+  MessageCircle,
+  Shield,
+  Star,
+  Truck,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-
-const categories = [
-  { name: 'Phụ kiện điện thoại', icon: Smartphone, color: 'bg-blue-100 text-blue-600' },
-  { name: 'Phụ kiện laptop', icon: Laptop, color: 'bg-purple-100 text-purple-600' },
-  { name: 'Thiết bị âm thanh', icon: Speaker, color: 'bg-pink-100 text-pink-600' },
-  { name: 'Thiết bị lưu trữ', icon: HardDrive, color: 'bg-green-100 text-green-600' },
-  { name: 'Phụ kiện gaming', icon: Gamepad2, color: 'bg-red-100 text-red-600' },
-];
+import { BranchResponse, branchService } from '../services/branchService';
+import brandService from '../services/brandService';
+import categoryService from '../services/categoryService';
+import productService from '../services/productService';
+import { Brand, Category, Product } from '../types/product';
 
 const features = [
   {
     icon: Truck,
     title: 'Giao hàng nhanh 2-4h',
-    description: 'Miễn phí ship nội thành'
+    description: 'Miễn phí ship nội thành',
   },
   {
     icon: Shield,
     title: 'Bảo hành dài hạn',
-    description: 'Đổi trả trong 30 ngày'
+    description: 'Đổi trả trong 30 ngày',
   },
   {
     icon: Headphones,
     title: 'Hỗ trợ 24/7',
-    description: 'Tư vấn miễn phí'
+    description: 'Tư vấn miễn phí',
   },
   {
     icon: CreditCard,
     title: 'Trả góp 0%',
-    description: 'Qua thẻ tín dụng'
-  }
+    description: 'Qua thẻ tín dụng',
+  },
 ];
 
-const flashSaleProducts = [
-  {
-    id: '1',
-    name: 'Tai nghe Gaming RGB Pro',
-    price: 890000,
-    originalPrice: 1490000,
-    image: 'https://images.unsplash.com/photo-1672044631233-22b268dc6416?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBoZWFkcGhvbmVzJTIwdGVjaG5vbG9neXxlbnwxfHx8fDE3NjgwMjg5OTJ8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    discount: 40,
-    rating: 4.8,
-    sold: 245
-  },
-  {
-    id: '2',
-    name: 'Bàn phím cơ Gaming RGB',
-    price: 1290000,
-    originalPrice: 2190000,
-    image: 'https://images.unsplash.com/photo-1645802106095-765b7e86f5bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBrZXlib2FyZCUyMHJnYnxlbnwxfHx8fDE3Njc5NjI5Mjl8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    discount: 41,
-    rating: 4.9,
-    sold: 189
-  },
-  {
-    id: '3',
-    name: 'Tai nghe không dây AirPods Pro',
-    price: 4990000,
-    originalPrice: 6490000,
-    image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aXJlbGVzcyUyMGVhcmJ1ZHN8ZW58MXx8fHwxNzY3OTYxODUxfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    discount: 23,
-    rating: 5.0,
-    sold: 423
-  },
-  {
-    id: '4',
-    name: 'Set phụ kiện laptop cao cấp',
-    price: 590000,
-    originalPrice: 990000,
-    image: 'https://images.unsplash.com/photo-1661169398798-a91a4eb3ee08?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXB0b3AlMjBrZXlib2FyZCUyMG1vdXNlfGVufDF8fHx8MTc2ODAyODk5M3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    discount: 40,
-    rating: 4.7,
-    sold: 312
-  }
-];
-
-const newProducts = [
-  {
-    id: '5',
-    name: 'Ốp lưng iPhone 15 Pro Max',
-    price: 290000,
-    image: 'https://images.unsplash.com/photo-1726763581169-e7643070cf64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaG9uZSUyMGNhc2UlMjBhY2Nlc3Nvcmllc3xlbnwxfHx8fDE3Njc5MzQwNzR8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    badge: 'Mới',
-    rating: 4.6,
-    sold: 89
-  },
-  {
-    id: '6',
-    name: 'Sạc nhanh 65W GaN',
-    price: 450000,
-    image: 'https://images.unsplash.com/photo-1583573864191-af3ab094887a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFydHBob25lJTIwYWNjZXNzb3JpZXN8ZW58MXx8fHwxNzY4MDI1NTkyfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    badge: 'Mới',
-    rating: 4.9,
-    sold: 156
-  },
-  {
-    id: '7',
-    name: 'Chuột gaming không dây',
-    price: 690000,
-    image: 'https://images.unsplash.com/photo-1661169398798-a91a4eb3ee08?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXB0b3AlMjBrZXlib2FyZCUyMG1vdXNlfGVufDF8fHx8MTc2ODAyODk5M3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    badge: 'Mới',
-    rating: 4.8,
-    sold: 234
-  },
-  {
-    id: '8',
-    name: 'Loa bluetooth cao cấp',
-    price: 1290000,
-    image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aXJlbGVzcyUyMGVhcmJ1ZHN8ZW58MXx8fHwxNzY3OTYxODUxfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    badge: 'Mới',
-    rating: 4.7,
-    sold: 178
-  }
-];
+// Categories are now displayed using image URLs
 
 export function HomePage() {
   const navigate = useNavigate();
 
+  // State
+  const [apiCategories, setApiCategories] = useState<Category[]>([]);
+  const [apiFlashSale, setApiFlashSale] = useState<Product[]>([]);
+  const [apiNewProducts, setApiNewProducts] = useState<Product[]>([]);
+  const [apiBestSellers, setApiBestSellers] = useState<Product[]>([]);
+  const [apiBrands, setApiBrands] = useState<Brand[]>([]);
+  const [apiBranches, setApiBranches] = useState<BranchResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [catRes, flashRes, newRes, bestRes, brandRes, branchRes] =
+          await Promise.all([
+            categoryService.getCategories(0, 10),
+            productService.getProducts({
+              sort: 'discountPercent,desc',
+              size: 4,
+            }),
+            productService.getProducts({ sort: 'createdDate,desc', size: 4 }),
+            productService.getProducts({ sort: 'soldCount,desc', size: 4 }),
+            brandService.getBrands(0, 20),
+            branchService.getBranches({ size: 10 }),
+          ]);
+
+        setApiCategories(catRes.content || []);
+        setApiFlashSale(flashRes.content || []);
+        setApiNewProducts(newRes.content || []);
+        setApiBestSellers(bestRes.content || []);
+
+        // Filter for partner brands if isPartner field exists, otherwise show all
+        const allBrands = brandRes.content || [];
+        setApiBrands(allBrands.filter((b) => b.isPartner !== false));
+
+        setApiBranches(branchRes.content || []);
+      } catch (error) {
+        console.error('Failed to fetch home page data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 font-medium animate-pulse">
+            Đang tải trải nghiệm premium...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-gray-50">
+    <div className="bg-gray-50 relative overflow-hidden">
+      {/* Background Decor Blobs */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none -z-10">
+        <div className="absolute top-[5%] -left-[10%] w-[40%] h-[40%] bg-red-100/40 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-[25%] -right-[10%] w-[35%] h-[35%] bg-indigo-100/40 rounded-full blur-[100px] animate-pulse [animation-delay:2s]" />
+        <div className="absolute top-[50%] -left-[5%] w-[30%] h-[30%] bg-blue-100/30 rounded-full blur-[120px]" />
+        <div className="absolute top-[75%] -right-[5%] w-[40%] h-[40%] bg-pink-100/30 rounded-full blur-[130px] animate-pulse [animation-delay:1s]" />
+        <div className="absolute bottom-[5%] left-[10%] w-[25%] h-[25%] bg-orange-100/20 rounded-full blur-[100px]" />
+      </div>
+
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-16 md:py-24">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+      <div className="bg-linear-to-r from-red-600 via-red-500 to-orange-500 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <Badge className="bg-white/20 text-white mb-4">
+              <Badge className="bg-white/20 text-white mb-3 backdrop-blur-md">
                 🎉 Mega Sale - Giảm đến 50%
               </Badge>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Phụ Kiện Điện Tử<br />Chính Hãng
+              <h1 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight leading-tight">
+                Phụ Kiện Điện Tử
+                <br />
+                Chính Hãng & Cao Cấp
               </h1>
-              <p className="text-lg md:text-xl mb-6 text-white/90">
-                Miễn phí giao hàng 2-4 giờ • Bảo hành 30 ngày • Trả góp 0%
+              <p className="text-sm md:text-base mb-6 text-white/90 max-w-lg">
+                Miễn phí giao hàng 2-4 giờ • Bảo hành 30 ngày • Trả góp 0%.
               </p>
               <div className="flex gap-4">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="bg-white text-red-600 hover:bg-gray-100"
                   onClick={() => navigate('/products')}
                 >
                   Mua ngay
                   <ChevronRight className="ml-2 w-4 h-4" />
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-white text-white hover:bg-white/10"
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-red-600 hover:bg-white/10"
                 >
                   Xem deal hot
                 </Button>
               </div>
             </div>
-            <div className="hidden md:block">
+            <div className="hidden md:block max-w-[320px] lg:max-w-[380px]">
               <ImageWithFallback
                 src="https://images.unsplash.com/photo-1672044631233-22b268dc6416?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBoZWFkcGhvbmVzJTIwdGVjaG5vbG9neXxlbnwxfHx8fDE3NjgwMjg5OTJ8MA&ixlib=rb-4.1.0&q=80&w=1080"
                 alt="Hero product"
-                className="w-full h-auto rounded-lg"
+                className="w-full h-auto rounded-xl drop-shadow-xl"
               />
             </div>
           </div>
@@ -178,7 +177,9 @@ export function HomePage() {
                 </div>
                 <div>
                   <div className="font-medium text-sm">{feature.title}</div>
-                  <div className="text-xs text-gray-600">{feature.description}</div>
+                  <div className="text-xs text-gray-600">
+                    {feature.description}
+                  </div>
                 </div>
               </div>
             ))}
@@ -190,47 +191,73 @@ export function HomePage() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <h2 className="text-2xl font-bold mb-6">Danh mục nổi bật</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {categories.map((category, index) => (
-            <button
-              key={index}
-              onClick={() => navigate(`/products?category=${encodeURIComponent(category.name)}`)}
-              className="group"
-            >
-              <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-                <div className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
-                  <category.icon className="w-8 h-8" />
-                </div>
-                <div className="font-medium text-sm">{category.name}</div>
-              </Card>
-            </button>
-          ))}
+          {(apiCategories.length > 0 ? apiCategories : []).map(
+            (category, index) => {
+              return (
+                <button
+                  key={category.categoryId || index}
+                  onClick={() =>
+                    navigate(`/products?categoryId=${category.categoryId}`)
+                  }
+                  className="group"
+                >
+                  <Card className="p-4 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-none bg-white">
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform bg-gray-50 overflow-hidden border border-gray-100/50 shadow-sm">
+                      {category.imageUrl ? (
+                        <ImageWithFallback
+                          src={category.imageUrl}
+                          alt={category.categoryName}
+                          className="w-full h-full object-contain p-2"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-400 font-bold text-xl uppercase">
+                          {category.categoryName.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="font-bold text-gray-800 group-hover:text-red-600 transition-colors text-sm line-clamp-1">
+                      {category.categoryName}
+                    </div>
+                  </Card>
+                </button>
+              );
+            }
+          )}
         </div>
       </div>
 
       {/* Flash Sale */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="bg-gradient-to-r from-red-600 to-orange-500 rounded-2xl p-6 mb-6">
+        <div className="bg-linear-to-r from-red-600 to-orange-500 rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between text-white">
             <div className="flex items-center gap-3">
               <div className="text-2xl">⚡</div>
               <div>
                 <h2 className="text-2xl font-bold">FLASH SALE</h2>
-                <p className="text-sm text-white/80">Giảm đến 50% - Số lượng có hạn</p>
+                <p className="text-sm text-white/80">
+                  Giảm đến 50% - Số lượng có hạn
+                </p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
               <span className="text-sm">Kết thúc trong:</span>
               <div className="flex gap-2">
-                <div className="bg-white text-red-600 px-2 py-1 rounded font-bold">12</div>
+                <div className="bg-white text-red-600 px-2 py-1 rounded font-bold">
+                  12
+                </div>
                 <div>:</div>
-                <div className="bg-white text-red-600 px-2 py-1 rounded font-bold">45</div>
+                <div className="bg-white text-red-600 px-2 py-1 rounded font-bold">
+                  45
+                </div>
                 <div>:</div>
-                <div className="bg-white text-red-600 px-2 py-1 rounded font-bold">23</div>
+                <div className="bg-white text-red-600 px-2 py-1 rounded font-bold">
+                  23
+                </div>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-red-600"
+            <Button
+              variant="outline"
+              className="border-white text-red-500 hover:bg-white hover:text-red-600"
               onClick={() => navigate('/products')}
             >
               Xem tất cả
@@ -239,45 +266,60 @@ export function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {flashSaleProducts.map((product) => (
+          {(apiFlashSale.length > 0 ? apiFlashSale : []).map((product) => (
             <button
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)}
+              key={product.productId}
+              onClick={() => navigate(`/product/${product.productId}`)}
               className="group text-left"
             >
               <Card className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative aspect-square overflow-hidden bg-gray-100">
                   <ImageWithFallback
-                    src={product.image}
-                    alt={product.name}
+                    src={
+                      product.mainImage ||
+                      'https://images.unsplash.com/photo-1672044631233-22b268dc6416?q=80&w=1080'
+                    }
+                    alt={product.productName}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
-                  <Badge className="absolute top-2 left-2 bg-red-600">
-                    -{product.discount}%
-                  </Badge>
+                  {product.discountPercent && (
+                    <Badge className="absolute top-2 left-2 bg-red-600">
+                      -{product.discountPercent}%
+                    </Badge>
+                  )}
                 </div>
                 <div className="p-4">
-                  <h3 className="font-medium mb-2 line-clamp-2 h-12">{product.name}</h3>
+                  <h3 className="font-medium mb-2 line-clamp-2 h-12">
+                    {product.productName}
+                  </h3>
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm">{product.rating}</span>
-                    <span className="text-xs text-gray-500">({product.sold} đã bán)</span>
+                    <span className="text-sm">{product.rating || 5.0}</span>
+                    <span className="text-xs text-gray-500">
+                      ({product.soldCount || 0} đã bán)
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-red-600 font-bold text-lg">
                       {product.price.toLocaleString('vi-VN')}₫
                     </span>
-                    <span className="text-gray-400 text-sm line-through">
-                      {product.originalPrice.toLocaleString('vi-VN')}₫
-                    </span>
+                    {product.originalPrice && (
+                      <span className="text-gray-400 text-sm line-through">
+                        {product.originalPrice.toLocaleString('vi-VN')}₫
+                      </span>
+                    )}
                   </div>
                   <div className="mt-2 bg-red-100 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-red-600 h-full rounded-full" 
-                      style={{ width: `${(product.sold / 500) * 100}%` }}
+                    <div
+                      className="bg-red-600 h-full rounded-full"
+                      style={{
+                        width: `${Math.min(((product.soldCount || 10) / 100) * 100, 100)}%`,
+                      }}
                     />
                   </div>
-                  <div className="text-xs text-gray-600 mt-1">Đã bán {product.sold}/500</div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Đã lưu kho {product.quantity} sản phẩm
+                  </div>
                 </div>
               </Card>
             </button>
@@ -289,39 +331,43 @@ export function HomePage() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Sản phẩm mới</h2>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/products')}
-          >
+          <Button variant="outline" onClick={() => navigate('/products')}>
             Xem tất cả
             <ChevronRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {newProducts.map((product) => (
+          {(apiNewProducts.length > 0 ? apiNewProducts : []).map((product) => (
             <button
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)}
+              key={product.productId}
+              onClick={() => navigate(`/product/${product.productId}`)}
               className="group text-left"
             >
               <Card className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative aspect-square overflow-hidden bg-gray-100">
                   <ImageWithFallback
-                    src={product.image}
-                    alt={product.name}
+                    src={
+                      product.mainImage ||
+                      'https://images.unsplash.com/photo-1583573864191-af3ab094887a?q=80&w=1080'
+                    }
+                    alt={product.productName}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   <Badge className="absolute top-2 left-2 bg-green-600">
-                    {product.badge}
+                    Mới
                   </Badge>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-medium mb-2 line-clamp-2 h-12">{product.name}</h3>
+                  <h3 className="font-medium mb-2 line-clamp-2 h-12">
+                    {product.productName}
+                  </h3>
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm">{product.rating}</span>
-                    <span className="text-xs text-gray-500">({product.sold})</span>
+                    <span className="text-sm">{product.rating || 5.0}</span>
+                    <span className="text-xs text-gray-500">
+                      ({product.soldCount || 0})
+                    </span>
                   </div>
                   <span className="text-red-600 font-bold text-lg">
                     {product.price.toLocaleString('vi-VN')}₫
@@ -336,21 +382,304 @@ export function HomePage() {
       {/* Promotion Banner */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-gradient-to-r from-purple-600 to-purple-400 rounded-2xl p-8 text-white">
+          <div className="bg-linear-to-r from-purple-600 to-purple-400 rounded-2xl p-8 text-white">
             <h3 className="text-2xl font-bold mb-2">Trả góp 0%</h3>
             <p className="mb-4">Duyệt nhanh chóng, nhận hàng ngay</p>
-            <Button className="bg-white text-purple-600 hover:bg-gray-100">
+            <Button className="bg-white text-purple-600 hover:bg-gray-100 font-bold">
               Tìm hiểu thêm
             </Button>
           </div>
-          <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl p-8 text-white">
+          <div className="bg-linear-to-r from-blue-600 to-blue-400 rounded-2xl p-8 text-white">
             <h3 className="text-2xl font-bold mb-2">Tích điểm đổi quà</h3>
             <p className="mb-4">Mua sắm nhiều, nhận ưu đãi lớn</p>
-            <Button className="bg-white text-blue-600 hover:bg-gray-100">
+            <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold">
               Xem quà tặng
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Brand Partners */}
+      <div className="bg-gray-50/50 py-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-bold">Đối tác chiến lược</h2>
+              <p className="text-gray-500 text-sm mt-1">
+                Sản phẩm phân phối chính hãng từ các thương hiệu hàng đầu
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {(apiBrands.length > 0 ? apiBrands : []).map((brand, index) => (
+              <button
+                key={brand.brandId || index}
+                onClick={() => navigate(`/products?brandId=${brand.brandId}`)}
+                className="group"
+              >
+                <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 border-none bg-white h-full flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform group-hover:bg-indigo-100">
+                    {brand.logoUrl ? (
+                      <img
+                        src={brand.logoUrl}
+                        alt={brand.brandName}
+                        className="w-10 h-10 object-contain transition-all opacity-100 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="text-xl font-black italic text-indigo-300 group-hover:text-indigo-600 transition-colors">
+                        {brand.brandName.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="font-bold text-sm text-gray-700 group-hover:text-indigo-600 transition-colors">
+                    {brand.brandName}
+                  </div>
+                  {brand.isPartner && (
+                    <Badge
+                      variant="outline"
+                      className="mt-2 text-[10px] py-0 border-indigo-200 text-indigo-500"
+                    >
+                      Đối tác
+                    </Badge>
+                  )}
+                </Card>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Best Sellers */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold">Bán chạy nhất</h2>
+            <p className="text-gray-500 text-sm mt-1">
+              Những sản phẩm được tin dùng nhiều nhất
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            className="text-red-600 hover:text-red-700 font-medium"
+            onClick={() => navigate('/products')}
+          >
+            Xem thêm <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {(apiBestSellers.length > 0 ? apiBestSellers : []).map((product) => (
+            <button
+              key={product.productId}
+              onClick={() => navigate(`/product/${product.productId}`)}
+              className="group text-left"
+            >
+              <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-none bg-white">
+                <div className="relative aspect-square overflow-hidden bg-gray-50">
+                  <ImageWithFallback
+                    src={
+                      product.mainImage ||
+                      'https://images.unsplash.com/photo-1619134766535-618a81622941?q=80&w=1080'
+                    }
+                    alt={product.productName}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-2 right-2">
+                    <Badge
+                      variant="secondary"
+                      className="bg-white/90 backdrop-blur-sm shadow-sm"
+                    >
+                      Hot
+                    </Badge>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2 h-10 text-sm leading-tight">
+                    {product.productName}
+                  </h3>
+                  <div className="flex items-center gap-1 mb-3">
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < Math.floor(product.rating || 5) ? 'fill-current' : ''}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      ({product.soldCount || 0})
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-red-600 font-bold text-lg">
+                      {product.price.toLocaleString('vi-VN')}₫
+                    </span>
+                    {product.originalPrice && (
+                      <span className="text-gray-400 text-xs line-through">
+                        {product.originalPrice.toLocaleString('vi-VN')}₫
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* B2B Banner */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-indigo-900 via-purple-900 to-red-900 text-white p-8 md:p-16">
+          <div className="relative z-10 max-w-2xl">
+            <Badge className="bg-white/20 text-white mb-6 backdrop-blur-md border-white/20">
+              Chương trình Doanh nghiệp
+            </Badge>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+              Cung cấp sỉ cho <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 to-red-400">
+                Cửa hàng & Doanh nghiệp
+              </span>
+            </h2>
+            <ul className="space-y-4 mb-10">
+              {[
+                'Chiết khấu lên đến 30% cho đơn hàng số lượng lớn',
+                'Hỗ trợ công nợ và VAT đầy đủ cho doanh nghiệp',
+                'Giao hàng hỏa tốc trong 2 giờ tại nội thành',
+                'Chính sách bảo hành và đổi trả ưu tiên',
+              ].map((text, i) => (
+                <li key={i} className="flex items-center gap-3 text-white/90">
+                  <CheckCircle2 className="w-5 h-5 text-orange-400 shrink-0" />
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-4">
+              <Button
+                size="lg"
+                className="bg-white text-indigo-900 hover:bg-gray-100 font-bold px-8 cursor-pointer"
+                onClick={() => navigate('/register-business')}
+              >
+                Đăng ký đối tác ngay
+              </Button>
+            </div>
+          </div>
+
+          {/* Abstract Background Elements */}
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-20 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500 rounded-full blur-[120px]" />
+          </div>
+          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-500 rounded-full blur-[100px] opacity-30" />
+        </div>
+      </div>
+
+      {/* Store Locator Section */}
+      <div className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 text-red-600 font-semibold mb-4">
+                <MapPin className="w-5 h-5" />
+                <span>Mạng lưới toàn quốc</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                Trải nghiệm sản phẩm trực tiếp tại hệ thống showroom
+              </h2>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Hệ thống cửa hàng luôn sẵn sàng đón tiếp. Quý khách có thể đến
+                trải nghiệm sản phẩm, nhận tư vấn kỹ thuật và bảo hành nhanh
+                chóng.
+              </p>
+
+              <div className="space-y-4">
+                {(apiBranches.length > 0 ? apiBranches : [])
+                  .slice(0, 3)
+                  .map((branch) => (
+                    <button
+                      key={branch.branchId}
+                      onClick={() => {
+                        const url =
+                          branch.mapsUrl ||
+                          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            branch.address
+                          )}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="w-full flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-red-500 hover:bg-red-50/30 transition-all text-left group cursor-pointer"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center shrink-0 group-hover:bg-red-600 transition-colors">
+                        <MapPin className="w-6 h-6 text-red-600 group-hover:text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <div className="font-bold group-hover:text-red-600 transition-colors truncate">
+                            {branch.branchName}
+                          </div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 group-hover:text-red-500 flex items-center gap-1 shrink-0 ml-2">
+                            Chỉ đường <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 truncate">
+                          {branch.address}
+                        </div>
+                        <div className="text-sm text-red-600 font-medium mt-1">
+                          SĐT: {branch.contactNumber}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            <div className="relative rounded-3xl overflow-hidden aspect-square md:aspect-4/3 bg-gray-100 shadow-2xl border-2 border-white">
+              <iframe
+                src={`https://www.google.com/maps?q=${encodeURIComponent(
+                  apiBranches[0]?.address || 'Hồ Chí Minh, Việt Nam'
+                )}&output=embed`}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Store Location"
+                className="opacity-90 hover:opacity-100 transition-opacity"
+              />
+              <div className="absolute top-4 left-4 p-3 bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-white/20 pointer-events-none">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-bold">
+                    Showroom đang mở cửa
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Support Widget */}
+      <div className="fixed bottom-8 right-6 md:right-10 z-50 flex flex-col gap-3">
+        {/* Zalo / Support Button */}
+        <button
+          className="group relative flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:shadow-blue-200/50 transition-all hover:-translate-y-1"
+          onClick={() => window.open('https://zalo.me/your_id', '_blank')}
+        >
+          <MessageCircle className="w-6 h-6" />
+          <span className="absolute right-full mr-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Hỗ trợ Zalo
+          </span>
+        </button>
+
+        {/* Back to Top Button */}
+        <button
+          className="group relative flex items-center justify-center w-12 h-12 bg-white/80 backdrop-blur-md text-gray-900 border border-gray-200 rounded-full shadow-md hover:bg-white transition-all"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <ArrowUp className="w-5 h-5" />
+          <span className="absolute right-full mr-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Lên đầu trang
+          </span>
+        </button>
       </div>
     </div>
   );

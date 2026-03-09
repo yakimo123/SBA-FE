@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import {
   Award,
   CheckCircle,
@@ -20,7 +21,12 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { reviews as fallbackReviews } from '../data/mockData';
@@ -55,27 +61,55 @@ export function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
-
-  const [apiReviews, setApiReviews] = useState<{ id: number; user: string; rating: number; date: string; comment: string; verified: boolean }[]>([]);
+  const [apiReviews, setApiReviews] = useState<
+    {
+      id: number;
+      user: string;
+      rating: number;
+      date: string;
+      comment: string;
+      verified: boolean;
+    }[]
+  >([]);
 
   const loadProduct = useCallback(async () => {
     if (!id) return;
-    const numericId = Number(id);
     setIsLoading(true);
     setError(null);
     try {
-      const [productData, mediaData, attrData] = await Promise.all([
-        productService.getProductById(numericId),
-        mediaService.getProductMedia(numericId).catch(() => [] as Media[]),
-        productAttributeService.getProductAttributes(numericId).catch(() => [] as ProductAttribute[]),
-      ]);
+      const numericId = Number(id);
+      const productData = await productService.getProductById(numericId);
       setProduct(productData);
-      setMediaList(mediaData ?? []);
+
+      // If product has imageUrls, we use them. Otherwise fallback to mediaService
+      if (productData.imageUrls && productData.imageUrls.length > 0) {
+        setMediaList(
+          productData.imageUrls.map((url, i) => ({
+            mediaId: i,
+            productId: numericId,
+            type: 'IMAGE',
+            url,
+          }))
+        );
+      } else {
+        const mediaData = await mediaService
+          .getProductMedia(numericId)
+          .catch(() => []);
+        setMediaList(mediaData);
+      }
+
+      const attrData = await productAttributeService
+        .getProductAttributes(numericId)
+        .catch(() => []);
       setAttributes(attrData ?? []);
 
       // Fetch reviews
       try {
-        const reviewsRes = await reviewService.getReviews({ productId: numericId, page: 0, size: 5 });
+        const reviewsRes = await reviewService.getReviews({
+          productId: numericId,
+          page: 0,
+          size: 5,
+        });
         const mapped = (reviewsRes.content || []).map((r: any) => ({
           id: r.reviewId,
           user: r.userFullName,
@@ -88,7 +122,6 @@ export function ProductDetailPage() {
       } catch {
         setApiReviews(fallbackReviews);
       }
-
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể tải sản phẩm';
       setError(msg);
@@ -119,8 +152,13 @@ export function ProductDetailPage() {
         <div className="text-center py-16">
           <div className="text-5xl mb-4">😕</div>
           <h2 className="text-2xl font-bold mb-2">Không tìm thấy sản phẩm</h2>
-          <p className="text-gray-600 mb-6">{error ?? 'Sản phẩm không tồn tại hoặc đã bị xóa.'}</p>
-          <Button onClick={() => navigate('/products')} className="bg-red-600 hover:bg-red-700">
+          <p className="text-gray-600 mb-6">
+            {error ?? 'Sản phẩm không tồn tại hoặc đã bị xóa.'}
+          </p>
+          <Button
+            onClick={() => navigate('/products')}
+            className="bg-red-600 hover:bg-red-700"
+          >
             Quay lại danh sách
           </Button>
         </div>
@@ -129,10 +167,12 @@ export function ProductDetailPage() {
   }
 
   // Build image gallery from media list; fallback to placeholder
-  const imageUrls: string[] =
+  const galleryImages: string[] =
     mediaList.filter((m) => m.type === 'IMAGE').map((m) => m.url).length > 0
       ? mediaList.filter((m) => m.type === 'IMAGE').map((m) => m.url)
-      : [PLACEHOLDER_IMG];
+      : product.imageUrls && product.imageUrls.length > 0
+        ? product.imageUrls
+        : [PLACEHOLDER_IMG];
 
   const isInStock = product.status === 'AVAILABLE' && product.quantity > 0;
   const reviews = apiReviews.length > 0 ? apiReviews : fallbackReviews;
@@ -143,7 +183,7 @@ export function ProductDetailPage() {
         id: String(product.productId),
         name: product.productName,
         price: product.price,
-        image: imageUrls[0],
+        image: galleryImages[0],
         category: product.categoryName ?? '',
       });
     }
@@ -154,7 +194,10 @@ export function ProductDetailPage() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm mb-6">
-          <button onClick={() => navigate('/')} className="text-gray-600 hover:text-red-600">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-600 hover:text-red-600"
+          >
             Trang chủ
           </button>
           <span className="text-gray-400">/</span>
@@ -165,7 +208,9 @@ export function ProductDetailPage() {
             {product.categoryName ?? 'Sản phẩm'}
           </button>
           <span className="text-gray-400">/</span>
-          <span className="text-gray-900 line-clamp-1">{product.productName}</span>
+          <span className="text-gray-900 line-clamp-1">
+            {product.productName}
+          </span>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
@@ -174,32 +219,38 @@ export function ProductDetailPage() {
             <Card className="overflow-hidden mb-4">
               <div className="relative aspect-square bg-gray-100">
                 <ImageWithFallback
-                  src={imageUrls[currentImageIndex]}
+                  src={galleryImages[currentImageIndex]}
                   alt={product.productName}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-all duration-500"
                 />
                 {!isInStock && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="text-white text-xl font-bold">Hết hàng</span>
+                    <span className="text-white text-xl font-bold">
+                      Hết hàng
+                    </span>
                   </div>
                 )}
-                {imageUrls.length > 1 && (
+                {galleryImages.length > 1 && (
                   <>
                     <button
                       onClick={() =>
                         setCurrentImageIndex(
-                          (prev) => (prev - 1 + imageUrls.length) % imageUrls.length
+                          (prev) =>
+                            (prev - 1 + galleryImages.length) %
+                            galleryImages.length
                         )
                       }
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() =>
-                        setCurrentImageIndex((prev) => (prev + 1) % imageUrls.length)
+                        setCurrentImageIndex(
+                          (prev) => (prev + 1) % galleryImages.length
+                        )
                       }
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
@@ -208,13 +259,16 @@ export function ProductDetailPage() {
               </div>
             </Card>
             {/* Thumbnails */}
-            <div className="grid grid-cols-4 gap-2">
-              {imageUrls.map((img, index) => (
+            <div className="grid grid-cols-5 gap-2 mt-4">
+              {galleryImages.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 ${currentImageIndex === index ? 'border-red-600' : 'border-transparent'
-                    }`}
+                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
+                    currentImageIndex === index
+                      ? 'border-red-600'
+                      : 'border-transparent'
+                  }`}
                 >
                   <ImageWithFallback
                     src={img}
@@ -231,25 +285,34 @@ export function ProductDetailPage() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 {product.brandName && (
-                  <Badge variant="outline" className="mb-2">
+                  <Badge
+                    variant="secondary"
+                    className="mb-2 text-[#c9521a] bg-[#fdf1eb] border-none"
+                  >
                     {product.brandName}
                   </Badge>
                 )}
-                <h1 className="text-3xl font-bold mb-2">{product.productName}</h1>
+                <h1 className="text-3xl font-bold mb-3 tracking-tight text-[#1a1612]">
+                  {product.productName}
+                </h1>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                          }`}
-                      />
-                    ))}
-                    <span className="font-medium ml-1">4.8</span>
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <span className="font-bold text-[#1a1612]">
+                      {product.rating || '0.0'}
+                    </span>
                   </div>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-600">
-                    Còn {product.quantity} sản phẩm
+                  <span className="text-gray-300">•</span>
+                  <span className="text-gray-600 text-sm">
+                    Đã bán {product.soldCount || 0}
+                  </span>
+                  <span className="text-gray-300">•</span>
+                  <span
+                    className={`text-sm font-semibold ${isInStock ? 'text-green-600' : 'text-red-600'}`}
+                  >
+                    {isInStock
+                      ? `Còn ${product.quantity} sản phẩm`
+                      : 'Hết hàng'}
                   </span>
                 </div>
               </div>
@@ -278,13 +341,40 @@ export function ProductDetailPage() {
             </div>
 
             {/* Price */}
-            <Card className="p-6 mb-4 bg-gray-50">
-              <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-4xl font-bold text-red-600">
+            <Card className="p-6 mb-6 bg-[#faf9f7] border-[#e8e3da] shadow-none">
+              <div className="flex items-center gap-4 mb-1">
+                <span className="text-4xl font-black text-[#c9521a]">
                   {product.price.toLocaleString('vi-VN')}₫
                 </span>
+                {product.discountPercent && product.discountPercent > 0 && (
+                  <Badge className="bg-[#c9521a] hover:bg-[#c9521a] text-white border-none py-1 px-2">
+                    -{product.discountPercent}%
+                  </Badge>
+                )}
               </div>
-              <p className="text-sm text-gray-600">Giá đã bao gồm VAT</p>
+              {product.originalPrice &&
+                product.originalPrice > product.price && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-gray-400 line-through text-lg">
+                      {product.originalPrice.toLocaleString('vi-VN')}₫
+                    </span>
+                  </div>
+                )}
+
+              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-[#e8e3da]">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Phân phối bởi:</span>
+                  <span className="font-semibold text-[#1a1612]">
+                    {product.supplierName || 'SBA Shop'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Danh mục:</span>
+                  <span className="font-semibold text-[#1a1612] uppercase text-[0.75rem] tracking-wider">
+                    {product.categoryName}
+                  </span>
+                </div>
+              </div>
             </Card>
 
             {/* Benefits */}
@@ -329,16 +419,22 @@ export function ProductDetailPage() {
                   >
                     -
                   </button>
-                  <span className="w-12 text-center font-medium">{quantity}</span>
+                  <span className="w-12 text-center font-medium">
+                    {quantity}
+                  </span>
                   <button
-                    onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
+                    onClick={() =>
+                      setQuantity(Math.min(product.quantity, quantity + 1))
+                    }
                     className="w-10 h-10 flex items-center justify-center hover:bg-gray-100"
                   >
                     +
                   </button>
                 </div>
               </div>
-              <span className="text-sm text-gray-600">Còn {product.quantity} sản phẩm</span>
+              <span className="text-sm text-gray-600">
+                Còn {product.quantity} sản phẩm
+              </span>
             </div>
 
             <div className="flex gap-3">
@@ -380,11 +476,23 @@ export function ProductDetailPage() {
 
             {/* Description */}
             <TabsContent value="description">
-              <div className="prose max-w-none">
-                <h3 className="text-xl font-bold mb-4">Mô tả sản phẩm</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  {product.description ?? 'Chưa có mô tả cho sản phẩm này.'}
-                </p>
+              <div className="prose prose-sm max-w-none text-[#1a1612]">
+                <h3 className="text-lg font-bold mb-4 border-b pb-2">
+                  Thông tin chi tiết
+                </h3>
+                {product.descriptionDetails ? (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(product.descriptionDetails),
+                    }}
+                    className="description-content [&_h3]:text-lg [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4"
+                  />
+                ) : (
+                  <p className="text-gray-500 italic">
+                    {product.description ||
+                      'Chưa có mô tả chi tiết cho sản phẩm này.'}
+                  </p>
+                )}
               </div>
             </TabsContent>
 
@@ -396,9 +504,13 @@ export function ProductDetailPage() {
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {attributes.map((attr) => (
-                    <div key={attr.productAttributeId} className="flex py-3 border-b">
+                    <div
+                      key={attr.productAttributeId}
+                      className="flex py-3 border-b"
+                    >
                       <span className="w-40 text-gray-600">
-                        {attr.attributeName ?? `Thuộc tính #${attr.attributeId}`}
+                        {attr.attributeName ??
+                          `Thuộc tính #${attr.attributeId}`}
                       </span>
                       <span className="font-medium flex-1">{attr.value}</span>
                     </div>
@@ -412,13 +524,18 @@ export function ProductDetailPage() {
               <div className="grid md:grid-cols-3 gap-8 mb-8">
                 <div className="md:col-span-1">
                   <div className="text-center mb-6">
-                    <div className="text-5xl font-bold text-red-600 mb-2">4.8</div>
+                    <div className="text-5xl font-bold text-red-600 mb-2">
+                      4.8
+                    </div>
                     <div className="flex items-center justify-center gap-1 mb-2">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-5 h-5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                            }`}
+                          className={`w-5 h-5 ${
+                            i < 4
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
                         />
                       ))}
                     </div>
@@ -429,7 +546,9 @@ export function ProductDetailPage() {
                       <div key={item.stars} className="flex items-center gap-2">
                         <span className="text-sm w-8">{item.stars} ⭐</span>
                         <Progress value={item.percentage} className="flex-1" />
-                        <span className="text-sm text-gray-600 w-8">{item.count}</span>
+                        <span className="text-sm text-gray-600 w-8">
+                          {item.count}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -456,14 +575,17 @@ export function ProductDetailPage() {
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`w-4 h-4 ${i < review.rating
-                                      ? 'fill-yellow-400 text-yellow-400'
-                                      : 'text-gray-300'
-                                      }`}
+                                    className={`w-4 h-4 ${
+                                      i < review.rating
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-300'
+                                    }`}
                                   />
                                 ))}
                               </div>
-                              <span className="text-sm text-gray-500">{review.date}</span>
+                              <span className="text-sm text-gray-500">
+                                {review.date}
+                              </span>
                             </div>
                           </div>
                         </div>

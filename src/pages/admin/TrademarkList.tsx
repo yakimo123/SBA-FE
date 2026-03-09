@@ -1,346 +1,60 @@
-import { Award, ChevronLeft, ChevronRight, Edit, Globe, Plus, Search, Trash2 } from 'lucide-react';
+import {
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Globe,
+  Image as ImageIcon,
+  Loader2,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { FILE_TYPES } from '../../constants/FILE_TYPES';
 import { brandService } from '../../services/brandService';
+import { mediaService } from '../../services/mediaService';
 import { Brand } from '../../types/product';
 
 const PAGE_SIZE = 10;
 
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-
-  .tl-root {
-    --bg: #f5f3ef;
-    --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --border-strong: #c9bfad;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --accent-mid: #f4c4a8;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
-    --teal: #1a7a6e;
-    --teal-soft: #e8f5f3;
-    --danger: #b03030;
-    --danger-soft: #fdf2f2;
-    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
-    --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
-    --radius: 10px;
-    --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    color: var(--ink);
-    padding: 32px;
-  }
-
-  /* ── Header ── */
-  .tl-header {
-    display: flex; align-items: flex-end;
-    justify-content: space-between; gap: 16px; margin-bottom: 28px;
-  }
-  .tl-header-left { display: flex; align-items: center; gap: 16px; }
-  .tl-icon-badge {
-    width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
-  }
-  .tl-icon-badge svg { color: white; width: 24px; height: 24px; }
-  .tl-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
-    font-weight: 400; color: var(--ink); line-height: 1;
-    margin: 0 0 4px; letter-spacing: -0.5px;
-  }
-  .tl-count-pill {
-    display: inline-flex; align-items: center;
-    background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
-    font-weight: 500; padding: 2px 8px; border-radius: 20px;
-    margin-left: 8px; letter-spacing: 0.02em;
-  }
-  .tl-subtitle { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
-  .tl-divider {
-    width: 32px; height: 2px;
-    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
-    border-radius: 2px; margin: 4px 0 0 68px;
-  }
-  .tl-add-btn {
-    display: flex; align-items: center; gap: 8px; padding: 10px 20px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    color: white; border: none; border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
-    cursor: pointer; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
-    transition: all 0.2s; white-space: nowrap;
-  }
-  .tl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,82,26,0.38); }
-  .tl-add-btn:active { transform: translateY(0); }
-
-  /* ── Error ── */
-  .tl-error {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
-    border-left: 3px solid var(--danger); color: var(--danger);
-    border-radius: var(--radius); padding: 12px 16px;
-    font-size: 0.875rem; margin-bottom: 20px;
-  }
-
-  /* ── Loading ── */
-  .tl-loading {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 80px 0; gap: 16px;
-  }
-  .tl-spinner {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 3px solid var(--border); border-top-color: var(--accent);
-    animation: tl-spin 0.7s linear infinite;
-  }
-  .tl-loading-text { font-size: 0.875rem; color: var(--ink-3); }
-  @keyframes tl-spin { to { transform: rotate(360deg); } }
-
-  /* ── Table card ── */
-  .tl-table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
-  }
-  .tl-table-toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
-  }
-  .tl-search-wrap { position: relative; display: flex; align-items: center; }
-  .tl-search-wrap svg {
-    position: absolute; left: 10px; color: var(--ink-3);
-    width: 14px; height: 14px; pointer-events: none;
-  }
-  .tl-search {
-    padding: 7px 12px 7px 32px; border: 1px solid var(--border);
-    border-radius: 8px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
-    color: var(--ink); outline: none; width: 220px;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .tl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-  .tl-table-meta { font-size: 0.8rem; color: var(--ink-3); }
-
-  /* ── Table ── */
-  .tl-table { width: 100%; border-collapse: collapse; }
-  .tl-table thead tr { border-bottom: 1px solid var(--border); }
-  .tl-table th {
-    padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
-    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-3); background: var(--surface-2);
-  }
-  .tl-table td {
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-    vertical-align: middle; transition: background 0.12s;
-  }
-  .tl-table tbody tr:last-child td { border-bottom: none; }
-  .tl-table tbody tr:hover td { background: var(--accent-soft); }
-
-  /* ── Brand cell ── */
-  .tl-brand-cell { display: flex; align-items: center; gap: 11px; }
-  .tl-brand-avatar {
-    width: 34px; height: 34px; border-radius: 9px;
-    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--accent-mid) 100%);
-    border: 1px solid var(--accent-mid);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Serif Display', serif;
-    font-size: 0.95rem; color: var(--accent); flex-shrink: 0;
-    font-weight: 400; letter-spacing: -0.5px;
-  }
-  .tl-brand-name { font-weight: 600; color: var(--ink); font-size: 0.88rem; }
-
-  /* ── Country badge ── */
-  .tl-country-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--teal-soft); color: var(--teal);
-    font-size: 0.75rem; font-weight: 500;
-    padding: 3px 9px; border-radius: 20px; white-space: nowrap;
-  }
-  .tl-country-badge svg { width: 11px; height: 11px; flex-shrink: 0; }
-
-  .tl-desc-text { font-size: 0.83rem; color: var(--ink-3); max-width: 300px; }
-  .tl-id-text {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
-    color: var(--ink-3); background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: 5px;
-    padding: 2px 7px; display: inline-block;
-  }
-
-  /* ── Actions ── */
-  .tl-actions { display: flex; gap: 6px; }
-  .tl-btn-edit {
-    display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--surface);
-    color: var(--violet); cursor: pointer; transition: all 0.15s;
-  }
-  .tl-btn-edit:hover { background: var(--violet-soft); border-color: var(--violet); }
-  .tl-btn-delete {
-    display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--surface);
-    color: var(--danger); cursor: pointer; transition: all 0.15s;
-  }
-  .tl-btn-delete:hover { background: var(--danger-soft); border-color: #f5c2c2; }
-
-  /* ── Empty ── */
-  .tl-empty {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 64px 20px; gap: 12px;
-  }
-  .tl-empty-icon {
-    width: 56px; height: 56px; border-radius: 14px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center; color: var(--ink-3);
-  }
-  .tl-empty-text { font-size: 0.9rem; color: var(--ink-3); margin: 0; }
-
-  /* ── Pagination ── */
-  .tl-pagination {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 20px 0 0;
-  }
-  .tl-page-btn {
-    display: flex; align-items: center; gap: 4px;
-    padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--surface); font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem; font-weight: 500; color: var(--ink-2);
-    cursor: pointer; transition: all 0.15s;
-  }
-  .tl-page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-  .tl-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .tl-page-info {
-    font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--ink-3); padding: 0 8px;
-  }
-
-  /* ── Modal ── */
-  .tl-overlay {
-    position: fixed; inset: 0; background: rgba(26,22,18,0.45);
-    backdrop-filter: blur(4px); display: flex; align-items: center;
-    justify-content: center; z-index: 1000; animation: tl-fade 0.15s ease;
-  }
-  @keyframes tl-fade { from { opacity: 0; } to { opacity: 1; } }
-  .tl-modal {
-    background: var(--surface); border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg); width: 100%; max-width: 460px;
-    margin: 20px; animation: tl-slide 0.2s ease; overflow: hidden;
-  }
-  @keyframes tl-slide {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .tl-modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 24px 18px; border-bottom: 1px solid var(--border);
-  }
-  .tl-modal-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.3rem;
-    font-weight: 400; color: var(--ink); margin: 0;
-  }
-  .tl-modal-close {
-    width: 32px; height: 32px; border-radius: 8px;
-    border: 1px solid var(--border); background: transparent;
-    color: var(--ink-3); cursor: pointer; display: flex;
-    align-items: center; justify-content: center;
-    font-size: 1.1rem; transition: all 0.15s; line-height: 1;
-  }
-  .tl-modal-close:hover { background: var(--surface-2); color: var(--ink); }
-  .tl-modal-body { padding: 22px 24px 26px; }
-
-  .tl-field { margin-bottom: 16px; }
-  .tl-m-label {
-    display: block; font-size: 0.8rem; font-weight: 600;
-    color: var(--ink-2); margin-bottom: 7px; letter-spacing: 0.01em;
-  }
-  .tl-m-label span { color: var(--accent); margin-left: 2px; }
-  .tl-m-input {
-    width: 100%; padding: 10px 14px;
-    border: 1px solid var(--border-strong); border-radius: 9px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-    color: var(--ink); background: var(--surface); outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
-  }
-  .tl-m-input::placeholder { color: var(--ink-3); }
-  .tl-m-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-
-  /* Country input with icon */
-  .tl-input-wrap { position: relative; }
-  .tl-input-icon {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    color: var(--ink-3); pointer-events: none; width: 15px; height: 15px;
-  }
-  .tl-m-input-icon { padding-left: 36px !important; }
-
-  .tl-m-textarea {
-    width: 100%; padding: 10px 14px;
-    border: 1px solid var(--border-strong); border-radius: 9px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-    color: var(--ink); background: var(--surface); outline: none;
-    resize: vertical; min-height: 72px; line-height: 1.6;
-    transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
-  }
-  .tl-m-textarea::placeholder { color: var(--ink-3); }
-  .tl-m-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-
-  .tl-m-error {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
-    border-radius: 8px; padding: 10px 14px;
-    font-size: 0.83rem; color: var(--danger); margin-top: 4px;
-  }
-  .tl-modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-  .tl-btn-cancel {
-    padding: 9px 18px; border: 1px solid var(--border-strong); border-radius: 9px;
-    background: var(--surface); font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem; font-weight: 500; color: var(--ink-2); cursor: pointer; transition: all 0.15s;
-  }
-  .tl-btn-cancel:hover { background: var(--surface-2); border-color: var(--ink-3); }
-  .tl-btn-save {
-    display: flex; align-items: center; gap: 8px;
-    padding: 9px 20px; border: none; border-radius: 9px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    color: white; font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem; font-weight: 600; cursor: pointer;
-    box-shadow: 0 3px 10px rgba(201,82,26,0.3); transition: all 0.15s;
-  }
-  .tl-btn-save:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(201,82,26,0.38); }
-  .tl-btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
-  .tl-save-spinner {
-    width: 14px; height: 14px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.4); border-top-color: white;
-    animation: tl-spin 0.6s linear infinite;
-  }
-`;
-
 // Generate initials avatar letter(s) from brand name
 const getInitials = (name: string) =>
-  name.trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
 export function TrademarkList() {
-  const [brands, setBrands]               = useState<Brand[]>([]);
-  const [isLoading, setIsLoading]         = useState(false);
-  const [error, setError]                 = useState<string | null>(null);
-  const [search, setSearch]               = useState('');
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
-  const [page, setPage]                   = useState(0);
-  const [totalPages, setTotalPages]       = useState(0);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const [isModalOpen, setIsModalOpen]         = useState(false);
-  const [editingBrand, setEditingBrand]       = useState<Brand | null>(null);
-  const [form, setForm]                       = useState({ brandName: '', country: '', description: '' });
-  const [formError, setFormError]             = useState<string | null>(null);
-  const [isSaving, setIsSaving]               = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [form, setForm] = useState({
+    brandName: '',
+    country: '',
+    description: '',
+    logoUrl: '',
+  });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchBrands = useCallback(async () => {
-    setIsLoading(true); setError(null);
+    setIsLoading(true);
+    setError(null);
     try {
       const data = await brandService.getBrands(page, PAGE_SIZE);
       setBrands(data.content ?? (data as unknown as Brand[]));
@@ -348,132 +62,249 @@ export function TrademarkList() {
       setTotalElements((data as { totalElements?: number }).totalElements ?? 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load brands');
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   }, [page]);
 
-  useEffect(() => { fetchBrands(); }, [fetchBrands]);
+  useEffect(() => {
+    fetchBrands();
+  }, [fetchBrands]);
 
   const openCreate = () => {
     setEditingBrand(null);
-    setForm({ brandName: '', country: '', description: '' });
-    setFormError(null); setIsModalOpen(true);
+    setForm({ brandName: '', country: '', description: '', logoUrl: '' });
+    setFormError(null);
+    setIsModalOpen(true);
   };
 
   const openEdit = (brand: Brand) => {
     setEditingBrand(brand);
-    setForm({ brandName: brand.brandName, country: brand.country ?? '', description: brand.description ?? '' });
-    setFormError(null); setIsModalOpen(true);
+    setForm({
+      brandName: brand.brandName,
+      country: brand.country ?? '',
+      description: brand.description ?? '',
+      logoUrl: brand.logoUrl ?? '',
+    });
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setFormError(null);
+    try {
+      const publicUrl = await mediaService.uploadFile(file, FILE_TYPES.BRAND);
+      setForm((prev) => ({ ...prev, logoUrl: publicUrl }));
+    } catch (err: unknown) {
+      setFormError(
+        err instanceof Error ? err.message : 'Failed to upload logo'
+      );
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleSave = async () => {
-    if (!form.brandName.trim()) { setFormError('Brand name is required'); return; }
-    setIsSaving(true); setFormError(null);
+    if (!form.brandName.trim()) {
+      setFormError('Brand name is required');
+      return;
+    }
+    setIsSaving(true);
+    setFormError(null);
     try {
-      editingBrand
-        ? await brandService.updateBrand(editingBrand.brandId, form)
-        : await brandService.createBrand(form);
-      setIsModalOpen(false); fetchBrands();
+      const payload = {
+        brandName: form.brandName,
+        country: form.country || undefined,
+        description: form.description || undefined,
+        logoUrl: form.logoUrl || undefined,
+      };
+
+      if (editingBrand) {
+        await brandService.updateBrand(editingBrand.brandId, payload);
+      } else {
+        await brandService.createBrand(payload);
+      }
+      setIsModalOpen(false);
+      fetchBrands();
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : 'Failed to save brand');
-    } finally { setIsSaving(false); }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = async (brand: Brand) => {
     if (!window.confirm(`Delete brand "${brand.brandName}"?`)) return;
-    try { await brandService.deleteBrand(brand.brandId); fetchBrands(); }
-    catch { alert('Failed to delete brand'); }
+    try {
+      await brandService.deleteBrand(brand.brandId);
+      fetchBrands();
+    } catch {
+      alert('Failed to delete brand');
+    }
   };
 
-  const filtered = brands.filter((b) =>
-    b.brandName.toLowerCase().includes(search.toLowerCase()) ||
-    (b.country ?? '').toLowerCase().includes(search.toLowerCase())
+  const filtered = brands.filter(
+    (b) =>
+      b.brandName.toLowerCase().includes(search.toLowerCase()) ||
+      (b.country ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="tl-root">
-      <style>{css}</style>
-
+    <div className="min-h-screen bg-[#f5f3ef] p-8 font-sans text-[#1a1612]">
       {/* ── Header ── */}
-      <div className="tl-header">
-        <div className="tl-header-left">
-          <div className="tl-icon-badge"><Award /></div>
+      <div className="mb-7 flex items-end justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#c9521a] to-[#e07040] text-white shadow-lg shadow-[#c9521a]/35">
+            <Award size={24} />
+          </div>
           <div>
-            <h1 className="tl-title">
+            <h1 className="font-serif text-3xl tracking-tight text-[#1a1612]">
               Trademarks
-              {totalElements > 0 && <span className="tl-count-pill">{totalElements}</span>}
+              {totalElements > 0 && (
+                <span className="ml-2 inline-flex items-center rounded-full bg-[#eeecf8] px-2 py-0.5 font-mono text-[0.7rem] font-medium tracking-wide text-[#4a3f8f]">
+                  {totalElements}
+                </span>
+              )}
             </h1>
-            <div className="tl-divider" />
-            <p className="tl-subtitle" style={{ marginTop: 6 }}>Manage brands and trademarks</p>
+            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#c9521a] to-transparent ml-px" />
+            <p className="mt-1.5 text-sm text-[#9c9085]">
+              Manage brands and trademarks
+            </p>
           </div>
         </div>
-        <button type="button" onClick={openCreate} className="tl-add-btn">
+        <button
+          type="button"
+          onClick={openCreate}
+          className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.9rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-[#c9521a]/38 active:translate-y-0"
+        >
           <Plus size={17} /> Add Trademark
         </button>
       </div>
 
       {/* ── Error ── */}
-      {error && <div className="tl-error">⚠ {error}</div>}
+      {error && (
+        <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-[#f5c2c2] border-l-3 border-l-[#b03030] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b03030]">
+          ⚠ {error}
+        </div>
+      )}
 
       {/* ── Table card ── */}
-      <div className="tl-table-card">
-        <div className="tl-table-toolbar">
-          <div className="tl-search-wrap">
-            <Search />
+      <div className="overflow-hidden rounded-2xl border border-[#e8e3da] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#e8e3da] bg-[#faf9f7] px-5 py-4">
+          <div className="relative flex items-center">
+            <Search className="absolute left-2.5 h-3.5 w-3.5 text-[#9c9085]" />
             <input
-              className="tl-search" placeholder="Search brands or countries…"
-              value={search} onChange={(e) => setSearch(e.target.value)}
+              className="w-[220px] rounded-lg border border-[#e8e3da] bg-white py-1.5 pl-8 pr-3 text-[0.85rem] text-[#1a1612] outline-hidden transition-all focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+              placeholder="Search brands or countries…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <span className="tl-table-meta">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
+          <span className="text-[0.8rem] text-[#9c9085]">
+            {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
         {isLoading ? (
-          <div className="tl-loading">
-            <div className="tl-spinner" />
-            <p className="tl-loading-text">Loading trademarks…</p>
+          <div className="flex flex-col items-center justify-center gap-4 py-20">
+            <Loader2 className="h-9 w-9 animate-spin text-[#c9521a]" />
+            <p className="text-sm text-[#9c9085]">Loading trademarks…</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="tl-empty">
-            <div className="tl-empty-icon"><Award size={22} /></div>
-            <p className="tl-empty-text">No brands found</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[#e8e3da] bg-[#faf9f7] text-[#9c9085]">
+              <Award size={22} />
+            </div>
+            <p className="text-[0.9rem] text-[#9c9085]">No brands found</p>
           </div>
         ) : (
-          <table className="tl-table">
+          <table className="w-full border-collapse">
             <thead>
-              <tr>
-                <th>Brand</th>
-                <th>Country</th>
-                <th>Description</th>
-                <th>ID</th>
-                <th>Actions</th>
+              <tr className="border-b border-[#e8e3da]">
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  Brand
+                </th>
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  Country
+                </th>
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  Description
+                </th>
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  ID
+                </th>
+                <th className="bg-[#faf9f7] px-5 py-3 text-left font-mono text-[0.69rem] font-medium tracking-widest uppercase text-[#9c9085]">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((b) => (
-                <tr key={b.brandId}>
-                  <td>
-                    <div className="tl-brand-cell">
-                      <div className="tl-brand-avatar">{getInitials(b.brandName)}</div>
-                      <span className="tl-brand-name">{b.brandName}</span>
+                <tr
+                  key={b.brandId}
+                  className="group border-b border-[#e8e3da] last:border-b-0 hover:bg-[#fdf1eb]/50"
+                >
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#f4c4a8] bg-linear-to-br from-[#fdf1eb] to-[#f4c4a8] font-serif text-[0.95rem] font-normal tracking-tight text-[#c9521a]">
+                        {b.logoUrl ? (
+                          <img
+                            src={b.logoUrl}
+                            alt=""
+                            className="h-full w-full rounded-lg object-cover"
+                          />
+                        ) : (
+                          getInitials(b.brandName)
+                        )}
+                      </div>
+                      <span className="text-[0.88rem] font-semibold text-[#1a1612]">
+                        {b.brandName}
+                      </span>
                     </div>
                   </td>
-                  <td>
-                    {b.country
-                      ? <span className="tl-country-badge"><Globe />{b.country}</span>
-                      : <span style={{ color: 'var(--ink-3)' }}>—</span>}
+                  <td className="px-5 py-3.5">
+                    {b.country ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e8f5f3] px-2.5 py-1 text-[0.75rem] font-medium text-[#1a7a6e]">
+                        <Globe size={11} />
+                        {b.country}
+                      </span>
+                    ) : (
+                      <span className="text-[#9c9085]/60">—</span>
+                    )}
                   </td>
-                  <td>
-                    <span className="tl-desc-text">
-                      {b.description ?? <span style={{ color: 'var(--ink-3)' }}>—</span>}
+                  <td className="px-5 py-3.5">
+                    <span className="line-clamp-2 max-w-[300px] text-[0.83rem] leading-relaxed text-[#9c9085]">
+                      {b.description ?? (
+                        <span className="text-[#9c9085]/60">—</span>
+                      )}
                     </span>
                   </td>
-                  <td><span className="tl-id-text">#{b.brandId}</span></td>
-                  <td>
-                    <div className="tl-actions">
-                      <button type="button" className="tl-btn-edit" title="Edit" onClick={() => openEdit(b)}>
+                  <td className="px-5 py-3.5">
+                    <span className="inline-block rounded-md border border-[#e8e3da] bg-[#faf9f7] px-2 py-0.5 font-mono text-[0.75rem] text-[#9c9085]">
+                      #{b.brandId}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex gap-1.5 align-center">
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#4a3f8f] transition-all hover:border-[#4a3f8f] hover:bg-[#eeecf8]"
+                        title="Edit"
+                        onClick={() => openEdit(b)}
+                      >
                         <Edit size={14} />
                       </button>
-                      <button type="button" className="tl-btn-delete" title="Delete" onClick={() => handleDelete(b)}>
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:border-[#f5c2c2] hover:bg-[#fdf2f2]"
+                        title="Delete"
+                        onClick={() => handleDelete(b)}
+                      >
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -487,14 +318,24 @@ export function TrademarkList() {
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
-        <div className="tl-pagination">
-          <button type="button" disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)} className="tl-page-btn">
+        <div className="mt-5 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+          >
             <ChevronLeft size={15} /> Previous
           </button>
-          <span className="tl-page-info">{page + 1} / {totalPages}</span>
-          <button type="button" disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)} className="tl-page-btn">
+          <span className="px-2 font-mono text-[0.78rem] text-[#9c9085]">
+            {page + 1} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+          >
             Next <ChevronRight size={15} />
           </button>
         </div>
@@ -502,48 +343,164 @@ export function TrademarkList() {
 
       {/* ── Modal ── */}
       {isModalOpen && (
-        <div className="tl-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="tl-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="tl-modal-header">
-              <h2 className="tl-modal-title">{editingBrand ? 'Edit Trademark' : 'New Trademark'}</h2>
-              <button type="button" className="tl-modal-close" onClick={() => setIsModalOpen(false)}>✕</button>
+        <div
+          className="fixed inset-0 z-1000 flex items-center justify-center bg-[#1a1612]/45 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="m-5 w-full max-w-[460px] overflow-hidden rounded-2xl bg-white shadow-2xl animate-in slide-in-from-bottom-3 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#e8e3da] px-6 py-4.5">
+              <h2 className="font-serif text-xl text-[#1a1612]">
+                {editingBrand ? 'Edit Trademark' : 'New Trademark'}
+              </h2>
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] text-[1.1rem] text-[#9c9085] transition-all hover:bg-[#faf9f7] hover:text-[#1a1612]"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
             </div>
-            <div className="tl-modal-body">
-              <div className="tl-field">
-                <label className="tl-m-label">Brand Name <span>*</span></label>
-                <input type="text" className="tl-m-input" autoFocus
+
+            <div className="px-6 py-5.5">
+              {/* Logo Upload Area */}
+              <div className="mb-5">
+                <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
+                  Brand Logo
+                </label>
+                <div className="flex gap-4">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-[#e8e3da] bg-[#faf9f7]">
+                    {form.logoUrl ? (
+                      <>
+                        <img
+                          src={form.logoUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((prev) => ({ ...prev, logoUrl: '' }))
+                          }
+                          className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1a1612]/60 text-white backdrop-blur-xs transition-colors hover:bg-[#b03030]"
+                        >
+                          <X size={12} />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-br from-[#fdf1eb] to-[#f4c4a8] text-[#c9521a]">
+                        <span className="font-serif text-2xl">
+                          {form.brandName ? (
+                            getInitials(form.brandName)
+                          ) : (
+                            <ImageIcon size={20} />
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-1 flex-col justify-center">
+                    <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[#c9bfad] bg-[#faf9f7] px-4 py-3 text-[0.8rem] font-medium text-[#c9521a] transition-all hover:border-[#c9521a]/50 hover:bg-[#fdf1eb]">
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={16} className="mr-2" />
+                          Choose Logo
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={isUploading}
+                      />
+                    </label>
+                    <p className="mt-1.5 text-[0.7rem] leading-relaxed text-[#9c9085]">
+                      Support JPG, PNG, WEBP. Max size 2MB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
+                  Brand Name <span className="text-[#c9521a]">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                  autoFocus
                   value={form.brandName}
-                  onChange={(e) => setForm({ ...form, brandName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, brandName: e.target.value })
+                  }
                   placeholder="e.g. Samsung"
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                 />
               </div>
-              <div className="tl-field">
-                <label className="tl-m-label">Country of Origin</label>
-                <div className="tl-input-wrap">
-                  <Globe className="tl-input-icon" />
-                  <input type="text" className="tl-m-input tl-m-input-icon"
+
+              <div className="mb-4">
+                <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
+                  Country of Origin
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9c9085]" />
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-[#c9bfad] bg-white py-2.5 pl-9 pr-3.5 text-[0.9rem] text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
                     value={form.country}
-                    onChange={(e) => setForm({ ...form, country: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, country: e.target.value })
+                    }
                     placeholder="e.g. South Korea"
                   />
                 </div>
               </div>
-              <div className="tl-field" style={{ marginBottom: 0 }}>
-                <label className="tl-m-label">Description</label>
-                <textarea className="tl-m-textarea" rows={2}
+
+              <div>
+                <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
+                  Description
+                </label>
+                <textarea
+                  className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] leading-relaxed text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                  rows={2}
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
                   placeholder="Short brand description…"
                 />
               </div>
 
-              {formError && <div className="tl-m-error">⚠ {formError}</div>}
+              {formError && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#f5c2c2] bg-[#fdf2f2] px-3.5 py-2.5 text-[0.83rem] text-[#b03030]">
+                  ⚠ {formError}
+                </div>
+              )}
 
-              <div className="tl-modal-footer">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="tl-btn-cancel">Cancel</button>
-                <button type="button" onClick={handleSave} disabled={isSaving} className="tl-btn-save">
-                  {isSaving && <span className="tl-save-spinner" />}
+              <div className="mt-5 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-lg border border-[#c9bfad] bg-white px-4.5 py-2.5 text-[0.88rem] font-medium text-[#5c5347] transition-all hover:border-[#9c9085] hover:bg-[#faf9f7]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving || isUploading}
+                  className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.88rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 transition-all hover:not-disabled:-translate-y-px hover:not-disabled:shadow-lg hover:not-disabled:shadow-[#c9521a]/38 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {editingBrand ? 'Save Changes' : 'Create'}
                 </button>
               </div>

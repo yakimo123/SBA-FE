@@ -1,13 +1,15 @@
 import { ApiResponse, PageResponse } from '../types/auth';
 import api from './api';
 
-// Matches BranchResponse from backend API
+// Matches StoreBranch from integration guide
 export interface BranchResponse {
   branchId: number;
   branchName: string;
   location: string;
-  managerName: string;
+  address: string;
   contactNumber: string;
+  workingHours: string;
+  mapsUrl: string;
 }
 
 export interface CreateBranchRequest {
@@ -33,7 +35,6 @@ export interface BranchListParams {
 
 const ENDPOINTS = {
   BRANCHES: '/api/v1/branches',
-  ALL_BRANCHES: '/api/v1/branches/all',
   BRANCH_BY_ID: (id: string | number) => `/api/v1/branches/${id}`,
   BRANCH_PRODUCT_STOCK: (
     branchId: string | number,
@@ -53,10 +54,9 @@ export const branchService = {
   },
 
   async getAllBranches(): Promise<BranchResponse[]> {
-    const response = await api.get<ApiResponse<BranchResponse[]>>(
-      ENDPOINTS.ALL_BRANCHES
-    );
-    return response.data.data;
+    // We request a large size to simulate "all" since the backend moved to pagination
+    const response = await this.getBranches({ size: 100 });
+    return response.content || [];
   },
 
   async getBranchById(id: string | number): Promise<BranchResponse> {
