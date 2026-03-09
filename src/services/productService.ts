@@ -24,8 +24,22 @@ export const productService = {
     if (params.keyword) query.keyword = params.keyword;
     if (params.categoryId) query.categoryId = params.categoryId;
     if (params.brandId) query.brandId = params.brandId;
-    const res = await api.get<ApiResponse<ProductPage>>(BASE, { params: query });
-    return res.data.data;
+    const res = await api.get<ApiResponse<ProductPage>>(BASE, {
+      params: query,
+    });
+
+    const data = res.data.data;
+    // Flatten nested page object if it exists
+    if (data.page) {
+      return {
+        ...data,
+        totalPages: data.page.totalPages,
+        totalElements: data.page.totalElements,
+        size: data.page.size,
+        number: data.page.number,
+      };
+    }
+    return data;
   },
 
   async getProductById(id: number): Promise<Product> {
@@ -33,7 +47,10 @@ export const productService = {
     return res.data.data;
   },
 
-  async updateProduct(id: number, data: UpdateProductRequest): Promise<Product> {
+  async updateProduct(
+    id: number,
+    data: UpdateProductRequest
+  ): Promise<Product> {
     const res = await api.put<ApiResponse<Product>>(`${BASE}/${id}`, data);
     return res.data.data;
   },
@@ -48,6 +65,17 @@ export const productService = {
       null,
       { params: { quantity } }
     );
+    return res.data.data;
+  },
+
+  async searchProducts(
+    q: string
+  ): Promise<{ content: Product[]; totalElements: number }> {
+    const res = await api.get<
+      ApiResponse<{ content: Product[]; totalElements: number }>
+    >(`${BASE}/search`, {
+      params: { q },
+    });
     return res.data.data;
   },
 };

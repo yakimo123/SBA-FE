@@ -24,6 +24,9 @@ import { StoreBranchList } from '../pages/admin/StoreBranchList';
 import { SupplierList } from '../pages/admin/SupplierList';
 import { TrademarkList } from '../pages/admin/TrademarkList';
 import { VoucherList } from '../pages/admin/VoucherList';
+import { StockExportPage } from '../pages/admin/warehouse/StockExportPage';
+import { StockImportPage } from '../pages/admin/warehouse/StockImportPage';
+import { StockInventoryPage } from '../pages/admin/warehouse/StockInventoryPage';
 import { BusinessApprovalPendingPage } from '../pages/b2b/BusinessApprovalPendingPage';
 import { BusinessRegistrationPage } from '../pages/b2b/BusinessRegistrationPage';
 import { CartPage } from '../pages/Cart';
@@ -101,6 +104,11 @@ export const router = createBrowserRouter([
           { path: 'settings/stores', element: <StoreBranchList /> },
           { path: 'settings/guarantees', element: <GuaranteeList /> },
           { path: 'settings/media', element: <MediaLibrary /> },
+
+          // Inventory
+          { path: 'inventory', element: <StockInventoryPage /> },
+          { path: 'inventory/import', element: <StockImportPage /> },
+          { path: 'inventory/export', element: <StockExportPage /> },
         ],
       },
     ],

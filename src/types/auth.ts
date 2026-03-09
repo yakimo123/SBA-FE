@@ -1,79 +1,85 @@
 // Auth Request Types
 export interface LoginRequest {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
 export interface RegisterRequest {
-    email: string;
-    password: string;
-    fullName: string;
-    phoneNumber?: string;
+  email: string;
+  password: string;
+  fullName: string;
+  phoneNumber?: string;
 }
 
 export interface RefreshTokenRequest {
-    refreshToken: string;
+  refreshToken: string;
 }
 
 // Auth Response Types
 export interface AuthResponse {
-    userId: number;
-    email: string;
-    fullName: string;
-    role: string;
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
+  userId: number;
+  email: string;
+  fullName: string;
+  role: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 export interface TokenResponse {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 // API Response wrapper
 export interface ApiResponse<T> {
-    status: number;
-    message: string;
-    data: T;
-    timestamp: string;
+  status: number;
+  message: string;
+  data: T;
+  timestamp: string;
 }
 
 // User type for context
 export interface AuthUser {
-    userId: number;
-    email: string;
-    fullName: string;
-    role: string;
-    phoneNumber?: string;
-    address?: string;
-    rewardPoint?: number;
-    // Backward compatible aliases
-    name?: string; // alias for fullName
-    phone?: string; // alias for phoneNumber
-    points?: number; // alias for rewardPoint
+  userId: number;
+  email: string;
+  fullName: string;
+  role: string;
+  phoneNumber?: string;
+  address?: string;
+  rewardPoint?: number;
+  // Backward compatible aliases
+  name?: string; // alias for fullName
+  phone?: string; // alias for phoneNumber
+  points?: number; // alias for rewardPoint
 }
 
 // Paginated Response wrapper
 export interface PageResponse<T> {
-    content: T[];
-    totalElements: number;
-    totalPages: number;
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  page?: {
     size: number;
     number: number;
-    first?: boolean;
-    last?: boolean;
-    numberOfElements?: number;
-    empty?: boolean;
+    totalElements: number;
+    totalPages: number;
+  };
+  first?: boolean;
+  last?: boolean;
+  numberOfElements?: number;
+  empty?: boolean;
 }
 
 // Auth State
 export interface AuthState {
-    user: AuthUser | null;
-    accessToken: string | null;
-    refreshToken: string | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    error: string | null;
+  user: AuthUser | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
 }

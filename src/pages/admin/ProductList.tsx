@@ -1,4 +1,14 @@
-import { Edit, Eye, Package, Plus, Search, SlidersHorizontal, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Eye,
+  Package,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -304,9 +314,9 @@ const css = `
 
 const statusConfig = (status: ProductStatus) => {
   const map: Record<ProductStatus, { label: string; className: string }> = {
-    AVAILABLE:    { label: 'Available',    className: 'pl-status-available'   },
-    UNAVAILABLE:  { label: 'Inactive',     className: 'pl-status-unavailable' },
-    OUT_OF_STOCK: { label: 'Out of Stock', className: 'pl-status-outofstock'  },
+    AVAILABLE: { label: 'Available', className: 'pl-status-available' },
+    UNAVAILABLE: { label: 'Inactive', className: 'pl-status-unavailable' },
+    OUT_OF_STOCK: { label: 'Out of Stock', className: 'pl-status-outofstock' },
   };
   return map[status] ?? { label: status, className: 'pl-status-unavailable' };
 };
@@ -314,17 +324,20 @@ const statusConfig = (status: ProductStatus) => {
 export function ProductList() {
   const navigate = useNavigate();
 
-  const [products, setProducts]       = useState<Product[]>([]);
-  const [categories, setCategories]   = useState<Category[]>([]);
-  const [brands, setBrands]           = useState<Brand[]>([]);
-  const [isLoading, setIsLoading]     = useState(false);
-  const [error, setError]             = useState<string | null>(null);
-  const [page, setPage]               = useState(0);
-  const [totalPages, setTotalPages]   = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
   const [filters, setFilters] = useState({
-    search: '', categoryId: '', brandId: '', status: '',
+    search: '',
+    categoryId: '',
+    brandId: '',
+    status: '',
   });
 
   const loadFilters = useCallback(async () => {
@@ -335,14 +348,18 @@ export function ProductList() {
       ]);
       setCategories(catData.content ?? []);
       setBrands(brandData.content ?? []);
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
   }, []);
 
   const fetchProducts = useCallback(async () => {
-    setIsLoading(true); setError(null);
+    setIsLoading(true);
+    setError(null);
     try {
       const data = await productService.getProducts({
-        page, size: PAGE_SIZE,
+        page,
+        size: PAGE_SIZE,
         keyword: filters.search || undefined,
         categoryId: filters.categoryId ? Number(filters.categoryId) : undefined,
         brandId: filters.brandId ? Number(filters.brandId) : undefined,
@@ -352,18 +369,26 @@ export function ProductList() {
       setTotalElements(data.totalElements ?? 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   }, [page, filters.search, filters.categoryId, filters.brandId]);
 
-  useEffect(() => { loadFilters(); }, [loadFilters]);
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => {
+    loadFilters();
+  }, [loadFilters]);
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleDelete = async (product: Product) => {
     if (!window.confirm(`Delete product "${product.productName}"?`)) return;
     try {
       await productService.deleteProduct(product.productId);
       fetchProducts();
-    } catch { alert('Failed to delete product'); }
+    } catch {
+      alert('Failed to delete product');
+    }
   };
 
   const stockClass = (qty: number) =>
@@ -376,7 +401,9 @@ export function ProductList() {
       {/* ── Header ── */}
       <div className="pl-header">
         <div className="pl-header-left">
-          <div className="pl-icon-badge"><Package /></div>
+          <div className="pl-icon-badge">
+            <Package />
+          </div>
           <div>
             <h1 className="pl-title">
               Products
@@ -385,10 +412,16 @@ export function ProductList() {
               )}
             </h1>
             <div className="pl-divider" />
-            <p className="pl-subtitle" style={{ marginTop: 6 }}>Manage your product inventory</p>
+            <p className="pl-subtitle" style={{ marginTop: 6 }}>
+              Manage your product inventory
+            </p>
           </div>
         </div>
-        <button type="button" onClick={() => navigate('/admin/products/new')} className="pl-add-btn">
+        <button
+          type="button"
+          onClick={() => navigate('/admin/products/new')}
+          className="pl-add-btn"
+        >
           <Plus size={17} /> Add Product
         </button>
       </div>
@@ -409,7 +442,10 @@ export function ProductList() {
                 className="pl-search"
                 placeholder="Search by product name…"
                 value={filters.search}
-                onChange={(e) => { setPage(0); setFilters({ ...filters, search: e.target.value }); }}
+                onChange={(e) => {
+                  setPage(0);
+                  setFilters({ ...filters, search: e.target.value });
+                }}
               />
             </div>
           </div>
@@ -418,11 +454,16 @@ export function ProductList() {
             <select
               className="pl-select"
               value={filters.categoryId}
-              onChange={(e) => { setPage(0); setFilters({ ...filters, categoryId: e.target.value }); }}
+              onChange={(e) => {
+                setPage(0);
+                setFilters({ ...filters, categoryId: e.target.value });
+              }}
             >
               <option value="">All Categories</option>
               {categories.map((c) => (
-                <option key={c.categoryId} value={c.categoryId}>{c.categoryName}</option>
+                <option key={c.categoryId} value={c.categoryId}>
+                  {c.categoryName}
+                </option>
               ))}
             </select>
           </div>
@@ -431,11 +472,16 @@ export function ProductList() {
             <select
               className="pl-select"
               value={filters.brandId}
-              onChange={(e) => { setPage(0); setFilters({ ...filters, brandId: e.target.value }); }}
+              onChange={(e) => {
+                setPage(0);
+                setFilters({ ...filters, brandId: e.target.value });
+              }}
             >
               <option value="">All Brands</option>
               {brands.map((b) => (
-                <option key={b.brandId} value={b.brandId}>{b.brandName}</option>
+                <option key={b.brandId} value={b.brandId}>
+                  {b.brandName}
+                </option>
               ))}
             </select>
           </div>
@@ -444,7 +490,10 @@ export function ProductList() {
             <select
               className="pl-select"
               value={filters.status}
-              onChange={(e) => { setPage(0); setFilters({ ...filters, status: e.target.value }); }}
+              onChange={(e) => {
+                setPage(0);
+                setFilters({ ...filters, status: e.target.value });
+              }}
             >
               <option value="">All Statuses</option>
               <option value="AVAILABLE">Available</option>
@@ -467,16 +516,23 @@ export function ProductList() {
       ) : (
         <div className="pl-table-card">
           <div className="pl-table-toolbar">
-            <span className="pl-filters-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span
+              className="pl-filters-label"
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
               <Package size={13} style={{ color: 'var(--ink-3)' }} />
               Product Inventory
             </span>
-            <span className="pl-table-meta">{products.length} result{products.length !== 1 ? 's' : ''}</span>
+            <span className="pl-table-meta">
+              {products.length} result{products.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
           {products.length === 0 ? (
             <div className="pl-empty">
-              <div className="pl-empty-icon"><Package size={22} /></div>
+              <div className="pl-empty-icon">
+                <Package size={22} />
+              </div>
               <p className="pl-empty-text">No products found</p>
             </div>
           ) : (
@@ -500,24 +556,38 @@ export function ProductList() {
                       <td>
                         <div className="pl-name-cell">
                           <div className="pl-dot" />
-                          <span className="pl-name-text">{product.productName}</span>
+                          <span className="pl-name-text">
+                            {product.productName}
+                          </span>
                         </div>
                       </td>
                       <td>
-                        {product.categoryName
-                          ? <span className="pl-cat-badge">{product.categoryName}</span>
-                          : <span style={{ color: 'var(--ink-3)' }}>—</span>}
+                        {product.categoryName ? (
+                          <span className="pl-cat-badge">
+                            {product.categoryName}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--ink-3)' }}>—</span>
+                        )}
                       </td>
                       <td>
-                        {product.brandName
-                          ? <span className="pl-brand-badge">{product.brandName}</span>
-                          : <span style={{ color: 'var(--ink-3)' }}>—</span>}
+                        {product.brandName ? (
+                          <span className="pl-brand-badge">
+                            {product.brandName}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--ink-3)' }}>—</span>
+                        )}
                       </td>
                       <td>
-                        <span className="pl-price">₫{product.price.toLocaleString('vi-VN')}</span>
+                        <span className="pl-price">
+                          ₫{product.price.toLocaleString('vi-VN')}
+                        </span>
                       </td>
                       <td>
-                        <span className={stockClass(product.quantity)}>{product.quantity}</span>
+                        <span className={stockClass(product.quantity)}>
+                          {product.quantity}
+                        </span>
                       </td>
                       <td>
                         <span className={s.className}>
@@ -531,7 +601,11 @@ export function ProductList() {
                             type="button"
                             className="pl-btn-view"
                             title="View"
-                            onClick={() => navigate(`/admin/products/${product.productId}/edit`)}
+                            onClick={() =>
+                              navigate(
+                                `/admin/products/${product.productId}/edit`
+                              )
+                            }
                           >
                             <Eye size={13} />
                           </button>
@@ -539,7 +613,11 @@ export function ProductList() {
                             type="button"
                             className="pl-btn-edit"
                             title="Edit"
-                            onClick={() => navigate(`/admin/products/${product.productId}/edit`)}
+                            onClick={() =>
+                              navigate(
+                                `/admin/products/${product.productId}/edit`
+                              )
+                            }
                           >
                             <Edit size={13} />
                           </button>
@@ -566,15 +644,21 @@ export function ProductList() {
       {totalPages > 1 && (
         <div className="pl-pagination">
           <button
-            type="button" disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)} className="pl-page-btn"
+            type="button"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+            className="pl-page-btn"
           >
             <ChevronLeft size={15} /> Previous
           </button>
-          <span className="pl-page-info">{page + 1} / {totalPages}</span>
+          <span className="pl-page-info">
+            {page + 1} / {totalPages}
+          </span>
           <button
-            type="button" disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)} className="pl-page-btn"
+            type="button"
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+            className="pl-page-btn"
           >
             Next <ChevronRight size={15} />
           </button>
