@@ -282,57 +282,60 @@ export function Sidebar() {
             Admin Panel
           </span>
         </div>
+      </SidebarHeader>
 
-        {/* ── Nav ── */}
-        <nav className="sb-nav">
+      <SidebarContent>
+        <SidebarMenu>
           {navigation.map((item, idx) => (
-            <div key={item.title} className="sb-item">
-              {/* Divider between sections */}
+            <SidebarMenuItem key={item.title}>
               {idx > 0 && idx < navigation.length && (
                 <div className="sb-divider" />
               )}
 
               {!item.children ? (
-                <SidebarMenuButton 
-                  asChild 
+                <SidebarMenuButton
+                  asChild
                   isActive={location.pathname === item.href}
                   className="hover:bg-white/10 data-[active=true]:bg-orange-500 data-[active=true]:text-white text-white font-['Fira_Sans'] font-medium"
                 >
-                  <item.icon size={16} />
-                  <span>{item.title}</span>
-                </NavLink>
+                  <NavLink to={item.href}>
+                    <item.icon size={16} />
+                    <span>{item.title}</span>
+                  </NavLink>
+                </SidebarMenuButton>
               ) : (
-                /* ── Collapsible group ── */
                 <Collapsible defaultOpen={isGroupActive(item)}>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton className="hover:bg-white/10 font-['Fira_Sans'] font-medium text-white/80 hover:text-white">
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
                       <ChevronRight className="sb-chevron" />
-                    </button>
+                    </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
                       {item.children.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton 
-                            asChild 
+                          <SidebarMenuSubButton
+                            asChild
                             isActive={location.pathname === subItem.href}
                             className="hover:bg-white/10 data-[active=true]:text-orange-400 text-white/70"
                           >
-                            <sub.icon size={13} />
-                            <span>{sub.title}</span>
-                            <span className="sb-sub-dot" />
-                          </NavLink>
-                        ))}
-                      </div>
-                    </div>
+                            <NavLink to={subItem.href}>
+                              <subItem.icon size={13} />
+                              <span>{subItem.title}</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
                   </CollapsibleContent>
                 </Collapsible>
               )}
-            </div>
+            </SidebarMenuItem>
           ))}
-        </nav>
+        </SidebarMenu>
+      </SidebarContent>
 
       <SidebarFooter className="border-t border-white/20 p-4">
         <div className="flex items-center gap-3">
@@ -348,8 +351,7 @@ export function Sidebar() {
             </p>
           </div>
         </div>
-
-      </aside>
-    </>
+      </SidebarFooter>
+    </ShadcnSidebar>
   );
 }

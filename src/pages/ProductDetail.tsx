@@ -22,6 +22,7 @@ import { Card } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext';
 import { reviews as fallbackReviews } from '../data/mockData';
 import { productAttributeService } from '../services/attributeService';
 import { mediaService } from '../services/mediaService';
@@ -44,6 +45,7 @@ export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [mediaList, setMediaList] = useState<Media[]>([]);
@@ -252,8 +254,22 @@ export function ProductDetailPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="icon">
-                  <Heart className="w-5 h-5" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() =>
+                    isInWishlist(product.productId)
+                      ? removeFromWishlist(product.productId)
+                      : addToWishlist(product.productId)
+                  }
+                >
+                  <Heart
+                    className={`w-5 h-5 transition-colors ${
+                      isInWishlist(product.productId)
+                        ? 'fill-red-500 text-red-500'
+                        : ''
+                    }`}
+                  />
                 </Button>
                 <Button variant="outline" size="icon">
                   <Share2 className="w-5 h-5" />

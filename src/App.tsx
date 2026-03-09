@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router-dom';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { WishlistProvider } from './contexts/WishlistContext';
 import { router } from './routes';
 
 // Retrieve Google Client ID from environment variables, fallback is provided
@@ -15,7 +16,9 @@ export default function App() {
     <GoogleOAuthProvider clientId={clientId}>
       <AuthProvider>
         <CartProvider>
-          <RouterProvider router={router} />
+          <WishlistProvider>
+            <RouterProvider router={router} />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
