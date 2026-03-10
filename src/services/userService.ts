@@ -2,12 +2,16 @@ import { ApiResponse, PageResponse } from '../types/auth';
 import api from './api';
 
 export interface UserResponse {
-  id: number;
+  userId: number;
   email: string;
   fullName: string;
+  phoneNumber: string;
+  address: string;
   role: string;
-  phoneNumber?: string;
   isActive: boolean;
+  registrationDate: string;
+  status: string;
+  rewardPoint: number;
 }
 
 export const userService = {
@@ -22,6 +26,16 @@ export const userService = {
     const response = await api.get<ApiResponse<PageResponse<UserResponse>>>(
       '/api/v1/users',
       { params }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get user by ID
+   */
+  async getUserById(id: string | number): Promise<UserResponse> {
+    const response = await api.get<ApiResponse<UserResponse>>(
+      `/api/v1/users/${id}`
     );
     return response.data.data;
   },

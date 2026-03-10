@@ -33,10 +33,10 @@ import { categoryService } from '../services/categoryService';
 import { productService } from '../services/productService';
 import { Brand, Category, Product } from '../types/product';
 
-const PLACEHOLDER_IMG =
-  'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?w=400&q=80';
 const PAGE_SIZE = 12;
 const MAX_PRICE = 50000000;
+const PLACEHOLDER_IMG =
+  'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?w=400&q=80';
 
 export function ProductListPage() {
   const navigate = useNavigate();
@@ -159,11 +159,6 @@ export function ProductListPage() {
       return 0;
     });
 
-  const getProductImage = (_product: Product): string => {
-    // Products from the API may not have a direct image URL — use placeholder
-    return PLACEHOLDER_IMG;
-  };
-
   const isInStock = (product: Product) =>
     product.status === 'AVAILABLE' && product.quantity > 0;
 
@@ -172,7 +167,7 @@ export function ProductListPage() {
       id: String(product.productId),
       name: product.productName,
       price: product.price,
-      image: getProductImage(product),
+      image: product.mainImage || PLACEHOLDER_IMG,
       category: product.categoryName ?? '',
     });
   };
@@ -500,7 +495,7 @@ export function ProductListPage() {
                         className="w-48 h-48 shrink-0 relative overflow-hidden bg-gray-100 rounded-lg"
                       >
                         <ImageWithFallback
-                          src={getProductImage(product)}
+                          src={product.mainImage || PLACEHOLDER_IMG}
                           alt={product.productName}
                           className="w-full h-full object-cover"
                         />
