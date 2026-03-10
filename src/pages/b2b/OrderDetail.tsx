@@ -1,4 +1,21 @@
-import { ArrowLeft, CheckCircle2, Clock, Package, Pencil, Truck, XCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  Package,
+  Pencil,
+  Truck,
+  XCircle,
+  Copy,
+  MoreVertical,
+  Download,
+  Calendar,
+  DollarSign,
+  Tag,
+  FileText,
+  AlertCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -6,26 +23,47 @@ import { useBulkOrders } from '../../contexts/BulkOrderContext';
 import { BulkOrderStatus } from '../../types';
 
 const STATUS_LABEL: Record<BulkOrderStatus, string> = {
-  PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', PROCESSING: 'Đang xử lý',
-  SHIPPED: 'Đang giao', DELIVERED: 'Đã giao', CANCELLED: 'Đã hủy',
+  PENDING: 'Chờ duyệt',
+  APPROVED: 'Đã duyệt',
+  PROCESSING: 'Đang xử lý',
+  SHIPPED: 'Đang giao',
+  DELIVERED: 'Đã giao',
+  CANCELLED: 'Đã hủy',
 };
+
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
-  PENDING: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
-  APPROVED: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
-  PROCESSING: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200',
-  SHIPPED: 'bg-purple-50 text-purple-700 ring-1 ring-purple-200',
-  DELIVERED: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
-  CANCELLED: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
+  PENDING: 'bg-amber-50 text-amber-700 border border-amber-300',
+  APPROVED: 'bg-blue-50 text-blue-700 border border-blue-300',
+  PROCESSING: 'bg-blue-50 text-blue-700 border border-blue-300',
+  SHIPPED: 'bg-purple-50 text-purple-700 border border-purple-300',
+  DELIVERED: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
+  CANCELLED: 'bg-slate-100 text-slate-600 border border-slate-300',
 };
 
 const TIMELINE = [
   { status: 'PENDING' as BulkOrderStatus, label: 'Chờ duyệt', icon: Clock },
   { status: 'APPROVED' as BulkOrderStatus, label: 'Đã duyệt', icon: CheckCircle2 },
-  { status: 'PROCESSING' as BulkOrderStatus, label: 'Xử lý', icon: Package },
-  { status: 'SHIPPED' as BulkOrderStatus, label: 'Đang giao', icon: Truck },
-  { status: 'DELIVERED' as BulkOrderStatus, label: 'Đã giao', icon: CheckCircle2 },
+  { status: 'PROCESSING' as BulkOrderStatus, label: 'Đang xử lý', icon: Package },
+  { status: 'SHIPPED' as BulkOrderStatus, label: 'Vận chuyển', icon: Truck },
+  { status: 'DELIVERED' as BulkOrderStatus, label: 'Hoàn thành', icon: CheckCircle2 },
 ];
-const STATUS_ORDER: BulkOrderStatus[] = ['PENDING', 'APPROVED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
+
+const STATUS_ORDER: BulkOrderStatus[] = [
+  'PENDING',
+  'APPROVED',
+  'PROCESSING',
+  'SHIPPED',
+  'DELIVERED',
+];
+
+const STEP_ICON_STYLE: Record<BulkOrderStatus, string> = {
+  PENDING: 'bg-amber-50 text-amber-600 border-amber-200',
+  APPROVED: 'bg-sky-50 text-sky-600 border-sky-200',
+  PROCESSING: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+  SHIPPED: 'bg-violet-50 text-violet-600 border-violet-200',
+  DELIVERED: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  CANCELLED: 'bg-slate-100 text-slate-500 border-slate-200',
+};
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
@@ -36,30 +74,51 @@ export function OrderDetail() {
   const { orders, cancelOrder, updateCustomization } = useBulkOrders();
   const [customInput, setCustomInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   const order = orders.find((o) => o.orderId === id);
 
   if (!order) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-slate-400">
-        <XCircle className="h-10 w-10 opacity-40" />
-        <p className="text-sm">Không tìm thấy đơn hàng</p>
-        <button onClick={() => navigate('/company/orders')} className="text-xs text-blue-600 hover:underline">
-          ← Quay lại danh sách
-        </button>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+            <XCircle className="h-8 w-8 text-slate-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">Không tìm thấy đơn hàng</h2>
+          <p className="text-sm text-slate-600 mb-6">
+            Đơn hàng này không tồn tại hoặc đã bị xóa
+          </p>
+          <button
+            onClick={() => navigate('/company/orders')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Quay lại danh sách
+          </button>
+        </div>
       </div>
     );
   }
 
-  const currentStep = order.status === 'CANCELLED' ? -1 : STATUS_ORDER.indexOf(order.status);
+  const normalizedStatus = String(order.status).toUpperCase() as BulkOrderStatus;
+  const currentStatus =
+    normalizedStatus === 'CANCELLED' || STATUS_ORDER.includes(normalizedStatus)
+      ? normalizedStatus
+      : 'PENDING';
+  const currentStep = currentStatus === 'CANCELLED' ? -1 : STATUS_ORDER.indexOf(currentStatus);
 
   const handleSaveCustomization = async () => {
     if (!customInput.trim()) return;
     setSaving(true);
+    setSaveMessage('');
     await new Promise((r) => setTimeout(r, 500));
     updateCustomization(order.orderId, customInput.trim());
     setCustomInput('');
     setSaving(false);
+    setSaveMessage('Đã lưu yêu cầu tùy chỉnh thành công.');
+    setTimeout(() => setSaveMessage(''), 2500);
   };
 
   const handleCancel = () => {
@@ -67,185 +126,352 @@ export function OrderDetail() {
     cancelOrder(order.orderId);
   };
 
+  const handleCopyOrderId = () => {
+    navigator.clipboard.writeText(order.orderId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const isSaveDisabled = saving || !customInput.trim();
+  const saveButtonLabel = saving ? 'Đang lưu...' : 'Lưu yêu cầu tùy chỉnh';
+
   return (
-    <div className="space-y-6">
-
-      {/* ── Back + header ── */}
-      <div>
-        <button
-          onClick={() => navigate('/company/orders')}
-          className="mb-4 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Đơn hàng của tôi
-        </button>
-
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-slate-800 tracking-tight">
-                Đơn hàng
-                <span className="ml-2 font-mono text-blue-600">{order.orderId}</span>
-              </h1>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[order.status]}`}>
-                {STATUS_LABEL[order.status]}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              Tạo lúc {new Date(order.createdAt).toLocaleString('vi-VN')}
-            </p>
-          </div>
-          {order.status === 'PENDING' && (
-            <button
-              onClick={handleCancel}
-              className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-100 transition-colors"
-            >
-              Hủy đơn hàng
+    <div className="min-h-screen bg-slate-100/60">
+      {/* ── Sticky Breadcrumb ── */}
+      <div className="sticky top-14 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <nav className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-600">
+            <button onClick={() => navigate('/company')} className="hover:text-slate-900 transition-colors">
+              B2B Portal
             </button>
-          )}
+            <ChevronRight className="h-4 w-4 text-slate-300" />
+            <button
+              onClick={() => navigate('/company/orders')}
+              className="hover:text-slate-900 transition-colors"
+            >
+              Đơn hàng
+            </button>
+            <ChevronRight className="h-4 w-4 text-slate-300" />
+            <span className="font-medium text-slate-900">{order.orderId}</span>
+          </nav>
         </div>
       </div>
 
-      {/* ── Timeline ── */}
-      {order.status !== 'CANCELLED' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="mb-5 text-xs font-semibold uppercase tracking-wider text-slate-400">Tiến trình đơn hàng</p>
-          <div className="flex items-center">
-            {TIMELINE.map((step, idx) => {
-              const done = idx <= currentStep;
-              const active = idx === currentStep;
-              const Icon = step.icon;
-              return (
-                <div key={step.status} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
-                      active ? 'bg-blue-600 shadow-md shadow-blue-200' : done ? 'bg-blue-100' : 'bg-slate-100'
-                    }`}>
-                      <Icon className={`h-3.5 w-3.5 ${active ? 'text-white' : done ? 'text-blue-500' : 'text-slate-300'}`} />
-                    </div>
-                    <span className={`mt-2 text-center text-[10px] font-medium ${
-                      active ? 'text-blue-700' : done ? 'text-slate-500' : 'text-slate-300'
-                    }`}>
-                      {step.label}
-                    </span>
-                  </div>
-                  {idx < TIMELINE.length - 1 && (
-                    <div className={`mx-1 h-px flex-1 ${idx < currentStep ? 'bg-blue-300' : 'bg-slate-200'}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Content grid ── */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-
-        {/* Sản phẩm */}
-        <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Sản phẩm</p>
-          </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
-                <th className="px-5 py-2.5 font-medium">Tên sản phẩm</th>
-                <th className="px-5 py-2.5 font-medium text-right">SL</th>
-                <th className="px-5 py-2.5 font-medium text-right">Đơn giá</th>
-                <th className="px-5 py-2.5 font-medium text-right">Thành tiền</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {order.items.map((item, idx) => (
-                <tr key={idx}>
-                  <td className="px-5 py-3.5">
-                    <p className="font-medium text-slate-800">{item.productName}</p>
-                    {item.tierPrice && item.tierPrice.discountPercent > 0 && (
-                      <span className="mt-0.5 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-200">
-                        Tier -{item.tierPrice.discountPercent}% (≥{item.tierPrice.minQty} sp)
-                      </span>
-                    )}
-                    {item.customization && (
-                      <p className="mt-0.5 text-xs italic text-slate-400">✏ {item.customization}</p>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 text-right text-slate-600">{item.quantity}</td>
-                  <td className="px-5 py-3.5 text-right text-slate-600">{fmt(item.unitPrice)}</td>
-                  <td className="px-5 py-3.5 text-right font-semibold text-slate-800">{fmt(item.subtotal)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Sidebar phải */}
-        <div className="space-y-4">
-
-          {/* Thanh toán */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">Thanh toán</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-slate-600">
-                <span>Tạm tính</span>
-                <span>{fmt(order.subtotal)}</span>
-              </div>
-              {order.voucherCode && (
-                <div className="flex justify-between text-emerald-600">
-                  <span>Voucher <span className="font-mono font-bold">{order.voucherCode}</span></span>
-                  <span>-{fmt(order.voucherDiscount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between border-t border-dashed border-slate-200 pt-2.5 font-bold">
-                <span className="text-slate-800">Tổng cộng</span>
-                <span className="text-blue-700 text-base">{fmt(order.total)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Ghi chú */}
-          {order.note && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Ghi chú</p>
-              <p className="text-sm text-slate-600 leading-relaxed">{order.note}</p>
-            </div>
-          )}
-
-          {/* Tuỳ chỉnh */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center gap-2">
-              <Pencil className="h-3.5 w-3.5 text-slate-400" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tuỳ chỉnh</p>
-            </div>
-            {order.customization && (
-              <div className="mb-3 rounded-lg bg-blue-50 p-3 text-xs text-blue-700 ring-1 ring-blue-200">
-                {order.customization}
-              </div>
-            )}
-            {order.status === 'PENDING' ? (
-              <div className="space-y-2">
-                <textarea
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  placeholder="Màu sắc, kích thước, khắc tên..."
-                  rows={3}
-                  className="w-full rounded-lg border border-slate-200 p-3 text-xs text-slate-700 placeholder-slate-400 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
-                />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* ── Order Header ── */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl font-bold text-slate-900">Đơn hàng #{order.orderId}</h1>
                 <button
-                  onClick={handleSaveCustomization}
-                  disabled={saving || !customInput.trim()}
-                  className="w-full rounded-lg bg-blue-600 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-40 transition-colors"
+                  onClick={handleCopyOrderId}
+                  className="p-1.5 hover:bg-slate-100 rounded-md transition-colors group relative"
+                  title="Copy mã đơn"
                 >
-                  {saving ? 'Đang lưu...' : 'Lưu tuỳ chỉnh'}
+                  <Copy className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                  {copied && (
+                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap">
+                      Đã copy!
+                    </span>
+                  )}
                 </button>
               </div>
-            ) : !order.customization ? (
-              <p className="text-xs text-slate-400">Không có yêu cầu tuỳ chỉnh</p>
-            ) : null}
+              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-slate-400" />
+                  <span>{new Date(order.createdAt).toLocaleString('vi-VN')}</span>
+                </div>
+                <span className="text-slate-300">•</span>
+                <div className="flex items-center gap-1.5">
+                  <Package className="h-4 w-4 text-slate-400" />
+                  <span>{order.items.length} sản phẩm</span>
+                </div>
+                <span className="text-slate-300">•</span>
+                <span
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLE[currentStatus]}`}
+                >
+                  {STATUS_LABEL[currentStatus]}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              {currentStatus === 'PENDING' && (
+                <button
+                  onClick={handleCancel}
+                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                >
+                  Hủy đơn
+                </button>
+              )}
+              <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors inline-flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Xuất PDF
+              </button>
+              <button className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors">
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Back Button ── */}
+        <button
+          onClick={() => navigate('/company/orders')}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại danh sách đơn hàng
+        </button>
+
+        {/* ── Progress Stepper ── */}
+        {currentStatus !== 'CANCELLED' ? (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h2 className="text-sm font-semibold text-slate-900 mb-6">Tiến trình đơn hàng</h2>
+            <div className="relative">
+              {/* Progress Line */}
+              <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-500"
+                  style={{
+                    width: `${(currentStep / (TIMELINE.length - 1)) * 100}%`,
+                  }}
+                />
+              </div>
+
+              {/* Steps */}
+              <div className="relative flex justify-between">
+                {TIMELINE.map((step, idx) => {
+                  const done = idx <= currentStep;
+                  const active = idx === currentStep;
+                  const Icon = step.icon;
+                  return (
+                    <div key={step.status} className="flex flex-col items-center">
+                      {/* Icon Circle */}
+                      <div
+                        className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${active
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-700 shadow-lg shadow-blue-500/40 scale-110'
+                          : done
+                            ? STEP_ICON_STYLE[step.status]
+                            : 'bg-white text-slate-400 border-slate-200'
+                          }`}
+                      >
+                        <Icon
+                          className={`h-5 w-5 transition-colors ${active ? 'text-white' : done ? '' : 'text-slate-400'
+                            }`}
+                        />
+                      </div>
+
+                      {/* Label */}
+                      <div className="mt-3 text-center">
+                        <p
+                          className={`text-xs font-semibold ${active
+                            ? 'text-blue-700'
+                            : done
+                              ? 'text-slate-700'
+                              : 'text-slate-400'
+                            }`}
+                        >
+                          {step.label}
+                        </p>
+                        {active && order.createdAt && (
+                          <p className="text-[10px] text-slate-500 mt-1">
+                            {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-red-900 mb-1">
+                  Đơn hàng đã bị hủy
+                </h3>
+                <p className="text-sm text-red-700">
+                  Đơn hàng này đã bị hủy và không thể tiếp tục xử lý.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Two Column Layout ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Order Items */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+                <h2 className="text-sm font-semibold text-slate-900">Chi tiết sản phẩm</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Sản phẩm
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Số lượng
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Đơn giá
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Thành tiền
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {order.items.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">
+                              {item.productName}
+                            </p>
+                            {item.tierPrice && item.tierPrice.discountPercent > 0 && (
+                              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                <Tag className="h-3 w-3" />
+                                Giảm {item.tierPrice.discountPercent}% (≥{item.tierPrice.minQty} sp)
+                              </span>
+                            )}
+                            {item.customization && (
+                              <p className="mt-1 flex items-center gap-1 text-xs text-slate-600">
+                                <Pencil className="h-3 w-3 text-slate-400" />
+                                {item.customization}
+                              </p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-slate-100 rounded-md text-sm font-medium text-slate-700">
+                            {item.quantity}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right text-sm text-slate-600">
+                          {fmt(item.unitPrice)}
+                        </td>
+                        <td className="px-6 py-4 text-right text-sm font-bold text-slate-900">
+                          {fmt(item.subtotal)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Summary & Details */}
+          <div className="space-y-6">
+            {/* Payment Summary */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="h-5 w-5 text-slate-400" />
+                <h2 className="text-sm font-semibold text-slate-900">Thông tin thanh toán</h2>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Tạm tính</span>
+                  <span className="font-medium text-slate-900">{fmt(order.subtotal)}</span>
+                </div>
+                {order.voucherCode && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-600 flex items-center gap-1">
+                      <Tag className="h-4 w-4" />
+                      Voucher {order.voucherCode}
+                    </span>
+                    <span className="font-medium text-emerald-600">
+                      -{fmt(order.voucherDiscount)}
+                    </span>
+                  </div>
+                )}
+                <div className="h-px bg-slate-200"></div>
+                <div className="flex justify-between items-center pt-1">
+                  <span className="text-sm font-semibold text-slate-900">Tổng cộng</span>
+                  <span className="text-xl font-bold text-slate-900">
+                    {fmt(order.total)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {order.note && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="h-5 w-5 text-slate-400" />
+                  <h2 className="text-sm font-semibold text-slate-900">Ghi chú</h2>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed">{order.note}</p>
+              </div>
+            )}
+
+            {/* Customization */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Pencil className="h-5 w-5 text-slate-400" />
+                <h2 className="text-sm font-semibold text-slate-900">Yêu cầu tùy chỉnh</h2>
+              </div>
+              {order.customization && (
+                <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
+                  <p className="text-sm text-blue-900">{order.customization}</p>
+                </div>
+              )}
+              {currentStatus === 'PENDING' ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    placeholder="Màu sắc, kích thước, khắc tên, thiết kế đặc biệt..."
+                    rows={4}
+                    className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none"
+                  />
+                  <button
+                    onClick={handleSaveCustomization}
+                    disabled={isSaveDisabled}
+                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
+                    style={
+                      isSaveDisabled
+                        ? {
+                          background: '#e2e8f0',
+                          color: '#334155',
+                          border: '1px solid #cbd5e1',
+                        }
+                        : {
+                          background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 100%)',
+                          color: '#ffffff',
+                          border: '1px solid #4338ca',
+                        }
+                    }
+                  >
+                    {saveButtonLabel}
+                  </button>
+                  {saveMessage && (
+                    <p className="text-sm font-medium text-emerald-600">{saveMessage}</p>
+                  )}
+                  {!saveMessage && !customInput.trim() && (
+                    <p className="text-xs text-slate-500">Nhập nội dung tùy chỉnh để lưu.</p>
+                  )}
+                </div>
+              ) : !order.customization ? (
+                <p className="text-sm text-slate-500 italic">Không có yêu cầu tùy chỉnh</p>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
