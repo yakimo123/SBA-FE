@@ -1,4 +1,4 @@
-import { Gift, Heart, LogOut, MapPin, ShoppingBag, Star, User } from 'lucide-react';
+import { Check, Gift, Heart, LogOut, MapPin, ShoppingBag, Star, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -14,15 +14,17 @@ import { Separator } from '../components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
-import { OrderResponse,orderService } from '../services/orderService';
+import { type OrderItemResponse, OrderResponse, orderService } from '../services/orderService';
 import { reviewService } from '../services/reviewService';
 import { VoucherResponse,voucherService } from '../services/voucherService';
 
 interface ReviewDialogState {
   isOpen: boolean;
-  orderId: string;
-  productId: number;
-  productName: string;
+  orderId: number;
+  orderItems: OrderItemResponse[];
+  selectedProductId: number | null;
+  selectedProductName: string;
+  isLoadingItems: boolean;
 }
 
 export function AccountPage() {
@@ -44,13 +46,16 @@ export function AccountPage() {
   // Review dialog state
   const [reviewDialog, setReviewDialog] = useState<ReviewDialogState>({
     isOpen: false,
-    orderId: '',
-    productId: 0,
-    productName: ''
+    orderId: 0,
+    orderItems: [],
+    selectedProductId: null,
+    selectedProductName: '',
+    isLoadingItems: false,
   });
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewedProducts, setReviewedProducts] = useState<Set<number>>(new Set());
 
   const fetchOrders = useCallback(async () => {
     if (!user?.userId) return;
@@ -77,10 +82,27 @@ export function AccountPage() {
     }
   }, []);
 
+  const fetchUserReviews = useCallback(async () => {
+    if (!user?.userId) return;
+    try {
+      const data = await reviewService.getReviews({ userId: user.userId, page: 0, size: 200 });
+      setReviewedProducts(new Set(data.content.map((r) => r.productId)));
+    } catch {
+      // silent
+    }
+  }, [user?.userId]);
+
   useEffect(() => {
     fetchOrders();
     fetchVouchers();
-  }, [fetchOrders, fetchVouchers]);
+    fetchUserReviews();
+  }, [fetchOrders, fetchVouchers, fetchUserReviews]);
+
+  const isOrderFullyReviewed = (order: OrderResponse) => {
+    const items = order.orderItems || [];
+    if (items.length === 0) return false;
+    return items.every((item) => reviewedProducts.has(item.productId));
+  };
 
   if (!user) {
     navigate('/login');
@@ -92,12 +114,22 @@ export function AccountPage() {
     navigate('/');
   };
 
-  const openReviewDialog = (orderId: string, productId: number, productName: string) => {
+  const openReviewDialog = (orderId: number) => {
+    const localOrder = orders.find((o) => o.orderId === orderId);
+    const items = localOrder?.orderItems || [];
+    // Find first un-reviewed product
+    const firstUnreviewed = items.find((item) => !reviewedProducts.has(item.productId));
+    if (!firstUnreviewed) {
+      toast.info('Bạn đã đánh giá tất cả sản phẩm trong đơn hàng này rồi.', { duration: 5000 });
+      return;
+    }
     setReviewDialog({
       isOpen: true,
       orderId,
-      productId,
-      productName
+      orderItems: items,
+      selectedProductId: firstUnreviewed.productId,
+      selectedProductName: firstUnreviewed.productName,
+      isLoadingItems: false,
     });
     setReviewRating(5);
     setReviewComment('');
@@ -106,9 +138,11 @@ export function AccountPage() {
   const closeReviewDialog = () => {
     setReviewDialog({
       isOpen: false,
-      orderId: '',
-      productId: 0,
-      productName: ''
+      orderId: 0,
+      orderItems: [],
+      selectedProductId: null,
+      selectedProductName: '',
+      isLoadingItems: false,
     });
     setReviewRating(5);
     setReviewComment('');
@@ -120,6 +154,11 @@ export function AccountPage() {
       return;
     }
 
+    if (!reviewDialog.selectedProductId) {
+      toast.error('Vui lòng chọn sản phẩm cần đánh giá');
+      return;
+    }
+
     if (!reviewComment.trim()) {
       toast.error('Vui lòng nhập nhận xét');
       return;
@@ -128,29 +167,54 @@ export function AccountPage() {
     setIsSubmittingReview(true);
     try {
       await reviewService.createReview(user.userId, {
-        productId: reviewDialog.productId,
+        productId: reviewDialog.selectedProductId,
         rating: reviewRating,
         comment: reviewComment.trim()
       });
       
-      toast.success('Đánh giá thành công! Cảm ơn bạn đã đánh giá.');
-      closeReviewDialog();
+      toast.success('Đánh giá thành công! Cảm ơn bạn đã đánh giá.', { duration: 5000 });
+      const newReviewed = new Set(reviewedProducts);
+      newReviewed.add(reviewDialog.selectedProductId!);
+      setReviewedProducts(newReviewed);
+      // Move to next un-reviewed product or close
+      const nextItem = reviewDialog.orderItems.find(
+        (item) => item.productId !== reviewDialog.selectedProductId && !newReviewed.has(item.productId)
+      );
+      if (nextItem) {
+        setReviewDialog((prev) => ({
+          ...prev,
+          selectedProductId: nextItem.productId,
+          selectedProductName: nextItem.productName,
+        }));
+        setReviewRating(5);
+        setReviewComment('');
+      } else {
+        closeReviewDialog();
+      }
     } catch (error: unknown) {
-      console.error('Error submitting review:', error);
-      const errorMessage = 
-        error && 
-        typeof error === 'object' && 
-        'response' in error &&
-        error.response &&
-        typeof error.response === 'object' &&
-        'data' in error.response &&
-        error.response.data &&
-        typeof error.response.data === 'object' &&
-        'message' in error.response.data &&
-        typeof error.response.data.message === 'string'
-          ? error.response.data.message
-          : 'Có lỗi xảy ra khi gửi đánh giá';
-      toast.error(errorMessage);
+      const errorMap: Record<number, string> = {
+        409: 'Bạn đã đánh giá sản phẩm này rồi',
+        400: 'Thông tin đánh giá không hợp lệ',
+        401: 'Vui lòng đăng nhập để đánh giá',
+        403: 'Bạn không có quyền thực hiện thao tác này',
+      };
+      let message = 'Có lỗi xảy ra khi gửi đánh giá';
+      if (error && typeof error === 'object' && 'response' in error) {
+        const status = (error as { response: { status: number } }).response?.status;
+        if (status && errorMap[status]) {
+          message = errorMap[status];
+        }
+        // Mark product as already reviewed on 409
+        if (status === 409 && reviewDialog.selectedProductId) {
+          setReviewedProducts((prev) => new Set(prev).add(reviewDialog.selectedProductId!));
+          setReviewDialog((prev) => ({
+            ...prev,
+            selectedProductId: null,
+            selectedProductName: '',
+          }));
+        }
+      }
+      toast.error(message, { duration: 5000 });
     } finally {
       setIsSubmittingReview(false);
     }
@@ -400,15 +464,20 @@ export function AccountPage() {
                               </Button>
                               <Button
                                 variant="outline"
-                                className="flex-1"
+                                className={`flex-1 ${isOrderFullyReviewed(order) ? 'opacity-60' : ''}`}
                                 type="button"
+                                disabled={isOrderFullyReviewed(order)}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  openReviewDialog(String(order.orderId), 1, `Đơn hàng #${order.orderId}`);
+                                  openReviewDialog(order.orderId);
                                 }}
                               >
-                                Đánh giá
+                                {isOrderFullyReviewed(order) ? (
+                                  <><Check className="w-4 h-4 mr-1" /> Đã đánh giá</>
+                                ) : (
+                                  'Đánh giá'
+                                )}
                               </Button>
                             </>
                           )}
@@ -511,17 +580,45 @@ export function AccountPage() {
           <DialogHeader>
             <DialogTitle>Đánh giá sản phẩm</DialogTitle>
             <DialogDescription>
-              Chia sẻ trải nghiệm của bạn về sản phẩm này
+              Đơn hàng #{reviewDialog.orderId}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                Sản phẩm
-              </Label>
-              <p className="text-sm font-semibold text-gray-900">{reviewDialog.productName}</p>
-            </div>
+            {/* Current product being reviewed */}
+            {reviewDialog.selectedProductId && (() => {
+              const currentItem = reviewDialog.orderItems.find((i) => i.productId === reviewDialog.selectedProductId);
+              return currentItem ? (
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-red-200 bg-red-50">
+                  {currentItem.productImage ? (
+                    <img src={currentItem.productImage} alt={currentItem.productName} className="w-12 h-12 object-cover rounded" />
+                  ) : (
+                    <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                      <ShoppingBag className="w-6 h-6 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{currentItem.productName}</p>
+                    <p className="text-xs text-gray-500">
+                      SL: {currentItem.quantity} × {currentItem.unitPrice?.toLocaleString('vi-VN')}₫
+                    </p>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Progress indicator for multi-item orders */}
+            {reviewDialog.orderItems.length > 1 && (() => {
+              const reviewedCount = reviewDialog.orderItems.filter(
+                (item) => reviewedProducts.has(item.productId)
+              ).length;
+              const total = reviewDialog.orderItems.length;
+              return (
+                <p className="text-xs text-gray-500 text-center">
+                  Đánh giá sản phẩm {reviewedCount + 1}/{total}
+                </p>
+              );
+            })()}
 
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-2 block">

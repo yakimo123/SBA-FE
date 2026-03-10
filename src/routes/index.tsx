@@ -20,6 +20,7 @@ import { OrderDetail } from '../pages/admin/OrderDetail';
 import { OrderList } from '../pages/admin/OrderList';
 import { ProductForm } from '../pages/admin/ProductForm';
 import { ProductList } from '../pages/admin/ProductList';
+import { ReviewList } from '../pages/admin/ReviewList';
 import { StoreBranchList } from '../pages/admin/StoreBranchList';
 import { SupplierList } from '../pages/admin/SupplierList';
 import { TrademarkList } from '../pages/admin/TrademarkList';
@@ -99,6 +100,7 @@ export const router = createBrowserRouter([
           { path: 'customers/companies', element: <CompanyList /> },
           { path: 'customers/favorites', element: <FavoriteList /> },
           { path: 'customers/feedback', element: <FeedbackList /> },
+          { path: 'customers/reviews', element: <ReviewList /> },
 
           // Settings
           { path: 'settings/stores', element: <StoreBranchList /> },

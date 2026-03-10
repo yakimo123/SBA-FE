@@ -8,10 +8,24 @@ export interface OrderResponse {
     userFullName: string;
     orderDate: string;
     totalAmount: number;
+    discountAmount?: number;
+    finalAmount?: number;
     orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
     shippingAddress: string;
     paymentMethod: string;
     voucherCode: string | null;
+    orderItems?: OrderItemResponse[];
+}
+
+export interface OrderItemResponse {
+    orderDetailId: number;
+    productId: number;
+    productName: string;
+    productImage?: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+    branchName?: string;
 }
 
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
