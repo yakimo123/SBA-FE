@@ -75,33 +75,20 @@ export const router = createBrowserRouter([
           { path: 'register-business', element: <BusinessRegistrationPage /> },
         ],
       },
-      { path: 'account', element: <AccountPage /> },
-      { path: 'unauthorized', element: <UnauthorizedPage /> },
     ],
   },
 
   // ── Admin routes ──────────────────────────────────────────────────────────
   {
-    // Admin routes - yêu cầu role ADMIN hoặc COMPANY
+    // Admin routes - yêu cầu role ADMIN
     path: '/admin',
-    element: <ProtectedRoute requiredRole={[ROLES.ADMIN, ROLES.COMPANY]} />,
+    element: <ProtectedRoute requiredRole={ROLES.ADMIN} />,
     children: [
       {
         element: <AdminLayout />,
         children: [
           { index: true, element: <Dashboard /> },
           { path: 'dashboard', element: <Dashboard /> },
-          { index: true, element: <Dashboard /> },
-          { path: 'dashboard', element: <Dashboard /> },
-
-          // Products
-          { path: 'products', element: <ProductList /> },
-          { path: 'products/new', element: <ProductForm /> },
-          { path: 'products/:id/edit', element: <ProductForm /> },
-          { path: 'products/categories', element: <CategoryList /> },
-          { path: 'products/trademarks', element: <TrademarkList /> },
-          { path: 'products/suppliers', element: <SupplierList /> },
-          { path: 'products/attributes', element: <AttributeList /> },
 
           // Products
           { path: 'products', element: <ProductList /> },
@@ -143,13 +130,18 @@ export const router = createBrowserRouter([
   // ── Company / B2B routes (role: COMPANY only) ────────────────────────────
   {
     path: '/company',
-    element: <CompanyLayout />,
+    element: <ProtectedRoute requiredRole={ROLES.COMPANY} />,
     children: [
-      { index: true, element: <CompanyDashboard /> },
-      { path: 'orders', element: <MyOrders /> },
-      { path: 'orders/new', element: <BulkOrderCreate /> },
-      { path: 'orders/:id', element: <CompanyOrderDetail /> },
-      { path: 'account', element: <CompanyAccount /> },
+      {
+        element: <CompanyLayout />,
+        children: [
+          { index: true, element: <CompanyDashboard /> },
+          { path: 'orders', element: <MyOrders /> },
+          { path: 'orders/new', element: <BulkOrderCreate /> },
+          { path: 'orders/:id', element: <CompanyOrderDetail /> },
+          { path: 'account', element: <CompanyAccount /> },
+        ],
+      },
     ],
   },
 ]);

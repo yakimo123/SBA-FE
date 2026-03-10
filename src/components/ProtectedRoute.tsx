@@ -1,9 +1,9 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   requiredRole?: string | string[];
   redirectTo?: string;
 }
@@ -45,5 +45,5 @@ export function ProtectedRoute({
     }
   }
 
-  return <>{children}</>;
+  return <>{children || <Outlet />}</>;
 }

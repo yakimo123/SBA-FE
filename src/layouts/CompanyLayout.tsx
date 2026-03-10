@@ -1,5 +1,5 @@
 import { Bell, Building2, ChevronRight } from 'lucide-react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import { CompanySidebar } from '../components/company/Sidebar';
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar';
@@ -14,7 +14,7 @@ const breadcrumbMap: Record<string, string> = {
 };
 
 export function CompanyLayout() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isLoading, user } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -28,8 +28,6 @@ export function CompanyLayout() {
     );
   }
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.role?.toUpperCase() !== 'COMPANY') return <Navigate to="/unauthorized" replace />;
 
   const currentLabel = Object.entries(breadcrumbMap)
     .reverse()

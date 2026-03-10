@@ -55,6 +55,40 @@ const parseJwt = (token: string): JwtPayload | null => {
     return null;
   }
 };
+
+// Normalize role from multiple JWT claim formats
+const extractRoleFromClaims = (claims: Record<string, unknown>): string => {
+  const normalize = (value: string): string =>
+    value.replace(/^ROLE_/i, '').toUpperCase();
+
+  // Common string role claim
+  if (typeof claims.role === 'string' && claims.role.trim()) {
+    return normalize(claims.role);
+  }
+
+  // Array role claims: roles, authorities
+  const pickFromArray = (arr: unknown): string | null => {
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    const first = arr.find((v) => typeof v === 'string' && v.trim());
+    return typeof first === 'string' ? normalize(first) : null;
+  };
+
+  const roleFromRoles = pickFromArray(claims.roles);
+  if (roleFromRoles) return roleFromRoles;
+
+  const roleFromAuthorities = pickFromArray(claims.authorities);
+  if (roleFromAuthorities) return roleFromAuthorities;
+
+  // OAuth scope claim (space-separated)
+  if (typeof claims.scope === 'string' && claims.scope.trim()) {
+    const scopeParts = claims.scope.split(/\s+/).map((s) => normalize(s));
+    if (scopeParts.includes('COMPANY')) return 'COMPANY';
+    if (scopeParts.length > 0) return scopeParts[0];
+  }
+
+  return 'USER';
+};
+
 // Get stored auth state from localStorage
 const getStoredAuthState = (): Partial<AuthState> => {
   const accessToken = getAccessToken();
@@ -63,20 +97,46 @@ const getStoredAuthState = (): Partial<AuthState> => {
   if (accessToken) {
     const decoded = parseJwt(accessToken);
     if (decoded) {
+      const claims = decoded as Record<string, unknown>;
+      const role = extractRoleFromClaims(claims);
+      const userId =
+        (typeof claims.userId === 'number' && claims.userId) ||
+        (typeof claims.id === 'number' && claims.id) ||
+        (typeof claims.sub === 'string' && /^\d+$/.test(claims.sub)
+          ? Number(claims.sub)
+          : 0);
+
       return {
         accessToken,
         refreshToken,
         isAuthenticated: true,
         user: {
-          userId: decoded.userId || 0,
-          email: decoded.email || '',
-          fullName: decoded.fullName || '',
-          role: Array.isArray(decoded.roles) ? decoded.roles[0] : 'USER',
-          phoneNumber: decoded.phoneNumber,
+          userId,
+          email:
+            (typeof claims.email === 'string' ? claims.email : '') ||
+            (typeof claims.sub === 'string' && claims.sub.includes('@')
+              ? claims.sub
+              : ''),
+          fullName:
+            (typeof claims.fullName === 'string' ? claims.fullName : '') ||
+            (typeof claims.name === 'string' ? claims.name : '') ||
+            '',
+          role,
+          phoneNumber:
+            typeof claims.phoneNumber === 'string'
+              ? claims.phoneNumber
+              : undefined,
           // Backward compatible aliases
-          name: decoded.fullName || '',
-          phone: decoded.phoneNumber,
-          points: decoded.rewardPoint || 0,
+          name:
+            (typeof claims.fullName === 'string' ? claims.fullName : '') ||
+            (typeof claims.name === 'string' ? claims.name : '') ||
+            '',
+          phone:
+            typeof claims.phoneNumber === 'string'
+              ? claims.phoneNumber
+              : undefined,
+          points:
+            typeof claims.rewardPoint === 'number' ? claims.rewardPoint : 0,
         } as AuthUser,
       };
     }

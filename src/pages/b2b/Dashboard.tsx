@@ -1,4 +1,4 @@
-import { ClipboardList, DollarSign, TrendingUp } from 'lucide-react';
+import { ClipboardList, DollarSign, PlusCircle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useBulkOrders } from '../../contexts/BulkOrderContext';
@@ -94,17 +94,21 @@ export function CompanyDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <button
           onClick={() => navigate('/company/orders/new')}
-          className="rounded-lg bg-blue-600 px-5 py-2.5 font-['Fira_Sans'] text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg border px-5 py-2.5 font-['Fira_Sans'] text-sm font-semibold shadow-sm transition-colors"
+          style={{ borderColor: '#bfdbfe', backgroundColor: '#ffffff', color: '#1d4ed8' }}
         >
-          + Tạo đơn hàng mới
+          <PlusCircle className="h-4 w-4" />
+          Tạo đơn hàng mới
         </button>
         <button
           onClick={() => navigate('/company/orders')}
-          className="rounded-lg border border-blue-300 bg-white px-5 py-2.5 font-['Fira_Sans'] text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg border px-5 py-2.5 font-['Fira_Sans'] text-sm font-semibold transition-colors"
+          style={{ borderColor: '#93c5fd', backgroundColor: '#eff6ff', color: '#1d4ed8' }}
         >
+          <ClipboardList className="h-4 w-4" />
           Xem tất cả đơn hàng
         </button>
       </div>
