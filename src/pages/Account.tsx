@@ -503,7 +503,7 @@ export function AccountPage() {
                               Hủy đơn hàng
                             </Button>
                           )}
-                          <Button variant="outline">Chi tiết</Button>
+                          <Button variant="outline" onClick={() => navigate(`/orders/${order.orderId}`)}>Chi tiết</Button>
                         </div>
                       </Card>
                     ))

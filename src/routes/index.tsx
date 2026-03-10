@@ -34,6 +34,7 @@ import { CartPage } from '../pages/Cart';
 import { CheckoutPage } from '../pages/Checkout';
 import { HomePage } from '../pages/Home';
 import { LoginPage } from '../pages/Login';
+import { OrderDetailPage } from '../pages/OrderDetail';
 import { ProductDetailPage } from '../pages/ProductDetail';
 import { ProductListPage } from '../pages/ProductList';
 import { RegisterPage } from '../pages/Register';
@@ -63,6 +64,7 @@ export const router = createBrowserRouter([
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CheckoutPage /> },
           { path: 'account', element: <AccountPage /> },
+          { path: 'orders/:id', element: <OrderDetailPage /> },
           { path: 'register-business', element: <BusinessRegistrationPage /> },
         ],
       },
