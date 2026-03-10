@@ -2,6 +2,7 @@ import { Bell, Home, LogIn, Search } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
 
 import { Sidebar } from '../components/admin/Sidebar';
+import ScrollToTop from '../components/common/ScrollToTop';
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,14 +12,18 @@ export function AdminLayout() {
 
   return (
     <SidebarProvider>
+      <ScrollToTop />
       <Sidebar />
 
       {/* Main Content */}
       <SidebarInset className="bg-purple-50">
         {/* Header */}
-        <header className="sticky top-0 z-30 shadow-sm" style={{ backgroundColor: '#59168B' }}>
+        <header
+          className="sticky top-0 z-30 shadow-sm"
+          style={{ backgroundColor: '#59168B' }}
+        >
           <div className="flex h-16 items-center justify-between px-8">
-            <div className="flex items-center gap-4 mx-4">              
+            <div className="flex items-center gap-4 mx-4">
               {/* Search */}
               <div className="flex-1 max-w-3xl">
                 <div className="relative">
