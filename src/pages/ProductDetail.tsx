@@ -62,7 +62,9 @@ export function ProductDetailPage() {
 
   // Review states
   const [reviews, setReviews] = useState<ReviewResponse[]>([]);
-  const [ratingStats, setRatingStats] = useState<RatingStatsResponse | null>(null);
+  const [ratingStats, setRatingStats] = useState<RatingStatsResponse | null>(
+    null
+  );
   const [reviewPage, setReviewPage] = useState(0);
   const [reviewTotalPages, setReviewTotalPages] = useState(0);
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
@@ -226,7 +228,10 @@ export function ProductDetailPage() {
       // Reload reviews and stats
       await Promise.all([
         loadReviews(product.productId, 0),
-        reviewService.getRatingStats(product.productId).then(setRatingStats).catch(() => {}),
+        reviewService
+          .getRatingStats(product.productId)
+          .then(setRatingStats)
+          .catch(() => {}),
       ]);
       setReviewPage(0);
     } catch (err: unknown) {
@@ -238,7 +243,8 @@ export function ProductDetailPage() {
       };
       let message = 'Đã có lỗi xảy ra, vui lòng thử lại sau';
       if (err && typeof err === 'object' && 'response' in err) {
-        const status = (err as { response: { status: number } }).response?.status;
+        const status = (err as { response: { status: number } }).response
+          ?.status;
         if (status && errorMap[status]) {
           message = errorMap[status];
         }
@@ -265,7 +271,8 @@ export function ProductDetailPage() {
         { stars: 1, count: ratingStats.oneStar },
       ].map((item) => ({
         ...item,
-        percentage: totalReviews > 0 ? Math.round((item.count / totalReviews) * 100) : 0,
+        percentage:
+          totalReviews > 0 ? Math.round((item.count / totalReviews) * 100) : 0,
       }))
     : [];
 
@@ -379,7 +386,9 @@ export function ProductDetailPage() {
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-bold text-[#1a1612]">
-                      {avgRating ? avgRating.toFixed(1) : (product.rating || '0.0')}
+                      {avgRating
+                        ? avgRating.toFixed(1)
+                        : product.rating || '0.0'}
                     </span>
                   </div>
                   <span className="text-gray-300">•</span>
@@ -387,7 +396,9 @@ export function ProductDetailPage() {
                     onClick={scrollToReviews}
                     className="text-gray-600 text-sm hover:text-red-600 underline-offset-2 hover:underline"
                   >
-                    {totalReviews > 0 ? `${totalReviews} đánh giá` : 'Chưa có đánh giá'}
+                    {totalReviews > 0
+                      ? `${totalReviews} đánh giá`
+                      : 'Chưa có đánh giá'}
                   </button>
                   <span className="text-gray-300">•</span>
                   <span
@@ -426,11 +437,11 @@ export function ProductDetailPage() {
             {/* Price */}
             <Card className="p-6 mb-6 bg-[#faf9f7] border-[#e8e3da] shadow-none">
               <div className="flex items-center gap-4 mb-1">
-                <span className="text-4xl font-black text-[#c9521a]">
+                <span className="text-4xl font-black text-[#e41717]">
                   {product.price.toLocaleString('vi-VN')}₫
                 </span>
                 {product.discountPercent && product.discountPercent > 0 && (
-                  <Badge className="bg-[#c9521a] hover:bg-[#c9521a] text-white border-none py-1 px-2">
+                  <Badge className="bg-[#e41717] hover:bg-[#e41717] text-white border-none py-1 px-2">
                     -{product.discountPercent}%
                   </Badge>
                 )}
@@ -443,21 +454,6 @@ export function ProductDetailPage() {
                     </span>
                   </div>
                 )}
-
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-[#e8e3da]">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Phân phối bởi:</span>
-                  <span className="font-semibold text-[#1a1612]">
-                    {product.supplierName || 'SBA Shop'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Danh mục:</span>
-                  <span className="font-semibold text-[#1a1612] uppercase text-[0.75rem] tracking-wider">
-                    {product.categoryName}
-                  </span>
-                </div>
-              </div>
             </Card>
 
             {/* Benefits */}
@@ -523,7 +519,8 @@ export function ProductDetailPage() {
             <div className="flex gap-3">
               <Button
                 size="lg"
-                className="flex-1 bg-red-600 hover:bg-red-700 h-12 text-lg"
+                variant="outline"
+                className="flex-1 h-12 text-lg border-red-200 text-gray-700 hover:bg-red-50"
                 disabled={!isInStock}
                 onClick={handleAddToCart}
               >
@@ -532,8 +529,7 @@ export function ProductDetailPage() {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
-                className="flex-1 h-12 text-lg"
+                className="flex-1 bg-red-600 hover:bg-red-700 h-12 text-lg text-white"
                 disabled={!isInStock}
                 onClick={() => {
                   handleAddToCart();
@@ -670,7 +666,9 @@ export function ProductDetailPage() {
                 <div className="text-center py-12 text-gray-500">
                   <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p className="text-lg font-medium">Chưa có đánh giá nào</p>
-                  <p className="text-sm">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                  <p className="text-sm">
+                    Hãy là người đầu tiên đánh giá sản phẩm này!
+                  </p>
                 </div>
               ) : (
                 <>
@@ -681,7 +679,9 @@ export function ProductDetailPage() {
                           <Avatar className="w-10 h-10 bg-gray-200" />
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium">{review.userFullName}</span>
+                              <span className="font-medium">
+                                {review.userFullName}
+                              </span>
                               <Badge variant="outline" className="text-xs">
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Đã mua hàng
@@ -701,7 +701,9 @@ export function ProductDetailPage() {
                                 ))}
                               </div>
                               <span className="text-sm text-gray-500">
-                                {new Date(review.reviewDate).toLocaleDateString('vi-VN')}
+                                {new Date(review.reviewDate).toLocaleDateString(
+                                  'vi-VN'
+                                )}
                               </span>
                             </div>
                           </div>
@@ -717,11 +719,15 @@ export function ProductDetailPage() {
                               </span>
                               {review.replyDate && (
                                 <span className="text-xs text-gray-400">
-                                  {new Date(review.replyDate).toLocaleDateString('vi-VN')}
+                                  {new Date(
+                                    review.replyDate
+                                  ).toLocaleDateString('vi-VN')}
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-600">{review.replyComment}</p>
+                            <p className="text-sm text-gray-600">
+                              {review.replyComment}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -744,7 +750,11 @@ export function ProductDetailPage() {
                           key={i}
                           variant={i === reviewPage ? 'default' : 'outline'}
                           size="sm"
-                          className={i === reviewPage ? 'bg-red-600 hover:bg-red-700' : ''}
+                          className={
+                            i === reviewPage
+                              ? 'bg-red-600 hover:bg-red-700'
+                              : ''
+                          }
                           onClick={() => handleReviewPageChange(i)}
                         >
                           {i + 1}

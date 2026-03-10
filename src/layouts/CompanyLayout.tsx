@@ -1,6 +1,7 @@
 import { Bell, Building2, ChevronRight } from 'lucide-react';
 import { Outlet, useLocation } from 'react-router-dom';
 
+import ScrollToTop from '../components/common/ScrollToTop';
 import { CompanySidebar } from '../components/company/Sidebar';
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,6 +37,7 @@ export function CompanyLayout() {
   return (
     <BulkOrderProvider>
     <SidebarProvider>
+      <ScrollToTop />
       <CompanySidebar />
       <SidebarInset className="bg-slate-50 min-h-screen">
         {/* Topbar */}
