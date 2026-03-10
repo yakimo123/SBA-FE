@@ -1,11 +1,13 @@
 import { Minus, Plus, ShoppingBag, Tag, Ticket, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { VoucherSelector } from '../components/common/VoucherSelector';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
 import { Input } from '../components/ui/input';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
@@ -18,11 +20,34 @@ export function CartPage() {
   const [selectedVoucher, setSelectedVoucher] =
     useState<VoucherResponse | null>(null);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
-
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(
+    () => new Set(cartItems.map((item) => item.id))
   );
+
+  const allSelected =
+    cartItems.length > 0 &&
+    cartItems.every((item) => selectedItems.has(item.id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(cartItems.map((item) => item.id)));
+    }
+  };
+
+  const toggleItem = (id: string) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const subtotal = cartItems
+    .filter((item) => selectedItems.has(item.id))
+    .reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 500000 ? 0 : 30000;
 
   const discount = selectedVoucher
@@ -90,7 +115,13 @@ export function CartPage() {
                   <div key={item.id} className="p-4">
                     <div className="grid md:grid-cols-12 gap-4 items-center">
                       {/* Product Info */}
-                      <div className="md:col-span-6 flex gap-4">
+                      <div className="md:col-span-6 flex items-start gap-3">
+                        <Checkbox
+                          checked={selectedItems.has(item.id)}
+                          onCheckedChange={() => toggleItem(item.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex gap-4 flex-1">
                         <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                           <ImageWithFallback
                             src={item.image}
@@ -112,6 +143,7 @@ export function CartPage() {
                             <Trash2 className="w-4 h-4" />
                             Xóa
                           </button>
+                        </div>
                         </div>
                       </div>
 
@@ -163,6 +195,15 @@ export function CartPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Select All footer */}
+              <div className="flex items-center gap-3 p-4 border-t bg-gray-50">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleAll}
+                />
+                <span className="text-sm font-medium">Chọn tất cả ({cartItems.length} sản phẩm)</span>
               </div>
             </Card>
 
@@ -241,7 +282,7 @@ export function CartPage() {
               <div className="space-y-3 mb-4 pb-4 border-b">
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    Tạm tính ({cartItems.length} sản phẩm)
+                    Tạm tính ({selectedItems.size} sản phẩm)
                   </span>
                   <span className="font-medium">
                     {subtotal.toLocaleString('vi-VN')}₫
@@ -282,12 +323,20 @@ export function CartPage() {
               )}
 
               <Button
-                onClick={() =>
+                onClick={() => {
+                  if (selectedItems.size === 0) {
+                    toast.error('Vui lòng chọn ít nhất một sản phẩm để thanh toán');
+                    return;
+                  }
                   navigate('/checkout', {
-                    state: { appliedVoucher: selectedVoucher },
-                  })
-                }
+                    state: {
+                      appliedVoucher: selectedVoucher,
+                      selectedItemIds: Array.from(selectedItems),
+                    },
+                  });
+                }}
                 className="w-full bg-red-600 hover:bg-red-700 h-12 text-lg mb-3"
+                disabled={selectedItems.size === 0}
               >
                 Tiến hành thanh toán
               </Button>

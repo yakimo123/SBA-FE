@@ -45,6 +45,7 @@ export function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [orderResult, setOrderResult] = useState<OrderResponse | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [checkoutItemIds, setCheckoutItemIds] = useState<string[] | null>(null);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -89,9 +90,13 @@ export function CheckoutPage() {
   useEffect(() => {
     const state = location.state as {
       appliedVoucher?: VoucherResponse;
+      selectedItemIds?: string[];
     } | null;
     if (state?.appliedVoucher) {
       setAppliedVoucher(state.appliedVoucher);
+    }
+    if (state?.selectedItemIds) {
+      setCheckoutItemIds(state.selectedItemIds);
     }
   }, [location.state]);
 
@@ -169,10 +174,9 @@ export function CheckoutPage() {
     setShowVoucherModal(true);
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const subtotal = cartItems
+    .filter((item) => !checkoutItemIds || checkoutItemIds.includes(item.id))
+    .reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingFee =
     deliveryMethod === 'express'
       ? 50000
@@ -247,7 +251,9 @@ export function CheckoutPage() {
         shippingAddress,
         paymentMethod: paymentMethodMap[paymentMethod] || 'COD',
         voucherCode: appliedVoucher?.voucherCode,
-        items: cartItems.map((item) => ({
+        items: cartItems
+          .filter((item) => !checkoutItemIds || checkoutItemIds.includes(item.id))
+          .map((item) => ({
           productId: Number(item.id),
           quantity: item.quantity,
         })),
@@ -766,11 +772,13 @@ export function CheckoutPage() {
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-24">
               <h3 className="text-xl font-bold mb-4">
-                Đơn hàng ({cartItems.length} sản phẩm)
+                Đơn hàng ({checkoutItemIds ? checkoutItemIds.length : cartItems.length} sản phẩm)
               </h3>
 
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                {cartItems.map((item) => (
+                {cartItems
+                  .filter((item) => !checkoutItemIds || checkoutItemIds.includes(item.id))
+                  .map((item) => (
                   <div key={item.id} className="flex gap-3">
                     <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 relative">
                       <ImageWithFallback
