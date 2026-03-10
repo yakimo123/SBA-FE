@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { ROLES } from '../constants/roles';
 import { AdminLayout } from '../layouts/AdminLayout';
+import { CompanyLayout } from '../layouts/CompanyLayout';
 import { RootLayout } from '../layouts/RootLayout';
 import { AccountPage } from '../pages/Account';
 import { AttributeList } from '../pages/admin/AttributeList';
@@ -28,8 +29,13 @@ import { VoucherList } from '../pages/admin/VoucherList';
 import { StockExportPage } from '../pages/admin/warehouse/StockExportPage';
 import { StockImportPage } from '../pages/admin/warehouse/StockImportPage';
 import { StockInventoryPage } from '../pages/admin/warehouse/StockInventoryPage';
+import { BulkOrderCreate } from '../pages/b2b/BulkOrderCreate';
 import { BusinessApprovalPendingPage } from '../pages/b2b/BusinessApprovalPendingPage';
 import { BusinessRegistrationPage } from '../pages/b2b/BusinessRegistrationPage';
+import { CompanyAccount } from '../pages/b2b/CompanyAccount';
+import { CompanyDashboard } from '../pages/b2b/Dashboard';
+import { MyOrders } from '../pages/b2b/MyOrders';
+import { OrderDetail as CompanyOrderDetail } from '../pages/b2b/OrderDetail';
 import { CartPage } from '../pages/Cart';
 import { CheckoutPage } from '../pages/Checkout';
 import { HomePage } from '../pages/Home';
@@ -43,6 +49,7 @@ import { VNPayReturnPage } from '../pages/VNPayReturn';
 import { WishlistPage } from '../pages/Wishlist';
 
 export const router = createBrowserRouter([
+  // ── Public / Customer routes ──────────────────────────────────────────────
   {
     path: '/',
     element: <RootLayout />,
@@ -68,8 +75,12 @@ export const router = createBrowserRouter([
           { path: 'register-business', element: <BusinessRegistrationPage /> },
         ],
       },
+      { path: 'account', element: <AccountPage /> },
+      { path: 'unauthorized', element: <UnauthorizedPage /> },
     ],
   },
+
+  // ── Admin routes ──────────────────────────────────────────────────────────
   {
     // Admin routes - yêu cầu role ADMIN hoặc COMPANY
     path: '/admin',
@@ -80,6 +91,17 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Dashboard /> },
           { path: 'dashboard', element: <Dashboard /> },
+          { index: true, element: <Dashboard /> },
+          { path: 'dashboard', element: <Dashboard /> },
+
+          // Products
+          { path: 'products', element: <ProductList /> },
+          { path: 'products/new', element: <ProductForm /> },
+          { path: 'products/:id/edit', element: <ProductForm /> },
+          { path: 'products/categories', element: <CategoryList /> },
+          { path: 'products/trademarks', element: <TrademarkList /> },
+          { path: 'products/suppliers', element: <SupplierList /> },
+          { path: 'products/attributes', element: <AttributeList /> },
 
           // Products
           { path: 'products', element: <ProductList /> },
@@ -115,6 +137,19 @@ export const router = createBrowserRouter([
           { path: 'inventory/export', element: <StockExportPage /> },
         ],
       },
+    ],
+  },
+
+  // ── Company / B2B routes (role: COMPANY only) ────────────────────────────
+  {
+    path: '/company',
+    element: <CompanyLayout />,
+    children: [
+      { index: true, element: <CompanyDashboard /> },
+      { path: 'orders', element: <MyOrders /> },
+      { path: 'orders/new', element: <BulkOrderCreate /> },
+      { path: 'orders/:id', element: <CompanyOrderDetail /> },
+      { path: 'account', element: <CompanyAccount /> },
     ],
   },
 ]);

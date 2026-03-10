@@ -91,15 +91,19 @@ const getStoredAuthState = (): Partial<AuthState> => {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(() => ({
-    user: null,
-    accessToken: null,
-    refreshToken: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
-    ...getStoredAuthState(),
-  }));
+  // Khởi tạo hoàn toàn đồng bộ từ localStorage — không cần useEffect
+  const [state, setState] = useState<AuthState>(() => {
+    const stored = getStoredAuthState();
+    return {
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      isLoading: false, // luôn false vì đọc localStorage là đồng bộ
+      error: null,
+      ...stored,
+    };
+  });
 
   // Listen for auth:logout event from API interceptor
   useEffect(() => {

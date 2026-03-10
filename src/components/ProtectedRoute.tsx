@@ -1,50 +1,49 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
-  /** Role(s) được phép truy cập. Nếu không truyền thì chỉ cần đăng nhập. */
+  children: React.ReactNode;
   requiredRole?: string | string[];
-  /** URL redirect khi chưa đăng nhập */
   redirectTo?: string;
 }
 
 /**
- * Component bảo vệ route:
- * - Chưa đăng nhập → redirect tới /login (giữ lại from path)
- * - Đăng nhập nhưng sai role → redirect tới /unauthorized
- * - OK → render children (Outlet)
+ * Bảo vệ route - kiểm tra authentication và role.
+ * - Chưa đăng nhập → redirect về /login
+ * - Sai role → redirect về /unauthorized
  */
 export function ProtectedRoute({
+  children,
   requiredRole,
   redirectTo = '/login',
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
-  // Đang load auth state → không render gì
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
       </div>
     );
   }
 
-  // Chưa đăng nhập → redirect login, lưu current path
   if (!isAuthenticated) {
-    return <Navigate to={redirectTo} state={{ from: location.pathname }} replace />;
+    return (
+      <Navigate to={redirectTo} state={{ from: location.pathname }} replace />
+    );
   }
 
-  // Kiểm tra role nếu cần
   if (requiredRole && user) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!roles.includes(user.role)) {
+    const userRole = user.role?.toUpperCase();
+    const normalizedRoles = roles.map((r) => r.toUpperCase());
+
+    if (!normalizedRoles.includes(userRole)) {
       return <Navigate to="/unauthorized" replace />;
     }
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 }
-
-
