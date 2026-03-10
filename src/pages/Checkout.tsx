@@ -10,15 +10,10 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+import { VoucherSelector } from '../components/common/VoucherSelector';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
@@ -34,6 +29,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { OrderResponse, orderService } from '../services/orderService';
 import { provinceService } from '../services/provinceService';
+import { userService } from '../services/userService';
 import { vnpayService } from '../services/vnpayService';
 import { VoucherResponse, voucherService } from '../services/voucherService';
 import { District, Province, Ward } from '../types/address';
@@ -89,6 +85,16 @@ export function CheckoutPage() {
     }
   }, [location.state]);
 
+  // Handle applied voucher from Cart
+  useEffect(() => {
+    const state = location.state as {
+      appliedVoucher?: VoucherResponse;
+    } | null;
+    if (state?.appliedVoucher) {
+      setAppliedVoucher(state.appliedVoucher);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
@@ -131,34 +137,36 @@ export function CheckoutPage() {
     }
   }, [selectedDistrictCode]);
 
+  // Fetch full user details to pre-fill form
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (user?.userId) {
+        try {
+          const fullUser = await userService.getUserById(user.userId);
+          if (fullUser) {
+            setFormData((prev) => ({
+              ...prev,
+              name: fullUser.fullName || prev.name,
+              phone: fullUser.phoneNumber || prev.phone,
+              email: fullUser.email || prev.email,
+              address: fullUser.address || prev.address,
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch user details:', error);
+        }
+      }
+    };
+    fetchUserDetails();
+  }, [user?.userId]);
+
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherResponse | null>(
     null
   );
-  const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
-  const [voucherError, setVoucherError] = useState<string | null>(null);
-  const [availableVouchers, setAvailableVouchers] = useState<VoucherResponse[]>(
-    []
-  );
   const [showVoucherModal, setShowVoucherModal] = useState(false);
-  const [isFetchingVouchers, setIsFetchingVouchers] = useState(false);
-  const [voucherSearch, setVoucherSearch] = useState('');
 
-  const openVoucherModal = async () => {
-    setVoucherSearch('');
+  const openVoucherModal = () => {
     setShowVoucherModal(true);
-    if (availableVouchers.length > 0) return;
-    setIsFetchingVouchers(true);
-    try {
-      const result = await voucherService.getVouchers({
-        validOnly: true,
-        size: 50,
-      });
-      setAvailableVouchers(result.content ?? []);
-    } catch {
-      // silently fail
-    } finally {
-      setIsFetchingVouchers(false);
-    }
   };
 
   const subtotal = cartItems.reduce(
@@ -192,8 +200,6 @@ export function CheckoutPage() {
       return;
     }
 
-    setVoucherError(null);
-    setIsApplyingVoucher(true);
     try {
       const voucher = await voucherService.validateAndGetVoucher(
         code,
@@ -201,30 +207,19 @@ export function CheckoutPage() {
         subtotal
       );
       setAppliedVoucher(voucher);
-      setVoucherError(null);
       setShowVoucherModal(false);
       toast.success('Áp dụng mã giảm giá thành công');
     } catch (error: unknown) {
+      const axiosError = error as {
+        response?: { data?: { message?: string } };
+      };
       const errorMessage =
-        error &&
-        typeof error === 'object' &&
-        'response' in error &&
-        error.response &&
-        typeof error.response === 'object' &&
-        'data' in error.response &&
-        error.response.data &&
-        typeof error.response.data === 'object' &&
-        'message' in error.response.data &&
-        typeof error.response.data.message === 'string'
-          ? error.response.data.message
-          : 'Mã giảm giá không hợp lệ hoặc không đủ điều kiện';
+        axiosError?.response?.data?.message ||
+        'Mã giảm giá không hợp lệ hoặc không đủ điều kiện';
 
       console.error(`Failed to apply voucher [${code}]:`, errorMessage, error);
-      setVoucherError(errorMessage);
       toast.error(errorMessage);
       setAppliedVoucher(null);
-    } finally {
-      setIsApplyingVoucher(false);
     }
   };
 
@@ -822,7 +817,6 @@ export function CheckoutPage() {
                       type="button"
                       onClick={() => {
                         setAppliedVoucher(null);
-                        setVoucherError(null);
                       }}
                       className="text-xs text-red-500 hover:text-red-700 font-medium shrink-0 ml-2"
                     >
@@ -840,97 +834,18 @@ export function CheckoutPage() {
                       <Ticket className="w-4 h-4 text-red-500" />
                       Chọn mã giảm giá
                     </Button>
-                    {voucherError && (
-                      <div className="text-xs text-red-600 font-medium">
-                        {voucherError}
-                      </div>
-                    )}
                   </>
                 )}
               </div>
 
-              {/* Voucher Modal */}
-              <Dialog
+              <VoucherSelector
                 open={showVoucherModal}
                 onOpenChange={setShowVoucherModal}
-              >
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Ticket className="w-5 h-5 text-red-500" />
-                      Chọn mã giảm giá
-                    </DialogTitle>
-                  </DialogHeader>
-
-                  {/* Search inside modal */}
-                  <div className="relative mb-1">
-                    <Input
-                      placeholder="Tìm theo mã..."
-                      value={voucherSearch}
-                      onChange={(e) => setVoucherSearch(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
-
-                  <div className="max-h-96 overflow-y-auto -mx-6 px-6">
-                    {isFetchingVouchers ? (
-                      <div className="py-10 text-center text-sm text-gray-500">
-                        Đang tải...
-                      </div>
-                    ) : availableVouchers.length === 0 ? (
-                      <div className="py-10 text-center text-sm text-gray-500">
-                        Không có mã giảm giá khả dụng
-                      </div>
-                    ) : (
-                      <div className="space-y-2 py-1">
-                        {availableVouchers
-                          .filter((v) => {
-                            if (!voucherSearch) return true;
-                            const search = voucherSearch.toLowerCase();
-                            return (
-                              v.voucherCode.toLowerCase().includes(search) ||
-                              v.description.toLowerCase().includes(search)
-                            );
-                          })
-                          .map((v) => (
-                            <button
-                              key={v.voucherId}
-                              type="button"
-                              disabled={isApplyingVoucher}
-                              onClick={() => applyVoucherByCode(v.voucherCode)}
-                              className="w-full flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-red-400 hover:bg-red-50 text-left transition-colors disabled:opacity-50"
-                            >
-                              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
-                                <Tag className="w-5 h-5 text-red-500" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="font-bold text-sm text-gray-900">
-                                    {v.voucherCode}
-                                  </span>
-                                  <span className="text-sm font-semibold text-red-600 shrink-0">
-                                    {v.discountType === 'PERCENT'
-                                      ? `Giảm ${v.discountValue}%`
-                                      : `Giảm ${v.discountValue.toLocaleString('vi-VN')}₫`}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                                  {v.description}
-                                </p>
-                                {v.minOrderValue > 0 && (
-                                  <p className="text-xs text-gray-400 mt-1">
-                                    Đơn hàng tối thiểu{' '}
-                                    {v.minOrderValue.toLocaleString('vi-VN')}₫
-                                  </p>
-                                )}
-                              </div>
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
+                onSelect={(voucher) => {
+                  applyVoucherByCode(voucher.voucherCode);
+                }}
+                subtotal={subtotal}
+              />
 
               <Separator className="my-4" />
 

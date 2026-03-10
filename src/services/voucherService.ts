@@ -16,6 +16,7 @@ export interface VoucherResponse {
   usedCount: number;
   isActive: boolean;
   isValid: boolean;
+  userStatus?: 'AVAILABLE' | 'USED' | 'EXPIRED';
 }
 
 export interface VoucherRequest {
@@ -48,6 +49,7 @@ const ENDPOINTS = {
     `/api/v1/vouchers/${voucherId}/assign/${userId}`,
   ASSIGN_BULK: (voucherId: string | number) =>
     `/api/v1/vouchers/${voucherId}/assign`,
+  MY_VOUCHERS: '/api/v1/vouchers/my-vouchers',
 };
 
 export const voucherService = {
@@ -164,6 +166,22 @@ export const voucherService = {
       ENDPOINTS.ASSIGN_BULK(voucherId),
       userIds
     );
+  },
+
+  /**
+   * Get my vouchers
+   */
+  async getMyVouchers(params: {
+    userId: number;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Promise<PageResponse<VoucherResponse>> {
+    const response = await api.get<ApiResponse<PageResponse<VoucherResponse>>>(
+      ENDPOINTS.MY_VOUCHERS,
+      { params }
+    );
+    return response.data.data;
   },
 };
 
