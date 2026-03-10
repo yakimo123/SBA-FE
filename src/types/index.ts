@@ -160,4 +160,61 @@ export interface CartResponse {
 export interface AddToCartRequest {
   productId: number;
   quantity: number;
+  // B2B / Bulk Order types
+}
+
+export type BulkOrderStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED';
+
+export interface TierPrice {
+  minQty: number;
+  maxQty: number | null;
+  unitPrice: number;
+  discountPercent: number;
+}
+
+export interface BulkOrderItem {
+  productId: string | number;
+  productName: string;
+  productImage?: string;
+  quantity: number;
+  unitPrice: number;
+  tierPrice?: TierPrice;
+  subtotal: number;
+  customization?: string;
+}
+
+export interface BulkOrder {
+  orderId: string;
+  companyId: number;
+  companyName: string;
+  status: BulkOrderStatus;
+  items: BulkOrderItem[];
+  voucherCode?: string;
+  voucherDiscount: number;
+  subtotal: number;
+  total: number;
+  note?: string;
+  customization?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBulkOrderRequest {
+  items: {
+    productId: string | number;
+    quantity: number;
+    customization?: string;
+  }[];
+  voucherCode?: string;
+  note?: string;
+}
+
+export interface AddCustomizationRequest {
+  customization: string;
 }

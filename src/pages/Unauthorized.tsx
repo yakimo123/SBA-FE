@@ -1,43 +1,41 @@
 import { ShieldX } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/button';
-import { getDefaultRouteForRole } from '../constants/roles';
 import { useAuth } from '../contexts/AuthContext';
 
 export function UnauthorizedPage() {
-  const { user, logout } = useAuth();
-  const homeRoute = getDefaultRouteForRole(user?.role);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleGoBack = () => {
+    const role = user?.role?.toUpperCase();
+    if (role === 'ADMIN') {
+      navigate('/admin');
+    } else if (role === 'COMPANY') {
+      navigate('/company');
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full mx-4 text-center">
-        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <ShieldX className="w-10 h-10 text-red-600" />
-        </div>
-
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h1>
-        <p className="text-gray-600 mb-8">
-          Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là lỗi.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link to={homeRoute}>
-            <Button className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
-              Về trang chủ
-            </Button>
-          </Link>
-          <Button
-            variant="outline"
-            onClick={logout}
-            className="w-full sm:w-auto"
-          >
-            Đăng nhập tài khoản khác
-          </Button>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 px-4 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+        <ShieldX className="h-10 w-10 text-red-500" />
       </div>
+      <div>
+        <h1 className="mb-2 text-3xl font-bold text-gray-900">
+          Không có quyền truy cập
+        </h1>
+        <p className="text-gray-500">
+          Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản trị
+          viên nếu đây là nhầm lẫn.
+        </p>
+      </div>
+      <Button onClick={handleGoBack} className="bg-blue-600 hover:bg-blue-700">
+        Quay về trang chủ
+      </Button>
     </div>
   );
 }
-
-

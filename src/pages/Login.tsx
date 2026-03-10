@@ -40,14 +40,23 @@ export function LoginPage() {
     return () => clearError();
   }, [clearError]);
 
-  // Remove custom useGoogleLogin handler since GoogleLogin component provides its own
+  // Redirect COMPANY về portal riêng sau khi login
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    const role = user.role?.toUpperCase();
+    if (role === 'COMPANY') {
+      navigate('/company', { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     try {
       await login(email, password);
-      // Redirect sẽ được xử lý bởi useEffect ở trên khi isAuthenticated thay đổi
+      // redirect is handled by the useEffect above
     } catch (err) {
       // Error is handled by AuthContext and available in error state
       console.error('Login failed', err);
