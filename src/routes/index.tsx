@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { AdminLayout } from '../layouts/AdminLayout';
+import { CompanyLayout } from '../layouts/CompanyLayout';
 import { RootLayout } from '../layouts/RootLayout';
 import { AccountPage } from '../pages/Account';
 import { AttributeList } from '../pages/admin/AttributeList';
@@ -22,6 +23,11 @@ import { StoreBranchList } from '../pages/admin/StoreBranchList';
 import { SupplierList } from '../pages/admin/SupplierList';
 import { TrademarkList } from '../pages/admin/TrademarkList';
 import { VoucherList } from '../pages/admin/VoucherList';
+import { BulkOrderCreate } from '../pages/b2b/BulkOrderCreate';
+import { CompanyAccount } from '../pages/b2b/CompanyAccount';
+import { CompanyDashboard } from '../pages/b2b/Dashboard';
+import { MyOrders } from '../pages/b2b/MyOrders';
+import { OrderDetail as CompanyOrderDetail } from '../pages/b2b/OrderDetail';
 import { CartPage } from '../pages/Cart';
 import { CheckoutPage } from '../pages/Checkout';
 import { HomePage } from '../pages/Home';
@@ -29,8 +35,10 @@ import { LoginPage } from '../pages/Login';
 import { ProductDetailPage } from '../pages/ProductDetail';
 import { ProductListPage } from '../pages/ProductList';
 import { RegisterPage } from '../pages/Register';
+import { UnauthorizedPage } from '../pages/Unauthorized';
 
 export const router = createBrowserRouter([
+  // ── Public / Customer routes ──────────────────────────────────────────────
   {
     path: '/',
     element: <RootLayout />,
@@ -43,15 +51,18 @@ export const router = createBrowserRouter([
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'account', element: <AccountPage /> },
+      { path: 'unauthorized', element: <UnauthorizedPage /> },
     ],
   },
+
+  // ── Admin routes ──────────────────────────────────────────────────────────
   {
     path: '/admin',
     element: <AdminLayout />,
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'dashboard', element: <Dashboard /> },
-      
+
       // Products
       { path: 'products', element: <ProductList /> },
       { path: 'products/new', element: <ProductForm /> },
@@ -78,6 +89,19 @@ export const router = createBrowserRouter([
       { path: 'settings/stores', element: <StoreBranchList /> },
       { path: 'settings/guarantees', element: <GuaranteeList /> },
       { path: 'settings/media', element: <MediaLibrary /> },
+    ],
+  },
+
+  // ── Company / B2B routes (role: COMPANY only) ────────────────────────────
+  {
+    path: '/company',
+    element: <CompanyLayout />,
+    children: [
+      { index: true, element: <CompanyDashboard /> },
+      { path: 'orders', element: <MyOrders /> },
+      { path: 'orders/new', element: <BulkOrderCreate /> },
+      { path: 'orders/:id', element: <CompanyOrderDetail /> },
+      { path: 'account', element: <CompanyAccount /> },
     ],
   },
 ]);

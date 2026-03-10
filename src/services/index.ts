@@ -7,3 +7,4 @@ export * from './reviewService';
 export { default as wishlistService } from './wishlistService';
 export * from './wishlistService';
 export * from './companyService';
+export { default as bulkOrderService } from './bulkOrderService';

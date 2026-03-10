@@ -1,5 +1,5 @@
-import { Apple, Chrome, Facebook, Lock, Mail, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { AlertCircle, Apple, Chrome, Facebook, Lock, Mail } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/button';
@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, error, clearError, isLoading } = useAuth();
+  const { login, error, clearError, isLoading, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -21,12 +21,23 @@ export function LoginPage() {
     return () => clearError();
   }, [clearError]);
 
+  // Redirect COMPANY về portal riêng sau khi login
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    const role = user.role?.toUpperCase();
+    if (role === 'COMPANY') {
+      navigate('/company', { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     try {
       await login(email, password);
-      navigate('/');
+      // redirect is handled by the useEffect above
     } catch (err) {
       // Error is handled by AuthContext and available in error state
       console.error('Login failed', err);
