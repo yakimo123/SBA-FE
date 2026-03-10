@@ -104,6 +104,11 @@ const navigation: NavigationItem[] = [
         href: '/admin/customers/feedback',
         icon: MessageSquare,
       },
+      {
+        title: 'Reviews',
+        href: '/admin/customers/reviews',
+        icon: Star,
+      },
     ],
   },
   {
