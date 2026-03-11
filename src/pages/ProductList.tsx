@@ -42,6 +42,7 @@ export function ProductListPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get('categoryId');
+  const initialBrand = searchParams.get('brandId');
   const { addToCart } = useCart();
 
   // UI state
@@ -53,8 +54,9 @@ export function ProductListPage() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
     initialCategory ? [Number(initialCategory)] : []
   );
-  const [selectedBrandIds, setSelectedBrandIds] = useState<number[]>([]);
-
+  const [selectedBrandIds, setSelectedBrandIds] = useState<number[]>(
+    initialBrand ? [Number(initialBrand)] : []
+  );
   // Data
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
