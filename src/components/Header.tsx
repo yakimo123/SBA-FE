@@ -1,4 +1,5 @@
 import {
+  Building2,
   Heart,
   LogOut,
   MapPin,
@@ -34,8 +35,8 @@ export function Header() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlistItems.length;
-  const isAdminOrCompany =
-    user?.role === ROLES.ADMIN || user?.role === ROLES.COMPANY;
+  const isAdmin = user?.role === ROLES.ADMIN;
+  const isCompany = user?.role === ROLES.COMPANY;
 
   const handleLogout = () => {
     logout();
@@ -150,10 +151,16 @@ export function Header() {
                     <User className="w-4 h-4 mr-2" />
                     Tài khoản
                   </DropdownMenuItem>
-                  {isAdminOrCompany && (
+                  {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Settings className="w-4 h-4 mr-2" />
                       Quản trị
+                    </DropdownMenuItem>
+                  )}
+                  {isCompany && (
+                    <DropdownMenuItem onClick={() => navigate('/company')}>
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Doanh nghiệp
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -190,36 +197,39 @@ export function Header() {
               Trang chủ
             </Link>
             <Link
-              to="/products"
+              to="/products?categoryName=Phụ kiện điện thoại"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Phụ kiện điện thoại
             </Link>
             <Link
-              to="/products"
+              to="/products?categoryName=Phụ kiện laptop"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Phụ kiện laptop
             </Link>
             <Link
-              to="/products"
+              to="/products?categoryName=Thiết bị âm thanh"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Thiết bị âm thanh
             </Link>
             <Link
-              to="/products"
+              to="/products?categoryName=Phụ kiện gaming"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Phụ kiện gaming
             </Link>
             <Link
-              to="/products"
+              to="/products?categoryName=Thiết bị lưu trữ"
               className="hover:text-red-600 whitespace-nowrap"
             >
               Thiết bị lưu trữ
             </Link>
-            <button className="text-red-600 font-medium whitespace-nowrap">
+            <button
+              onClick={() => navigate('/products?sortBy=discountPercent,desc')}
+              className="text-red-600 font-medium whitespace-nowrap"
+            >
               🔥 Flash Sale
             </button>
           </nav>

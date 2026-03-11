@@ -14,7 +14,7 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
  */
 export const DEFAULT_ROUTES: Record<string, string> = {
   [ROLES.ADMIN]: '/admin',
-  [ROLES.COMPANY]: '/admin', // Company dùng chung admin layout, có thể tách sau
+  [ROLES.COMPANY]: '/company',
   [ROLES.USER]: '/',
 };
 
