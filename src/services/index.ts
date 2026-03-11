@@ -8,3 +8,5 @@ export { default as wishlistService } from './wishlistService';
 export * from './wishlistService';
 export * from './companyService';
 export { default as bulkOrderService } from './bulkOrderService';
+export { default as productService } from './productService';
+export { default as voucherService } from './voucherService';

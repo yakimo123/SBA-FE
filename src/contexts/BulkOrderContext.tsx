@@ -1,64 +1,67 @@
-import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
-import { mockBulkOrders } from '../data/mockData';
-import { BulkOrder, BulkOrderItem, BulkOrderStatus } from '../types';
+import { useAuth } from './AuthContext';
+import bulkOrderService from '../services/bulkOrderService';
+import { BulkOrderResponse, BulkOrderStatus, CreateBulkOrderRequest, CreateCustomizationRequest } from '../types';
 
 interface BulkOrderContextType {
-  orders: BulkOrder[];
-  addOrder: (items: BulkOrderItem[], voucherCode: string, voucherDiscount: number, note: string, total: number, subtotal: number) => BulkOrder;
-  cancelOrder: (orderId: string) => void;
-  updateCustomization: (orderId: string, customization: string) => void;
+  orders: BulkOrderResponse[];
+  loading: boolean;
+  fetchOrders: () => Promise<void>;
+  createOrder: (data: CreateBulkOrderRequest) => Promise<BulkOrderResponse>;
+  cancelOrder: (orderId: number) => Promise<void>;
+  updateStatus: (orderId: number, status: BulkOrderStatus) => Promise<void>;
+  addCustomization: (detailId: number, data: CreateCustomizationRequest) => Promise<BulkOrderResponse>;
 }
 
 const BulkOrderContext = createContext<BulkOrderContextType | undefined>(undefined);
 
-let orderCounter = mockBulkOrders.length + 1;
-
 export function BulkOrderProvider({ children }: { children: ReactNode }) {
-  const [orders, setOrders] = useState<BulkOrder[]>(mockBulkOrders);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<BulkOrderResponse[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const addOrder = useCallback((
-    items: BulkOrderItem[],
-    voucherCode: string,
-    voucherDiscount: number,
-    note: string,
-    total: number,
-    subtotal: number,
-  ): BulkOrder => {
-    const now = new Date().toISOString();
-    const padded = String(orderCounter++).padStart(3, '0');
-    const newOrder: BulkOrder = {
-      orderId: `BO-2026-${padded}`,
-      companyId: 1,
-      companyName: 'Company',
-      status: 'PENDING' as BulkOrderStatus,
-      items,
-      voucherCode: voucherCode || undefined,
-      voucherDiscount,
-      subtotal,
-      total,
-      note: note || undefined,
-      createdAt: now,
-      updatedAt: now,
-    };
-    setOrders((prev) => [newOrder, ...prev]);
-    return newOrder;
-  }, []);
+  const fetchOrders = useCallback(async () => {
+    if (!user?.userId) return;
+    setLoading(true);
+    try {
+      const data = await bulkOrderService.search({ userId: user.userId, size: 100 });
+      setOrders(data.content);
+    } catch (err) {
+      console.error('Failed to fetch bulk orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.userId]);
 
-  const cancelOrder = useCallback((orderId: string) => {
-    setOrders((prev) =>
-      prev.map((o) => o.orderId === orderId ? { ...o, status: 'CANCELLED' as BulkOrderStatus } : o)
-    );
-  }, []);
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
-  const updateCustomization = useCallback((orderId: string, customization: string) => {
-    setOrders((prev) =>
-      prev.map((o) => o.orderId === orderId ? { ...o, customization } : o)
-    );
-  }, []);
+  const createOrder = useCallback(async (data: CreateBulkOrderRequest): Promise<BulkOrderResponse> => {
+    const result = await bulkOrderService.create(user!.userId, data);
+    await fetchOrders();
+    return result;
+  }, [user, fetchOrders]);
+
+  const cancelOrder = useCallback(async (orderId: number) => {
+    await bulkOrderService.updateStatus(orderId, 'CANCELLED');
+    await fetchOrders();
+  }, [fetchOrders]);
+
+  const updateStatus = useCallback(async (orderId: number, status: BulkOrderStatus) => {
+    await bulkOrderService.updateStatus(orderId, status);
+    await fetchOrders();
+  }, [fetchOrders]);
+
+  const addCustomization = useCallback(async (detailId: number, data: CreateCustomizationRequest): Promise<BulkOrderResponse> => {
+    const result = await bulkOrderService.addCustomization(detailId, data);
+    await fetchOrders();
+    return result;
+  }, [fetchOrders]);
 
   return (
-    <BulkOrderContext.Provider value={{ orders, addOrder, cancelOrder, updateCustomization }}>
+    <BulkOrderContext.Provider value={{ orders, loading, fetchOrders, createOrder, cancelOrder, updateStatus, addCustomization }}>
       {children}
     </BulkOrderContext.Provider>
   );

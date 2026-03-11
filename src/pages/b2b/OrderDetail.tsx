@@ -5,7 +5,6 @@ import {
   Clock,
   Package,
   Pencil,
-  Truck,
   XCircle,
   Copy,
   MoreVertical,
@@ -13,30 +12,31 @@ import {
   Calendar,
   DollarSign,
   Tag,
-  FileText,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import bulkOrderService from '../../services/bulkOrderService';
 import { useBulkOrders } from '../../contexts/BulkOrderContext';
-import { BulkOrderStatus } from '../../types';
+import { BulkOrderResponse, BulkOrderStatus } from '../../types';
 
 const STATUS_LABEL: Record<BulkOrderStatus, string> = {
   PENDING: 'Chờ duyệt',
   APPROVED: 'Đã duyệt',
+  REJECTED: 'Từ chối',
   PROCESSING: 'Đang xử lý',
-  SHIPPED: 'Đang giao',
-  DELIVERED: 'Đã giao',
+  COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy',
 };
 
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
   PENDING: 'bg-amber-50 text-amber-700 border border-amber-300',
   APPROVED: 'bg-blue-50 text-blue-700 border border-blue-300',
+  REJECTED: 'bg-red-50 text-red-700 border border-red-300',
   PROCESSING: 'bg-blue-50 text-blue-700 border border-blue-300',
-  SHIPPED: 'bg-purple-50 text-purple-700 border border-purple-300',
-  DELIVERED: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
+  COMPLETED: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
   CANCELLED: 'bg-slate-100 text-slate-600 border border-slate-300',
 };
 
@@ -44,24 +44,22 @@ const TIMELINE = [
   { status: 'PENDING' as BulkOrderStatus, label: 'Chờ duyệt', icon: Clock },
   { status: 'APPROVED' as BulkOrderStatus, label: 'Đã duyệt', icon: CheckCircle2 },
   { status: 'PROCESSING' as BulkOrderStatus, label: 'Đang xử lý', icon: Package },
-  { status: 'SHIPPED' as BulkOrderStatus, label: 'Vận chuyển', icon: Truck },
-  { status: 'DELIVERED' as BulkOrderStatus, label: 'Hoàn thành', icon: CheckCircle2 },
+  { status: 'COMPLETED' as BulkOrderStatus, label: 'Hoàn thành', icon: CheckCircle2 },
 ];
 
 const STATUS_ORDER: BulkOrderStatus[] = [
   'PENDING',
   'APPROVED',
   'PROCESSING',
-  'SHIPPED',
-  'DELIVERED',
+  'COMPLETED',
 ];
 
 const STEP_ICON_STYLE: Record<BulkOrderStatus, string> = {
   PENDING: 'bg-amber-50 text-amber-600 border-amber-200',
   APPROVED: 'bg-sky-50 text-sky-600 border-sky-200',
+  REJECTED: 'bg-red-50 text-red-600 border-red-200',
   PROCESSING: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-  SHIPPED: 'bg-violet-50 text-violet-600 border-violet-200',
-  DELIVERED: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  COMPLETED: 'bg-emerald-50 text-emerald-600 border-emerald-200',
   CANCELLED: 'bg-slate-100 text-slate-500 border-slate-200',
 };
 
@@ -71,13 +69,40 @@ const fmt = (n: number) =>
 export function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { orders, cancelOrder, updateCustomization } = useBulkOrders();
+  const { cancelOrder, addCustomization } = useBulkOrders();
+  const [order, setOrder] = useState<BulkOrderResponse | null>(null);
+  const [loading, setLoading] = useState(true);
   const [customInput, setCustomInput] = useState('');
+  const [customType, setCustomType] = useState('');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  const order = orders.find((o) => o.orderId === id);
+  const fetchOrder = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const data = await bulkOrderService.getById(Number(id));
+      setOrder(data);
+    } catch (err) {
+      console.error('Failed to fetch order:', err);
+      setOrder(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchOrder();
+  }, [fetchOrder]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -110,29 +135,43 @@ export function OrderDetail() {
   const currentStep = currentStatus === 'CANCELLED' ? -1 : STATUS_ORDER.indexOf(currentStatus);
 
   const handleSaveCustomization = async () => {
-    if (!customInput.trim()) return;
+    if (!customInput.trim() || !customType.trim()) return;
+    if (!order?.details?.length) return;
     setSaving(true);
     setSaveMessage('');
-    await new Promise((r) => setTimeout(r, 500));
-    updateCustomization(order.orderId, customInput.trim());
-    setCustomInput('');
-    setSaving(false);
-    setSaveMessage('Đã lưu yêu cầu tùy chỉnh thành công.');
-    setTimeout(() => setSaveMessage(''), 2500);
+    try {
+      // Add customization to the first detail item
+      const detailId = order.details[0].bulkOrderDetailId;
+      await addCustomization(detailId, {
+        type: customType.trim(),
+        note: customInput.trim(),
+      });
+      setCustomInput('');
+      setCustomType('');
+      setSaveMessage('Đã lưu yêu cầu tùy chỉnh thành công.');
+      await fetchOrder(); // Refresh data
+      setTimeout(() => setSaveMessage(''), 2500);
+    } catch (err) {
+      console.error('Failed to save customization:', err);
+      setSaveMessage('Lỗi khi lưu yêu cầu tùy chỉnh.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')) return;
-    cancelOrder(order.orderId);
+    await cancelOrder(order!.bulkOrderId);
+    await fetchOrder();
   };
 
   const handleCopyOrderId = () => {
-    navigator.clipboard.writeText(order.orderId);
+    navigator.clipboard.writeText(String(order!.bulkOrderId));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isSaveDisabled = saving || !customInput.trim();
+  const isSaveDisabled = saving || !customInput.trim() || !customType.trim();
   const saveButtonLabel = saving ? 'Đang lưu...' : 'Lưu yêu cầu tùy chỉnh';
 
   return (
@@ -152,7 +191,7 @@ export function OrderDetail() {
               Đơn hàng
             </button>
             <ChevronRight className="h-4 w-4 text-slate-300" />
-            <span className="font-medium text-slate-900">{order.orderId}</span>
+            <span className="font-medium text-slate-900">#{order.bulkOrderId}</span>
           </nav>
         </div>
       </div>
@@ -163,7 +202,7 @@ export function OrderDetail() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-slate-900">Đơn hàng #{order.orderId}</h1>
+                <h1 className="text-2xl font-bold text-slate-900">Đơn hàng #{order.bulkOrderId}</h1>
                 <button
                   onClick={handleCopyOrderId}
                   className="p-1.5 hover:bg-slate-100 rounded-md transition-colors group relative"
@@ -185,7 +224,7 @@ export function OrderDetail() {
                 <span className="text-slate-300">•</span>
                 <div className="flex items-center gap-1.5">
                   <Package className="h-4 w-4 text-slate-400" />
-                  <span>{order.items.length} sản phẩm</span>
+                  <span>{order.details?.length || 0} sản phẩm</span>
                 </div>
                 <span className="text-slate-300">•</span>
                 <span
@@ -333,24 +372,47 @@ export function OrderDetail() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {order.items.map((item, idx) => (
+                    {order.details?.map((item, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4">
                           <div>
                             <p className="text-sm font-semibold text-slate-900">
                               {item.productName}
                             </p>
-                            {item.tierPrice && item.tierPrice.discountPercent > 0 && (
+                            {item.discountSnapshot != null && item.discountSnapshot > 0 && (
                               <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
                                 <Tag className="h-3 w-3" />
-                                Giảm {item.tierPrice.discountPercent}% (≥{item.tierPrice.minQty} sp)
+                                Giảm {item.discountSnapshot}%{item.appliedTierPrice ? ` (≥${item.appliedTierPrice} sp)` : ''}
                               </span>
                             )}
-                            {item.customization && (
-                              <p className="mt-1 flex items-center gap-1 text-xs text-slate-600">
-                                <Pencil className="h-3 w-3 text-slate-400" />
-                                {item.customization}
-                              </p>
+                            {item.priceTiers?.length > 0 && (
+                              <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+                                <p className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 border-b border-slate-200">
+                                  Bảng giá sỉ
+                                </p>
+                                <div className="divide-y divide-slate-100">
+                                  {item.priceTiers.map((tier) => (
+                                    <div
+                                      key={tier.bulkPriceTierId}
+                                      className={`flex justify-between px-3 py-1.5 text-xs ${item.quantity >= tier.minQty ? 'bg-emerald-50 text-emerald-800 font-semibold' : 'text-slate-600'
+                                        }`}
+                                    >
+                                      <span>≥ {tier.minQty} sp</span>
+                                      <span>{fmt(tier.unitPrice)}/sp</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {item.customizations?.length > 0 && (
+                              <div className="mt-1 space-y-0.5">
+                                {item.customizations.map((c) => (
+                                  <p key={c.customizationId} className="flex items-center gap-1 text-xs text-slate-600">
+                                    <Pencil className="h-3 w-3 text-slate-400" />
+                                    [{c.type}] {c.note}{c.extraFee ? ` (+${fmt(c.extraFee)})` : ''}
+                                  </p>
+                                ))}
+                              </div>
                             )}
                           </div>
                         </td>
@@ -360,10 +422,10 @@ export function OrderDetail() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right text-sm text-slate-600">
-                          {fmt(item.unitPrice)}
+                          {fmt(item.unitPriceSnapshot)}
                         </td>
                         <td className="px-6 py-4 text-right text-sm font-bold text-slate-900">
-                          {fmt(item.subtotal)}
+                          {fmt(item.lineTotal)}
                         </td>
                       </tr>
                     ))}
@@ -384,16 +446,16 @@ export function OrderDetail() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Tạm tính</span>
-                  <span className="font-medium text-slate-900">{fmt(order.subtotal)}</span>
+                  <span className="font-medium text-slate-900">{fmt(order.totalPrice)}</span>
                 </div>
-                {order.voucherCode && (
+                {order.discountCode && (
                   <div className="flex justify-between text-sm">
                     <span className="text-emerald-600 flex items-center gap-1">
                       <Tag className="h-4 w-4" />
-                      Voucher {order.voucherCode}
+                      Voucher {order.discountCode}{order.discountPercentage ? ` (-${order.discountPercentage}%)` : ''}
                     </span>
                     <span className="font-medium text-emerald-600">
-                      -{fmt(order.voucherDiscount)}
+                      -{fmt(order.discountAmount)}
                     </span>
                   </div>
                 )}
@@ -401,22 +463,11 @@ export function OrderDetail() {
                 <div className="flex justify-between items-center pt-1">
                   <span className="text-sm font-semibold text-slate-900">Tổng cộng</span>
                   <span className="text-xl font-bold text-slate-900">
-                    {fmt(order.total)}
+                    {fmt(order.finalPrice)}
                   </span>
                 </div>
               </div>
             </div>
-
-            {/* Notes */}
-            {order.note && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="h-5 w-5 text-slate-400" />
-                  <h2 className="text-sm font-semibold text-slate-900">Ghi chú</h2>
-                </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{order.note}</p>
-              </div>
-            )}
 
             {/* Customization */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
@@ -424,18 +475,32 @@ export function OrderDetail() {
                 <Pencil className="h-5 w-5 text-slate-400" />
                 <h2 className="text-sm font-semibold text-slate-900">Yêu cầu tùy chỉnh</h2>
               </div>
-              {order.customization && (
-                <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
-                  <p className="text-sm text-blue-900">{order.customization}</p>
+              {order.details?.some(d => d.customizations?.length > 0) && (
+                <div className="mb-4 space-y-2">
+                  {order.details.flatMap(d => d.customizations ?? []).map((c) => (
+                    <div key={c.customizationId} className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                      <p className="text-sm text-blue-900">
+                        <span className="font-semibold">[{c.type}]</span> {c.note}
+                        {c.extraFee ? <span className="ml-2 text-xs text-blue-700">(+{fmt(c.extraFee)})</span> : null}
+                        <span className="ml-2 text-xs text-blue-500">({c.status})</span>
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
               {currentStatus === 'PENDING' ? (
                 <div className="space-y-3">
+                  <input
+                    value={customType}
+                    onChange={(e) => setCustomType(e.target.value)}
+                    placeholder="Loại tùy chỉnh (vd: In logo, Khắc tên...)"
+                    className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
                   <textarea
                     value={customInput}
                     onChange={(e) => setCustomInput(e.target.value)}
-                    placeholder="Màu sắc, kích thước, khắc tên, thiết kế đặc biệt..."
-                    rows={4}
+                    placeholder="Mô tả chi tiết yêu cầu tùy chỉnh..."
+                    rows={3}
                     className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none"
                   />
                   <button
@@ -461,11 +526,11 @@ export function OrderDetail() {
                   {saveMessage && (
                     <p className="text-sm font-medium text-emerald-600">{saveMessage}</p>
                   )}
-                  {!saveMessage && !customInput.trim() && (
-                    <p className="text-xs text-slate-500">Nhập nội dung tùy chỉnh để lưu.</p>
+                  {!saveMessage && (!customInput.trim() || !customType.trim()) && (
+                    <p className="text-xs text-slate-500">Nhập loại và nội dung tùy chỉnh để lưu.</p>
                   )}
                 </div>
-              ) : !order.customization ? (
+              ) : !order.details?.some(d => d.customizations?.length > 0) ? (
                 <p className="text-sm text-slate-500 italic">Không có yêu cầu tùy chỉnh</p>
               ) : null}
             </div>

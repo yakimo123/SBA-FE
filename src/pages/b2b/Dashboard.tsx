@@ -1,4 +1,4 @@
-import { ClipboardList, DollarSign, PlusCircle, TrendingUp } from 'lucide-react';
+import { ClipboardList, DollarSign, Loader2, PlusCircle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useBulkOrders } from '../../contexts/BulkOrderContext';
@@ -7,18 +7,18 @@ import { BulkOrderStatus } from '../../types';
 const STATUS_LABEL: Record<BulkOrderStatus, string> = {
   PENDING: 'Chờ duyệt',
   APPROVED: 'Đã duyệt',
+  REJECTED: 'Từ chối',
   PROCESSING: 'Đang xử lý',
-  SHIPPED: 'Đang giao',
-  DELIVERED: 'Đã giao',
+  COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy',
 };
 
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
   APPROVED: 'bg-blue-100 text-blue-800',
+  REJECTED: 'bg-red-100 text-red-800',
   PROCESSING: 'bg-indigo-100 text-indigo-800',
-  SHIPPED: 'bg-purple-100 text-purple-800',
-  DELIVERED: 'bg-green-100 text-green-800',
+  COMPLETED: 'bg-green-100 text-green-800',
   CANCELLED: 'bg-red-100 text-red-800',
 };
 
@@ -27,13 +27,21 @@ const fmt = (n: number) =>
 
 export function CompanyDashboard() {
   const navigate = useNavigate();
-  const { orders } = useBulkOrders();
+  const { orders, loading } = useBulkOrders();
 
   const totalSpend = orders
     .filter((o) => o.status !== 'CANCELLED')
-    .reduce((sum, o) => sum + o.total, 0);
+    .reduce((sum, o) => sum + o.finalPrice, 0);
   const pendingCount = orders.filter((o) => o.status === 'PENDING').length;
   const totalOrders = orders.length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -133,20 +141,20 @@ export function CompanyDashboard() {
             <tbody>
               {orders.slice(0, 5).map((order) => (
                 <tr
-                  key={order.orderId}
+                  key={order.bulkOrderId}
                   className="border-b border-gray-50 hover:bg-blue-50/40 transition-colors"
                 >
                   <td className="px-6 py-4 font-mono font-medium text-blue-700">
-                    {order.orderId}
+                    #{order.bulkOrderId}
                   </td>
                   <td className="px-6 py-4 text-gray-600">
                     {new Date(order.createdAt).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="px-6 py-4 text-gray-700 max-w-[200px] truncate">
-                    {order.items.map((i) => i.productName).join(', ')}
+                    {order.details?.map((d) => d.productName).join(', ') || '—'}
                   </td>
                   <td className="px-6 py-4 text-right font-semibold text-gray-900">
-                    {fmt(order.total)}
+                    {fmt(order.finalPrice)}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -157,7 +165,7 @@ export function CompanyDashboard() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
-                      onClick={() => navigate(`/company/orders/${order.orderId}`)}
+                      onClick={() => navigate(`/company/orders/${order.bulkOrderId}`)}
                       className="text-xs font-medium text-blue-600 hover:underline"
                     >
                       Xem chi tiết

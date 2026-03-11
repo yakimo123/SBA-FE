@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   DollarSign,
   Eye,
+  Loader2,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -21,18 +22,18 @@ import { BulkOrderStatus } from '../../types';
 const STATUS_LABEL: Record<BulkOrderStatus, string> = {
   PENDING: 'Chờ duyệt',
   APPROVED: 'Đã duyệt',
+  REJECTED: 'Từ chối',
   PROCESSING: 'Đang xử lý',
-  SHIPPED: 'Đang giao',
-  DELIVERED: 'Đã giao',
+  COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy',
 };
 
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
   PENDING: 'bg-amber-50 text-amber-700 border border-amber-300',
   APPROVED: 'bg-blue-50 text-blue-700 border border-blue-300',
+  REJECTED: 'bg-red-50 text-red-700 border border-red-300',
   PROCESSING: 'bg-indigo-50 text-indigo-700 border border-indigo-300',
-  SHIPPED: 'bg-purple-50 text-purple-700 border border-purple-300',
-  DELIVERED: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
+  COMPLETED: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
   CANCELLED: 'bg-slate-100 text-slate-600 border border-slate-300',
 };
 
@@ -40,9 +41,9 @@ const ALL_TABS = [
   'ALL',
   'PENDING',
   'APPROVED',
+  'REJECTED',
   'PROCESSING',
-  'SHIPPED',
-  'DELIVERED',
+  'COMPLETED',
   'CANCELLED',
 ] as const;
 type Tab = (typeof ALL_TABS)[number];
@@ -52,7 +53,7 @@ const fmt = (n: number) =>
 
 export function MyOrders() {
   const navigate = useNavigate();
-  const { orders, cancelOrder } = useBulkOrders();
+  const { orders, cancelOrder, loading } = useBulkOrders();
   const [tab, setTab] = useState<Tab>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
@@ -64,8 +65,8 @@ export function MyOrders() {
     if (searchQuery) {
       result = result.filter(
         (o) =>
-          o.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          o.items.some((i) => i.productName.toLowerCase().includes(searchQuery.toLowerCase()))
+          String(o.bulkOrderId).includes(searchQuery) ||
+          o.details?.some((d) => d.productName.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -74,34 +75,42 @@ export function MyOrders() {
       if (sortBy === 'date') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
-      return b.total - a.total;
+      return b.finalPrice - a.finalPrice;
     });
 
     return result;
   }, [orders, tab, searchQuery, sortBy]);
 
-  const handleCancel = (orderId: string) => {
+  const handleCancel = async (orderId: number) => {
     if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')) return;
-    cancelOrder(orderId);
+    await cancelOrder(orderId);
   };
 
   const countByStatus = (s: BulkOrderStatus) => orders.filter((o) => o.status === s).length;
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+    const totalRevenue = orders.reduce((sum, o) => sum + o.finalPrice, 0);
     const pendingCount = countByStatus('PENDING');
-    const deliveredCount = countByStatus('DELIVERED');
+    const completedCount = countByStatus('COMPLETED');
     const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
 
     return {
       totalOrders: orders.length,
       totalRevenue,
       pendingOrders: pendingCount,
-      completedOrders: deliveredCount,
+      completedOrders: completedCount,
       avgOrderValue,
     };
   }, [orders]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -230,9 +239,9 @@ export function MyOrders() {
                 [
                   'PENDING',
                   'APPROVED',
+                  'REJECTED',
                   'PROCESSING',
-                  'SHIPPED',
-                  'DELIVERED',
+                  'COMPLETED',
                   'CANCELLED',
                 ] as const
               ).map((s) => {
@@ -240,9 +249,9 @@ export function MyOrders() {
                 const activeColors = {
                   PENDING: { bg: '#d97706', border: '#d97706', color: '#ffffff' },
                   APPROVED: { bg: '#2563eb', border: '#2563eb', color: '#ffffff' },
+                  REJECTED: { bg: '#dc2626', border: '#dc2626', color: '#ffffff' },
                   PROCESSING: { bg: '#4f46e5', border: '#4f46e5', color: '#ffffff' },
-                  SHIPPED: { bg: '#7c3aed', border: '#7c3aed', color: '#ffffff' },
-                  DELIVERED: { bg: '#059669', border: '#059669', color: '#ffffff' },
+                  COMPLETED: { bg: '#059669', border: '#059669', color: '#ffffff' },
                   CANCELLED: { bg: '#475569', border: '#475569', color: '#ffffff' },
                 };
                 const isActive = tab === s;
@@ -340,9 +349,9 @@ export function MyOrders() {
                 <tbody className="divide-y divide-slate-100">
                   {filtered.map((order) => (
                     <tr
-                      key={order.orderId}
+                      key={order.bulkOrderId}
                       className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/company/orders/${order.orderId}`)}
+                      onClick={() => navigate(`/company/orders/${order.bulkOrderId}`)}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -350,7 +359,7 @@ export function MyOrders() {
                             <ShoppingBag className="h-5 w-5 text-indigo-600" />
                           </div>
                           <span className="font-mono text-sm font-semibold text-slate-900">
-                            {order.orderId}
+                            #{order.bulkOrderId}
                           </span>
                         </div>
                       </td>
@@ -365,15 +374,15 @@ export function MyOrders() {
                       <td className="px-6 py-4">
                         <div className="max-w-[280px]">
                           <p className="text-sm font-medium text-slate-900 truncate">
-                            {order.items.map((i) => i.productName).join(', ')}
+                            {order.details?.map((d) => d.productName).join(', ') || '—'}
                           </p>
                           <p className="text-xs text-slate-500 mt-0.5">
-                            {order.items.length} sản phẩm
+                            {order.details?.length || 0} sản phẩm
                           </p>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className="text-sm font-bold text-slate-900">{fmt(order.total)}</span>
+                        <span className="text-sm font-bold text-slate-900">{fmt(order.finalPrice)}</span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span
@@ -385,7 +394,7 @@ export function MyOrders() {
                       <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => navigate(`/company/orders/${order.orderId}`)}
+                            onClick={() => navigate(`/company/orders/${order.bulkOrderId}`)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
                           >
                             <Eye className="h-4 w-4" />
@@ -393,7 +402,7 @@ export function MyOrders() {
                           </button>
                           {order.status === 'PENDING' && (
                             <button
-                              onClick={() => handleCancel(order.orderId)}
+                              onClick={() => handleCancel(order.bulkOrderId)}
                               className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
                             >
                               Hủy

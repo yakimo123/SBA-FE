@@ -1,8 +1,8 @@
 import {
   AlertCircle,
   CheckCircle2,
-  ChevronDown,
   ChevronRight,
+  Loader2,
   Minus,
   Plus,
   Search,
@@ -10,91 +10,87 @@ import {
   Tag,
   Trash2,
   Package,
-  Sparkles,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBulkOrders } from '../../contexts/BulkOrderContext';
-import { BulkOrderItem, TierPrice } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+import { ProductResponse, VoucherResponse } from '../../types';
+import productService from '../../services/productService';
+import voucherService from '../../services/voucherService';
 
-
-// Mock data
-const allProducts = [
-  { id: '1', name: 'Sản phẩm A', brand: 'Brand X', category: 'Điện tử', price: 100000, image: '' },
-  { id: '2', name: 'Sản phẩm B', brand: 'Brand Y', category: 'Thời trang', price: 200000, image: '' },
-  { id: '3', name: 'Sản phẩm C', brand: 'Brand Z', category: 'Gia dụng', price: 150000, image: '' },
-];
-
-const mockTierPrices: Record<string, TierPrice[]> = {
-  '1': [
-    { minQty: 1, maxQty: 9, unitPrice: 100000, discountPercent: 0 },
-    { minQty: 10, maxQty: 49, unitPrice: 95000, discountPercent: 5 },
-    { minQty: 50, maxQty: null, unitPrice: 90000, discountPercent: 10 },
-  ],
-  '2': [
-    { minQty: 1, maxQty: 9, unitPrice: 200000, discountPercent: 0 },
-    { minQty: 10, maxQty: 49, unitPrice: 190000, discountPercent: 5 },
-    { minQty: 50, maxQty: null, unitPrice: 180000, discountPercent: 10 },
-  ],
-  '3': [
-    { minQty: 1, maxQty: 9, unitPrice: 150000, discountPercent: 0 },
-    { minQty: 10, maxQty: 49, unitPrice: 145000, discountPercent: 3 },
-    { minQty: 50, maxQty: null, unitPrice: 140000, discountPercent: 7 },
-  ],
-};
+interface CartItem {
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
 
 // Helper functions
 const fmt = (n: number) => n.toLocaleString('vi-VN') + 'đ';
 
-const getActiveTier = (productId: string, qty: number) => {
-  const tiers = mockTierPrices[productId] || [];
-  return [...tiers]
-    .reverse()
-    .find((t) => qty >= t.minQty);
-};
-
 export function BulkOrderCreate() {
   const navigate = useNavigate();
-  const { addOrder } = useBulkOrders();
+  const { createOrder } = useBulkOrders();
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
-  const [cartItems, setCartItems] = useState<BulkOrderItem[]>([]);
+  const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [voucherInput, setVoucherInput] = useState('');
   const [voucherCode, setVoucherCode] = useState('');
-  const [voucherDiscount, setVoucherDiscount] = useState(0);
+  const [voucherDetail, setVoucherDetail] = useState<VoucherResponse | null>(null);
   const [voucherError, setVoucherError] = useState('');
+  const [voucherLoading, setVoucherLoading] = useState(false);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [expandedTier, setExpandedTier] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const filteredProducts = allProducts.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Fetch products from API
+  const fetchProducts = useCallback(async (keyword?: string) => {
+    setLoadingProducts(true);
+    try {
+      const data = await productService.search(keyword, undefined, undefined, 0, 50);
+      setProducts(data.content);
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, []);
 
-  const addProduct = (productId: string) => {
-    const product = allProducts.find((p) => p.id === productId);
-    if (!product) return;
-    const existing = cartItems.find((i) => i.productId === productId);
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProducts(search || undefined);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search, fetchProducts]);
+
+  const addProduct = (product: ProductResponse) => {
+    const existing = cartItems.find((i) => i.productId === product.productId);
     if (existing) {
-      updateQty(productId, existing.quantity + 1);
+      updateQty(product.productId, existing.quantity + 1);
       return;
     }
-    const tier = getActiveTier(productId, 1);
-    const unitPrice = tier?.unitPrice ?? product.price;
     setCartItems((prev) => [
       ...prev,
       {
-        productId,
-        productName: product.name,
+        productId: product.productId,
+        productName: product.productName,
         quantity: 1,
-        unitPrice,
-        tierPrice: tier,
-        subtotal: unitPrice,
+        unitPrice: product.price,
+        subtotal: product.price,
       },
     ]);
   };
 
-  const updateQty = (productId: string | number, qty: number) => {
+  const updateQty = (productId: number, qty: number) => {
     if (qty <= 0) {
       removeItem(productId);
       return;
@@ -102,41 +98,50 @@ export function BulkOrderCreate() {
     setCartItems((prev) =>
       prev.map((item) => {
         if (item.productId !== productId) return item;
-        const tier = getActiveTier(String(productId), qty);
-        const unitPrice = tier?.unitPrice ?? item.unitPrice;
-        return { ...item, quantity: qty, unitPrice, tierPrice: tier, subtotal: unitPrice * qty };
+        return { ...item, quantity: qty, subtotal: item.unitPrice * qty };
       })
     );
   };
 
-  const removeItem = (productId: string | number) =>
+  const removeItem = (productId: number) =>
     setCartItems((prev) => prev.filter((i) => i.productId !== productId));
 
   const subtotal = cartItems.reduce((sum, i) => sum + i.subtotal, 0);
+
+  // Calculate discount preview
+  const voucherDiscount = voucherDetail
+    ? voucherDetail.discountType === 'PERCENTAGE'
+      ? subtotal * voucherDetail.discountValue / 100
+      : voucherDetail.discountValue
+    : 0;
   const total = subtotal - voucherDiscount;
 
-  const handleApplyVoucher = () => {
+  const handleApplyVoucher = async () => {
     setVoucherError('');
     const code = voucherInput.toUpperCase().trim();
     if (!code) return;
     if (cartItems.length === 0) { setVoucherError('Vui lòng thêm sản phẩm trước khi áp voucher'); return; }
-    if (code === 'B2B10') {
-      setVoucherCode('B2B10');
-      setVoucherDiscount(Math.round(subtotal * 0.1));
-    } else if (code === 'B2B20') {
-      setVoucherCode('B2B20');
-      setVoucherDiscount(Math.round(subtotal * 0.2));
-    } else {
-      setVoucherCode('');
-      setVoucherDiscount(0);
-      setVoucherError('Mã voucher không hợp lệ hoặc đã hết hạn');
+    setVoucherLoading(true);
+    try {
+      const valid = await voucherService.validate(code, user?.userId ?? 0);
+      if (!valid) {
+        setVoucherError('Mã giảm giá không hợp lệ hoặc đã hết hạn');
+        return;
+      }
+      const detail = await voucherService.getByCode(code);
+      setVoucherCode(code);
+      setVoucherDetail(detail);
+    } catch {
+      setVoucherError('Không thể xác thực mã giảm giá. Vui lòng thử lại.');
+    } finally {
+      setVoucherLoading(false);
     }
   };
 
   const handleRemoveVoucher = () => {
     setVoucherCode('');
-    setVoucherDiscount(0);
     setVoucherInput('');
+    setVoucherDetail(null);
     setVoucherError('');
   };
 
@@ -148,10 +153,22 @@ export function BulkOrderCreate() {
   const handleConfirmOrder = async () => {
     setShowConfirm(false);
     setSubmitting(true);
-    addOrder(cartItems, voucherCode, voucherDiscount, note, total, subtotal);
-    await new Promise((r) => setTimeout(r, 600));
-    setSubmitting(false);
-    navigate('/company/orders');
+    try {
+      await createOrder({
+        companyId: 1, // TODO: Get from user's company
+        items: cartItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+        voucherCode: voucherCode || undefined,
+      });
+      navigate('/company/orders');
+    } catch (err) {
+      console.error('Failed to create order:', err);
+      alert('Không thể tạo đơn hàng. Vui lòng thử lại.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -216,7 +233,14 @@ export function BulkOrderCreate() {
 
             {/* Products List */}
             <div className="space-y-3">
-              {filteredProducts.length === 0 ? (
+              {loadingProducts ? (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm py-16">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                    <p className="text-sm text-slate-500">Đang tải sản phẩm...</p>
+                  </div>
+                </div>
+              ) : products.length === 0 ? (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm py-16">
                   <div className="text-center text-slate-400">
                     <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
@@ -224,14 +248,12 @@ export function BulkOrderCreate() {
                   </div>
                 </div>
               ) : (
-                filteredProducts.map((product) => {
-                  const tiers = mockTierPrices[product.id];
-                  const inCart = cartItems.find((i) => i.productId === product.id);
-                  const isExpanded = expandedTier === product.id;
+                products.map((product) => {
+                  const inCart = cartItems.find((i) => i.productId === product.productId);
 
                   return (
                     <div
-                      key={product.id}
+                      key={product.productId}
                       className={`bg-white rounded-xl border shadow-sm transition-all ${inCart
                         ? 'border-blue-200 ring-2 ring-blue-50'
                         : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
@@ -249,13 +271,25 @@ export function BulkOrderCreate() {
 
                           {/* Product Info */}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold text-slate-900 mb-1">{product.name}</h3>
+                            <h3 className="text-base font-semibold text-slate-900 mb-1">{product.productName}</h3>
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                                {product.brand}
-                              </span>
-                              <span className="text-xs text-slate-400">•</span>
-                              <span className="text-xs text-slate-500">{product.category}</span>
+                              {product.brandName && (
+                                <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                                  {product.brandName}
+                                </span>
+                              )}
+                              {product.categoryName && (
+                                <>
+                                  <span className="text-xs text-slate-400">•</span>
+                                  <span className="text-xs text-slate-500">{product.categoryName}</span>
+                                </>
+                              )}
+                              {product.quantity != null && (
+                                <>
+                                  <span className="text-xs text-slate-400">•</span>
+                                  <span className="text-xs text-slate-500">Kho: {product.quantity}</span>
+                                </>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-3">
@@ -263,20 +297,6 @@ export function BulkOrderCreate() {
                                 <p className="text-xs text-slate-500 mb-0.5">Giá niêm yết</p>
                                 <p className="text-lg font-bold text-slate-900">{fmt(product.price)}</p>
                               </div>
-
-                              {tiers && (
-                                <button
-                                  onClick={() => setExpandedTier(isExpanded ? null : product.id)}
-                                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${isExpanded
-                                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                                    : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                                    }`}
-                                >
-                                  <Sparkles className="h-3.5 w-3.5" />
-                                  <span>Giá theo số lượng</span>
-                                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                                </button>
-                              )}
                             </div>
                           </div>
 
@@ -286,7 +306,7 @@ export function BulkOrderCreate() {
                               <div className="flex flex-col items-end gap-2">
                                 <div className="inline-flex items-center gap-2 rounded-lg border-2 border-blue-200 bg-blue-50 p-1">
                                   <button
-                                    onClick={() => updateQty(product.id, inCart.quantity - 1)}
+                                    onClick={() => updateQty(product.productId, inCart.quantity - 1)}
                                     className="flex h-8 w-8 items-center justify-center rounded-md bg-white hover:bg-red-50 transition-colors shadow-sm"
                                   >
                                     <Minus className="h-4 w-4 text-slate-600" />
@@ -295,7 +315,7 @@ export function BulkOrderCreate() {
                                     {inCart.quantity}
                                   </span>
                                   <button
-                                    onClick={() => updateQty(product.id, inCart.quantity + 1)}
+                                    onClick={() => updateQty(product.productId, inCart.quantity + 1)}
                                     className="flex h-8 w-8 items-center justify-center rounded-md bg-white hover:bg-blue-50 transition-colors shadow-sm"
                                   >
                                     <Plus className="h-4 w-4 text-slate-600" />
@@ -307,7 +327,7 @@ export function BulkOrderCreate() {
                               </div>
                             ) : (
                               <button
-                                onClick={() => addProduct(product.id)}
+                                onClick={() => addProduct(product)}
                                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all"
                               >
                                 <Plus className="h-4 w-4" />
@@ -316,35 +336,6 @@ export function BulkOrderCreate() {
                             )}
                           </div>
                         </div>
-
-                        {/* Tier Pricing Expansion */}
-                        {isExpanded && tiers && (
-                          <div className="mt-4 pt-4 border-t border-slate-100">
-                            <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-3">
-                              Bảng giá theo số lượng
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {tiers.map((tier, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 hover:border-blue-200 hover:bg-blue-50 transition-colors"
-                                >
-                                  <div>
-                                    <p className="text-xs font-medium text-slate-600">
-                                      {tier.minQty}{tier.maxQty ? ` - ${tier.maxQty}` : '+'} sản phẩm
-                                    </p>
-                                    <p className="text-sm font-bold text-slate-900 mt-0.5">{fmt(tier.unitPrice)}</p>
-                                  </div>
-                                  {tier.discountPercent > 0 && (
-                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                                      -{tier.discountPercent}%
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
@@ -396,23 +387,13 @@ export function BulkOrderCreate() {
                   <>
                     <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
                       {cartItems.map((item) => (
-                        <div key={String(item.productId)} className="group px-6 py-5 hover:bg-slate-50/50 transition-all duration-200">
+                        <div key={item.productId} className="group px-6 py-5 hover:bg-slate-50/50 transition-all duration-200">
                           {/* Item Header */}
                           <div className="flex items-start justify-between gap-3 mb-3">
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-slate-900 leading-snug mb-1">
                                 {item.productName}
                               </p>
-                              {item.tierPrice && item.tierPrice.discountPercent > 0 && (
-                                <div className="flex items-center gap-2">
-                                  <span className="inline-flex items-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
-                                    -{item.tierPrice.discountPercent}% Tier
-                                  </span>
-                                  <span className="text-xs text-slate-500">
-                                    từ {item.tierPrice.minQty}+ sp
-                                  </span>
-                                </div>
-                              )}
                             </div>
                             <button
                               onClick={() => removeItem(item.productId)}
@@ -485,16 +466,18 @@ export function BulkOrderCreate() {
                   <p className="font-bold text-sm text-slate-900">Mã giảm giá</p>
                 </div>
 
-                {voucherCode ? (
+                {voucherCode && voucherDetail ? (
                   <div className="rounded-xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-full bg-emerald-500 p-1.5 shadow-md">
-                          <CheckCircle2 className="h-4 w-4 text-white" />
-                        </div>
+                        <CheckCircle2 className="h-6 w-6 text-emerald-500 flex-shrink-0" />
                         <div>
                           <p className="text-sm font-bold text-emerald-900 mb-0.5">{voucherCode}</p>
-                          <p className="text-xs font-semibold text-emerald-600">Tiết kiệm {fmt(voucherDiscount)}</p>
+                          <p className="text-xs font-semibold text-emerald-600">
+                            Giảm {voucherDetail.discountType === 'PERCENTAGE'
+                              ? `${voucherDetail.discountValue}% (-${fmt(voucherDiscount)})`
+                              : fmt(voucherDetail.discountValue)}
+                          </p>
                         </div>
                       </div>
                       <button
@@ -521,10 +504,11 @@ export function BulkOrderCreate() {
                       />
                       <button
                         onClick={handleApplyVoucher}
-                        className="rounded-xl px-5 text-sm font-bold active:scale-95 shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
+                        disabled={voucherLoading}
+                        className="rounded-xl px-5 text-sm font-bold active:scale-95 shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap disabled:opacity-60"
                         style={{ backgroundColor: '#4338ca', color: '#ffffff' }}
                       >
-                        Áp dụng
+                        {voucherLoading ? 'Đang kiểm tra...' : 'Áp dụng'}
                       </button>
                     </div>
                     {voucherError && (
@@ -533,11 +517,6 @@ export function BulkOrderCreate() {
                         {voucherError}
                       </div>
                     )}
-                    <div className="rounded-lg bg-indigo-50 border border-indigo-100 px-3 py-2">
-                      <p className="text-xs text-indigo-700">
-                        💡 <span className="font-semibold">Mã khả dụng:</span> <span className="font-mono font-bold">B2B10</span> · <span className="font-mono font-bold">B2B20</span>
-                      </p>
-                    </div>
                   </div>
                 )}
               </div>
@@ -571,16 +550,16 @@ export function BulkOrderCreate() {
                     <span className="font-semibold tabular-nums text-slate-900">{fmt(subtotal)}</span>
                   </div>
 
-                  {voucherDiscount > 0 && (
+                  {voucherCode && voucherDetail && (
                     <div className="-mx-1 flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2">
                       <div className="flex items-center gap-2">
                         <Tag className="h-3.5 w-3.5 text-emerald-600" />
-                        <span className="text-emerald-700 font-semibold">Giảm giá</span>
+                        <span className="text-emerald-700 font-semibold">Voucher</span>
                         <span className="text-xs font-mono font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">
                           {voucherCode}
                         </span>
                       </div>
-                      <span className="font-bold tabular-nums text-emerald-600">-{fmt(voucherDiscount)}</span>
+                      <span className="font-semibold text-emerald-600">-{fmt(voucherDiscount)}</span>
                     </div>
                   )}
 
@@ -643,16 +622,11 @@ export function BulkOrderCreate() {
             {/* Order Items */}
             <div className="max-h-64 overflow-y-auto divide-y divide-slate-100 px-6">
               {cartItems.map((item) => (
-                <div key={String(item.productId)} className="flex items-center justify-between gap-3 py-3">
+                <div key={item.productId} className="flex items-center justify-between gap-3 py-3">
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-sm font-medium text-slate-900">{item.productName}</p>
                     <div className="mt-0.5 flex items-center gap-2">
                       <span className="text-xs text-slate-500">SL: {item.quantity}</span>
-                      {item.tierPrice && item.tierPrice.discountPercent > 0 && (
-                        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                          -{item.tierPrice.discountPercent}%
-                        </span>
-                      )}
                     </div>
                   </div>
                   <span className="flex-shrink-0 text-sm font-semibold text-slate-900">
@@ -669,10 +643,10 @@ export function BulkOrderCreate() {
                 <span>Tạm tính</span>
                 <span className="font-medium">{fmt(subtotal)}</span>
               </div>
-              {voucherDiscount > 0 && (
+              {voucherCode && (
                 <div className="flex justify-between text-emerald-600">
                   <span>Voucher <span className="font-mono font-bold">{voucherCode}</span></span>
-                  <span className="font-medium">-{fmt(voucherDiscount)}</span>
+                  <span className="text-xs">Áp dụng khi thanh toán</span>
                 </div>
               )}
               {note && (

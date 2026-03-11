@@ -1,59 +1,76 @@
 import {
-  AddCustomizationRequest,
   ApiResponse,
-  BulkOrder,
+  BulkOrderResponse,
+  BulkOrderStatus,
   CreateBulkOrderRequest,
-  TierPrice,
+  CreateCustomizationRequest,
+  PageableResponse,
 } from '../types';
 import api from './api';
 
 const BASE = '/api/v1/bulk-orders';
 
 const bulkOrderService = {
-  /** Lấy danh sách đơn hàng của company hiện tại */
-  getMyOrders: async (page = 0, size = 20): Promise<{ content: BulkOrder[]; totalElements: number; totalPages: number }> => {
-    const res = await api.get<ApiResponse<{ content: BulkOrder[]; totalElements: number; totalPages: number }>>(
-      `${BASE}/my-orders`,
-      { params: { page, size } }
+  /** Tìm kiếm đơn hàng bulk với các bộ lọc */
+  search: async (params: {
+    userId?: number;
+    companyId?: number;
+    status?: BulkOrderStatus;
+    createdAtFrom?: string;
+    createdAtTo?: string;
+    page?: number;
+    size?: number;
+  } = {}): Promise<PageableResponse<BulkOrderResponse>> => {
+    const query = new URLSearchParams();
+    if (params.userId) query.append('userId', params.userId.toString());
+    if (params.companyId) query.append('companyId', params.companyId.toString());
+    if (params.status) query.append('status', params.status);
+    if (params.createdAtFrom) query.append('createdAtFrom', params.createdAtFrom);
+    if (params.createdAtTo) query.append('createdAtTo', params.createdAtTo);
+    query.append('page', (params.page ?? 0).toString());
+    query.append('size', (params.size ?? 20).toString());
+
+    const res = await api.get<ApiResponse<PageableResponse<BulkOrderResponse>>>(
+      `${BASE}?${query.toString()}`
     );
     return res.data.data;
   },
 
   /** Lấy chi tiết một đơn hàng */
-  getOrderById: async (orderId: string): Promise<BulkOrder> => {
-    const res = await api.get<ApiResponse<BulkOrder>>(`${BASE}/${orderId}`);
+  getById: async (id: number): Promise<BulkOrderResponse> => {
+    const res = await api.get<ApiResponse<BulkOrderResponse>>(`${BASE}/${id}`);
+    return res.data.data;
+  },
+
+  /** Lấy price breakdown */
+  getPriceBreakdown: async (id: number): Promise<BulkOrderResponse> => {
+    const res = await api.get<ApiResponse<BulkOrderResponse>>(`${BASE}/${id}/price-breakdown`);
     return res.data.data;
   },
 
   /** Tạo đơn hàng mới */
-  createBulkOrder: async (data: CreateBulkOrderRequest): Promise<BulkOrder> => {
-    const res = await api.post<ApiResponse<BulkOrder>>(BASE, data);
+  create: async (userId: number, data: CreateBulkOrderRequest): Promise<BulkOrderResponse> => {
+    const res = await api.post<ApiResponse<BulkOrderResponse>>(
+      `${BASE}?userId=${userId}`,
+      data
+    );
     return res.data.data;
   },
 
-  /** Hủy đơn hàng (chỉ khi PENDING) */
-  cancelOrder: async (orderId: string): Promise<BulkOrder> => {
-    const res = await api.patch<ApiResponse<BulkOrder>>(`${BASE}/${orderId}/cancel`);
+  /** Cập nhật trạng thái đơn hàng (bao gồm hủy) */
+  updateStatus: async (id: number, status: BulkOrderStatus): Promise<BulkOrderResponse> => {
+    const res = await api.patch<ApiResponse<BulkOrderResponse>>(
+      `${BASE}/${id}/status?status=${status}`
+    );
     return res.data.data;
   },
 
-  /** Thêm / sửa customization trên đơn PENDING */
-  addCustomization: async (orderId: string, data: AddCustomizationRequest): Promise<BulkOrder> => {
-    const res = await api.patch<ApiResponse<BulkOrder>>(`${BASE}/${orderId}/customization`, data);
-    return res.data.data;
-  },
-
-  /** Áp dụng voucher */
-  applyVoucher: async (orderId: string, voucherCode: string): Promise<BulkOrder> => {
-    const res = await api.patch<ApiResponse<BulkOrder>>(`${BASE}/${orderId}/voucher`, { voucherCode });
-    return res.data.data;
-  },
-
-  /** Lấy tier pricing theo productId */
-  getTierPrices: async (productId: string | number): Promise<TierPrice[]> => {
-    const res = await api.get<ApiResponse<TierPrice[]>>(`${BASE}/tier-prices`, {
-      params: { productId },
-    });
+  /** Thêm customization vào chi tiết đơn hàng */
+  addCustomization: async (detailId: number, data: CreateCustomizationRequest): Promise<BulkOrderResponse> => {
+    const res = await api.post<ApiResponse<BulkOrderResponse>>(
+      `${BASE}/details/${detailId}/customization`,
+      data
+    );
     return res.data.data;
   },
 };

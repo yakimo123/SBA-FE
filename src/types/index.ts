@@ -102,49 +102,96 @@ export interface CompanyResponse {
   address?: string;
 }
 
-// B2B / Bulk Order types
-export type BulkOrderStatus = 'PENDING' | 'APPROVED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-
-export interface TierPrice {
-  minQty: number;
-  maxQty: number | null;
-  unitPrice: number;
-  discountPercent: number;
-}
-
-export interface BulkOrderItem {
-  productId: string | number;
+// Product response from API
+export interface ProductResponse {
+  productId: number;
   productName: string;
-  productImage?: string;
+  description: string;
+  price: number;
+  categoryId: number;
+  categoryName: string;
+  brandId: number;
+  brandName: string;
   quantity: number;
-  unitPrice: number;
-  tierPrice?: TierPrice;
-  subtotal: number;
-  customization?: string;
+  status: string;
+  createdDate: string;
+  supplierId: number;
+  supplierName: string;
 }
 
-export interface BulkOrder {
-  orderId: string;
+// B2B / Bulk Order types
+export type BulkOrderStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+
+export interface BulkPriceTierResponse {
+  bulkPriceTierId: number;
+  minQty: number;
+  unitPrice: number;
+}
+
+export interface OrderCustomizationResponse {
+  customizationId: number;
+  type: string;
+  note: string;
+  status: string;
+  extraFee: number;
+}
+
+export interface BulkOrderDetailResponse {
+  bulkOrderDetailId: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPriceSnapshot: number;
+  discountSnapshot: number;
+  appliedTierPrice: number;
+  customizationFee: number;
+  lineTotal: number;
+  priceTiers: BulkPriceTierResponse[];
+  customizations: OrderCustomizationResponse[];
+}
+
+export interface BulkOrderResponse {
+  bulkOrderId: number;
+  userId: number;
+  userFullName: string;
   companyId: number;
   companyName: string;
-  status: BulkOrderStatus;
-  items: BulkOrderItem[];
-  voucherCode?: string;
-  voucherDiscount: number;
-  subtotal: number;
-  total: number;
-  note?: string;
-  customization?: string;
   createdAt: string;
-  updatedAt: string;
+  status: BulkOrderStatus;
+  totalPrice: number;
+  discountCode: string;
+  discountPercentage: number;
+  discountAmount: number;
+  finalPrice: number;
+  discountApplied: boolean;
+  details: BulkOrderDetailResponse[];
+}
+
+export interface BulkOrderItemRequest {
+  productId: number;
+  quantity: number;
 }
 
 export interface CreateBulkOrderRequest {
-  items: { productId: string | number; quantity: number; customization?: string }[];
+  companyId: number;
   voucherCode?: string;
-  note?: string;
+  items: BulkOrderItemRequest[];
 }
 
-export interface AddCustomizationRequest {
-  customization: string;
+export interface CreateCustomizationRequest {
+  type: string;
+  note?: string;
+  extraFee?: number;
+}
+
+export interface VoucherResponse {
+  voucherId: number;
+  voucherCode: string;
+  description: string;
+  discountValue: number;
+  discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  validFrom: string;
+  validTo: string;
+  usageLimit: number;
+  isValid: boolean;
 }
