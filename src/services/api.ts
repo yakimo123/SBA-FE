@@ -7,6 +7,7 @@ const API_BASE_URL =
 // Token keys in localStorage
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
+const USER_DATA_KEY = 'userData';
 
 // Create axios instance
 const api = axios.create({
@@ -37,6 +38,21 @@ export const setTokens = (accessToken: string, refreshToken?: string): void => {
 export const clearTokens = (): void => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_DATA_KEY);
+};
+
+export const setUserData = (data: { userId: number; email: string; fullName: string; role: string; phoneNumber?: string }): void => {
+  localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
+};
+
+export const getUserData = (): { userId: number; email: string; fullName: string; role: string; phoneNumber?: string } | null => {
+  try {
+    const raw = localStorage.getItem(USER_DATA_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 };
 
 // Flag to prevent multiple refresh requests

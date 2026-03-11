@@ -12,6 +12,8 @@ import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
+  getUserData,
+  setUserData,
 } from '../services';
 import {
   AuthState,
@@ -95,6 +97,27 @@ const getStoredAuthState = (): Partial<AuthState> => {
   const refreshToken = getRefreshToken();
 
   if (accessToken) {
+    // Prefer persisted user data (set during login) over JWT parsing
+    const savedUser = getUserData();
+    if (savedUser && savedUser.userId) {
+      return {
+        accessToken,
+        refreshToken,
+        isAuthenticated: true,
+        user: {
+          userId: savedUser.userId,
+          email: savedUser.email,
+          fullName: savedUser.fullName,
+          role: savedUser.role,
+          phoneNumber: savedUser.phoneNumber,
+          name: savedUser.fullName,
+          phone: savedUser.phoneNumber,
+          points: 0,
+        } as AuthUser,
+      };
+    }
+
+    // Fallback: decode JWT claims
     const decoded = parseJwt(accessToken);
     if (decoded) {
       const claims = decoded as Record<string, unknown>;
@@ -257,6 +280,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const credentials: LoginRequest = { email, password };
         const authData = await authService.login(credentials);
 
+        setUserData({
+          userId: authData.userId,
+          email: authData.email,
+          fullName: authData.fullName,
+          role: authData.role,
+        });
+
         setState({
           user: {
             userId: authData.userId,
@@ -293,6 +323,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const authData = await authService.googleLogin(token);
+
+      setUserData({
+        userId: authData.userId,
+        email: authData.email,
+        fullName: authData.fullName,
+        role: authData.role,
+      });
 
       setState({
         user: {
@@ -340,6 +377,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phoneNumber,
         };
         const authData = await authService.register(userData);
+
+        setUserData({
+          userId: authData.userId,
+          email: authData.email,
+          fullName: authData.fullName,
+          role: authData.role,
+          phoneNumber,
+        });
 
         setState({
           user: {
