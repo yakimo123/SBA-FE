@@ -36,6 +36,7 @@ import { LoginPage } from '../pages/Login';
 import { ProductDetailPage } from '../pages/ProductDetail';
 import { ProductListPage } from '../pages/ProductList';
 import { RegisterPage } from '../pages/Register';
+import { SearchResultsPage } from '../pages/SearchResultsPage';
 import { UnauthorizedPage } from '../pages/Unauthorized';
 import { VNPayReturnPage } from '../pages/VNPayReturn';
 import { WishlistPage } from '../pages/Wishlist';
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'products', element: <ProductListPage /> },
       { path: 'product/:id', element: <ProductDetailPage /> },
+      { path: 'search', element: <SearchResultsPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'unauthorized', element: <UnauthorizedPage /> },
