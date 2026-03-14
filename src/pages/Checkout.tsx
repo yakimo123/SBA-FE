@@ -47,8 +47,8 @@ export function CheckoutPage() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [checkoutItemIds, setCheckoutItemIds] = useState<string[] | null>(null);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
+    name: user?.fullName || user?.name || '',
+    phone: user?.phoneNumber || user?.phone || '',
     email: user?.email || '',
     address: user?.address || '',
     city: '',
@@ -154,8 +154,43 @@ export function CheckoutPage() {
               name: fullUser.fullName || prev.name,
               phone: fullUser.phoneNumber || prev.phone,
               email: fullUser.email || prev.email,
-              address: fullUser.address || prev.address,
             }));
+            
+            // Parse address to extract city, district, ward
+            if (fullUser.address) {
+              const addressParts = fullUser.address.split(',').map(part => part.trim());
+              let parsedCity = '';
+              let parsedDistrict = '';
+              let parsedWard = '';
+              let parsedAddress = '';
+              
+              if (addressParts.length >= 4) {
+                // Format: address, ward, district, city
+                parsedAddress = addressParts[0];
+                parsedWard = addressParts[1];
+                parsedDistrict = addressParts[2];
+                parsedCity = addressParts[3];
+              } else if (addressParts.length === 3) {
+                // Format: address, district, city
+                parsedAddress = addressParts[0];
+                parsedDistrict = addressParts[1];
+                parsedCity = addressParts[2];
+              } else if (addressParts.length === 2) {
+                // Format: address, city
+                parsedAddress = addressParts[0];
+                parsedCity = addressParts[1];
+              } else {
+                parsedAddress = fullUser.address;
+              }
+              
+              setFormData((prev) => ({
+                ...prev,
+                address: parsedAddress || prev.address,
+                city: parsedCity,
+                district: parsedDistrict,
+                ward: parsedWard,
+              }));
+            }
           }
         } catch (error) {
           console.error('Failed to fetch user details:', error);
@@ -164,6 +199,26 @@ export function CheckoutPage() {
     };
     fetchUserDetails();
   }, [user?.userId]);
+
+  // Auto-fill province when form data has city
+  useEffect(() => {
+    if (formData.city && provinces.length > 0 && !selectedProvinceCode) {
+      const province = provinces.find(p => p.name === formData.city);
+      if (province) {
+        setSelectedProvinceCode(province.code);
+      }
+    }
+  }, [formData.city, provinces, selectedProvinceCode]);
+
+  // Auto-fill district when districts are loaded and district name is in form data
+  useEffect(() => {
+    if (formData.district && districts.length > 0 && !selectedDistrictCode) {
+      const district = districts.find(d => d.name === formData.district);
+      if (district) {
+        setSelectedDistrictCode(district.code);
+      }
+    }
+  }, [districts, formData.district, selectedDistrictCode]);
 
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherResponse | null>(
     null
@@ -267,6 +322,27 @@ export function CheckoutPage() {
       }
 
       const result = await orderService.createOrder(userId, orderData);
+
+      // Save address to user profile after successful order
+      try {
+        const fullAddress = [
+          formData.address,
+          formData.ward,
+          formData.district,
+          formData.city,
+        ]
+          .filter(Boolean)
+          .join(', ');
+
+        await userService.updateUser(userId, {
+          fullName: formData.name,
+          phoneNumber: formData.phone,
+          address: fullAddress,
+        });
+      } catch (error) {
+        console.error('Failed to save address to profile:', error);
+        // Don't fail the order if address saving fails
+      }
 
       // VNPay: redirect to payment gateway instead of showing success screen
       // Cart is NOT cleared here — it will only be cleared after confirmed SUCCESS on return
