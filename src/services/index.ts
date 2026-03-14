@@ -2,6 +2,8 @@ export { default as api } from './api';
 export * from './api';
 export { default as authService } from './authService';
 export * from './authService';
+export { default as bannerService } from './bannerService';
+export * from './bannerService';
 export { default as cartService } from './cartService';
 export * from './cartService';
 export { default as reviewService } from './reviewService';

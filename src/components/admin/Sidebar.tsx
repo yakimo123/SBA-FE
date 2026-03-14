@@ -1,8 +1,9 @@
-﻿import {
+import {
   Building,
   ChevronRight,
   FileText,
   Heart,
+  Image as ImageIcon,
   LayoutDashboard,
   MessageSquare,
   MinusCircle,
@@ -122,6 +123,7 @@ const navigation: NavigationItem[] = [
         href: '/admin/settings/guarantees',
         icon: FileText,
       },
+      { title: 'Banners', href: '/admin/settings/banners', icon: ImageIcon },
       { title: 'Media Library', href: '/admin/settings/media', icon: Package },
     ],
   },
