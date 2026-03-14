@@ -7,6 +7,7 @@ export const FILE_TYPES = {
   BRAND: 'BRAND',
   CATEGORY: 'CATEGORY',
   USER: 'USER',
+  BANNER: 'BANNER',
   OTHER: 'OTHER',
 } as const;
 

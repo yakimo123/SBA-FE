@@ -1,3 +1,4 @@
+import Autoplay from 'embla-carousel-autoplay';
 import {
   ArrowRight,
   ArrowUp,
@@ -11,13 +12,20 @@ import {
   Star,
   Truck,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import {
+  Carousel,
+  type CarouselApi,
+  CarouselContent,
+  CarouselItem,
+} from '../components/ui/carousel';
+import bannerService, { Banner } from '../services/bannerService';
 import { BranchResponse, branchService } from '../services/branchService';
 import brandService from '../services/brandService';
 import categoryService from '../services/categoryService';
@@ -49,8 +57,105 @@ const features = [
 
 // Categories are now displayed using image URLs
 
+// Default fallback slides in case API fails
+const defaultHeroSlides = [
+  {
+    badge: '🎉 Mega Sale - Giảm đến 50%',
+    title: 'Phụ Kiện Điện Tử\nChính Hãng & Cao Cấp',
+    description: 'Miễn phí giao hàng 2-4 giờ • Bảo hành 30 ngày • Trả góp 0%.',
+    image:
+      'https://images.unsplash.com/photo-1672044631233-22b268dc6416?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBoZWFkcGhvbmVzJTIwdGVjaG5vbG9neXxlbnwxfHx8fDE3NjgwMjg5OTJ8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    gradient: 'from-red-600 via-red-500 to-orange-500',
+    cta: 'Mua ngay',
+    ctaSecondary: 'Xem deal hot',
+    link: '/products',
+  },
+  {
+    badge: '🎧 Gaming Gear',
+    title: 'Phụ Kiện Gaming\nChơi Game Đỉnh Cao',
+    description: 'Tai nghe, chuột, bàn phím cơ từ các thương hiệu hàng đầu.',
+    image:
+      'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?q=80&w=1080',
+    gradient: 'from-purple-700 via-purple-600 to-indigo-500',
+    cta: 'Khám phá ngay',
+    ctaSecondary: 'Xem thêm',
+    link: '/products',
+  },
+  {
+    badge: '📱 Phụ kiện điện thoại',
+    title: 'Ốp Lưng & Sạc Nhanh\nBảo Vệ Thiết Bị',
+    description: 'Ốp iPhone, Samsung chính hãng. Sạc nhanh PD 65W giá tốt.',
+    image:
+      'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?q=80&w=1080',
+    gradient: 'from-blue-700 via-blue-600 to-cyan-500',
+    cta: 'Mua ngay',
+    ctaSecondary: 'Xem ưu đãi',
+    link: '/products',
+  },
+];
+
+const defaultSideBanners = [
+  {
+    title: 'Săn Voucher',
+    subtitle: 'Giảm đến 50%',
+    gradient: 'from-orange-500 to-red-500',
+    icon: '🎫',
+    link: '/products',
+    image: '',
+  },
+  {
+    title: 'Freeship',
+    subtitle: 'Đơn từ 0đ',
+    gradient: 'from-emerald-500 to-teal-600',
+    icon: '🚚',
+    link: '/products',
+    image: '',
+  },
+];
+
+// Convert API banner to slide format
+const convertBannerToSlide = (banner: Banner) => ({
+  badge: banner.subtitle || '',
+  title: banner.title,
+  description: banner.description || '',
+  image: banner.imageUrl,
+  gradient: 'from-red-600 via-red-500 to-orange-500',
+  cta: banner.buttonText || 'Mua ngay',
+  ctaSecondary: 'Xem thêm',
+  link: banner.buttonLink || '/products',
+});
+
+// Convert API banner to side banner format
+const convertBannerToSideBanner = (banner: Banner, index: number) => ({
+  title: banner.title,
+  subtitle: banner.subtitle || '',
+  gradient: index === 0 ? 'from-orange-500 to-red-500' : 'from-emerald-500 to-teal-600',
+  icon: index === 0 ? '🎫' : '🚚',
+  link: banner.buttonLink || '/products',
+  image: banner.imageUrl || '',
+});
+
 export function HomePage() {
   const navigate = useNavigate();
+
+  // Banner carousel state
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const autoplayPlugin = useRef(
+    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
+  );
+
+  const onSelect = useCallback(() => {
+    if (!carouselApi) return;
+    setCurrentSlide(carouselApi.selectedScrollSnap());
+  }, [carouselApi]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    onSelect();
+    carouselApi.on('select', onSelect);
+    return () => { carouselApi.off('select', onSelect); };
+  }, [carouselApi, onSelect]);
 
   // State
   const [apiCategories, setApiCategories] = useState<Category[]>([]);
@@ -59,12 +164,31 @@ export function HomePage() {
   const [apiBestSellers, setApiBestSellers] = useState<Product[]>([]);
   const [apiBrands, setApiBrands] = useState<Brand[]>([]);
   const [apiBranches, setApiBranches] = useState<BranchResponse[]>([]);
+  const [heroSlides, setHeroSlides] = useState(defaultHeroSlides);
+  const [sideBanners, setSideBanners] = useState(defaultSideBanners);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+
+        // Fetch banners first
+        const bannerRes = await bannerService.getHomeBanners();
+        const banners = bannerRes.data;
+
+        // Convert API banners to slides and side banners
+        if (banners.main && banners.main.length > 0) {
+          setHeroSlides(banners.main.map(convertBannerToSlide));
+        }
+
+        // Combine rightTop and rightBottom for side banners (max 2)
+        const rightBanners = [...(banners.rightTop || []), ...(banners.rightBottom || [])].slice(0, 2);
+        if (rightBanners.length > 0) {
+          setSideBanners(rightBanners.map((b, i) => convertBannerToSideBanner(b, i)));
+        }
+
+        // Fetch other data in parallel
         const [catRes, flashRes, newRes, bestRes, brandRes, branchRes] =
           await Promise.all([
             categoryService.getCategories(0, 10),
@@ -90,6 +214,7 @@ export function HomePage() {
         setApiBranches(branchRes.content || []);
       } catch (error) {
         console.error('Failed to fetch home page data:', error);
+        // Keep default fallback data on error
       } finally {
         setIsLoading(false);
       }
@@ -121,47 +246,139 @@ export function HomePage() {
         <div className="absolute bottom-[5%] left-[10%] w-[25%] h-[25%] bg-orange-100/20 rounded-full blur-[100px]" />
       </div>
 
-      {/* Hero Banner */}
-      <div className="bg-linear-to-r from-red-600 via-red-500 to-orange-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <Badge className="bg-white/20 text-white mb-3 backdrop-blur-md">
-                🎉 Mega Sale - Giảm đến 50%
-              </Badge>
-              <h1 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight leading-tight">
-                Phụ Kiện Điện Tử
-                <br />
-                Chính Hãng & Cao Cấp
-              </h1>
-              <p className="text-sm md:text-base mb-6 text-white/90 max-w-lg">
-                Miễn phí giao hàng 2-4 giờ • Bảo hành 30 ngày • Trả góp 0%.
-              </p>
-              <div className="flex gap-4">
-                <Button
-                  size="lg"
-                  className="bg-white text-red-600 hover:bg-gray-100"
-                  onClick={() => navigate('/products')}
-                >
-                  Mua ngay
-                  <ChevronRight className="ml-2 w-4 h-4" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white text-red-600 hover:bg-white/10"
-                >
-                  Xem deal hot
-                </Button>
-              </div>
+      {/* Hero Banner – 3 panels: banner chính cao bằng 2 banner phụ */}
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-3 md:min-h-[460px] items-stretch">
+          {/* Main Carousel (left) – cao bằng tổng 2 banner phụ */}
+          <div className="min-h-[320px] md:min-h-[460px] md:h-full">
+            <Carousel
+              opts={{ loop: true }}
+              plugins={[autoplayPlugin.current]}
+              setApi={setCarouselApi}
+              className="relative h-full rounded-xl overflow-hidden"
+            >
+              <CarouselContent className="ml-0 h-full">
+                {heroSlides.map((slide, index) => (
+                  <CarouselItem key={index} className="pl-0 h-full">
+                    <div className="relative h-full min-h-[320px] md:min-h-[460px] w-full overflow-hidden rounded-xl">
+                    {/* Ảnh full nền */}
+                    <ImageWithFallback
+                      src={slide.image}
+                      alt={slide.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    {/* Overlay nhẹ để chữ đọc được, ảnh vẫn rõ */}
+                    <div
+                      className="absolute inset-0 bg-linear-to-r from-black/50 via-black/25 to-transparent"
+                      aria-hidden
+                    />
+                    {/* Nội dung đè lên ảnh – font Outfit */}
+                    <div className="relative z-10 flex h-full flex-col justify-center px-6 md:px-10 py-8 md:py-12 font-['Outfit',sans-serif]">
+                      <div className="max-w-xl">
+                        <Badge className="bg-white/20 text-white mb-3 backdrop-blur-md border-0 font-semibold">
+                          {slide.badge}
+                        </Badge>
+                        <h1 className="text-2xl md:text-4xl font-extrabold mb-3 tracking-tight leading-tight text-white drop-shadow-md">
+                          {slide.title.split('\n').map((line, i) => (
+                            <span key={i}>
+                              {i > 0 && <br />}
+                              {line}
+                            </span>
+                          ))}
+                        </h1>
+                        <p className="text-sm mb-5 text-white/90 max-w-md drop-shadow-sm font-medium">
+                          {slide.description}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          <Button
+                            size="lg"
+                            className="bg-white text-red-600 hover:bg-gray-100 font-bold shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(slide.link);
+                            }}
+                          >
+                            {slide.cta}
+                            <ChevronRight className="ml-1 w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+
+            {/* Navigation Arrows */}
+            <button
+              onClick={() => carouselApi?.scrollPrev()}
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors shadow-md"
+            >
+              <ChevronRight className="w-5 h-5 rotate-180" />
+            </button>
+            <button
+              onClick={() => carouselApi?.scrollNext()}
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors shadow-md"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+
+            {/* Dot Indicators */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+              {heroSlides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => carouselApi?.scrollTo(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    currentSlide === index
+                      ? 'w-7 bg-white shadow'
+                      : 'w-2 bg-white/50 hover:bg-white/70'
+                  }`}
+                />
+              ))}
             </div>
-            <div className="hidden md:block max-w-[320px] lg:max-w-[380px]">
-              <ImageWithFallback
-                src="https://images.unsplash.com/photo-1672044631233-22b268dc6416?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBoZWFkcGhvbmVzJTIwdGVjaG5vbG9neXxlbnwxfHx8fDE3NjgwMjg5OTJ8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                alt="Hero product"
-                className="w-full h-auto rounded-xl drop-shadow-xl"
-              />
-            </div>
+          </Carousel>
+          </div>
+
+          {/* Side Banners (right) – 2 ô bằng nhau, tổng cao = banner chính */}
+          <div className="hidden md:flex flex-col gap-3 h-full">
+            {sideBanners.map((banner, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => navigate(banner.link)}
+                className="relative flex-1 min-h-0 rounded-xl overflow-hidden text-white p-5 flex flex-col justify-between hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer text-left"
+              >
+                {/* Ảnh nền banner phụ (hiện khi có image từ API) */}
+                {'image' in banner && banner.image ? (
+                  <>
+                    <ImageWithFallback
+                      src={banner.image}
+                      alt={banner.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/30" aria-hidden />
+                  </>
+                ) : (
+                  <div
+                    className={`absolute inset-0 bg-linear-to-br ${banner.gradient}`}
+                    aria-hidden
+                  />
+                )}
+                <div className="relative z-10">
+                  <span className="text-2xl mb-2 block">{banner.icon}</span>
+                  <h3 className="text-lg font-bold leading-tight drop-shadow-sm">
+                    {banner.title}
+                  </h3>
+                  <p className="text-xl font-extrabold mt-1 drop-shadow-sm">
+                    {banner.subtitle}
+                  </p>
+                </div>
+                <div className="relative z-10 flex items-center gap-1 text-xs font-semibold text-white/90 mt-3 drop-shadow-sm">
+                  Xem ngay <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </div>

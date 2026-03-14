@@ -7,6 +7,7 @@ import { CompanyLayout } from '../layouts/CompanyLayout';
 import { RootLayout } from '../layouts/RootLayout';
 import { AccountPage } from '../pages/Account';
 import { AttributeList } from '../pages/admin/AttributeList';
+import { BannerList } from '../pages/admin/BannerList';
 import { BulkRequestList } from '../pages/admin/BulkOrderList';
 import { CategoryList } from '../pages/admin/CategoryList';
 import { CompanyList } from '../pages/admin/CompanyList';
@@ -118,6 +119,7 @@ export const router = createBrowserRouter([
           // Settings
           { path: 'settings/stores', element: <StoreBranchList /> },
           { path: 'settings/guarantees', element: <GuaranteeList /> },
+          { path: 'settings/banners', element: <BannerList /> },
           { path: 'settings/media', element: <MediaLibrary /> },
 
           // Inventory

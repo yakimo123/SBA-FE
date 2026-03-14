@@ -218,3 +218,32 @@ export interface CreateBulkOrderRequest {
 export interface AddCustomizationRequest {
   customization: string;
 }
+
+// Banner types
+export type BannerPosition = 'MAIN' | 'RIGHT_TOP' | 'RIGHT_BOTTOM';
+
+export interface Banner {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  imageUrl: string;
+  imageKey: string;
+  buttonText: string;
+  buttonLink: string;
+  position: BannerPosition;
+  sortOrder: number;
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+  backgroundColor: string;
+  textColor: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BannerResponse {
+  main: Banner[];
+  rightTop: Banner[];
+  rightBottom: Banner[];
+}
