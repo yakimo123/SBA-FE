@@ -5,7 +5,6 @@ import {
   CheckCircle,
   FileText,
   MapPin,
-  Upload,
   User as UserIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -51,21 +50,9 @@ export function BusinessRegistrationPage() {
     email: '',
     phone: '',
     address: '',
-    billingAddress: '',
     foundingDate: '',
     businessType: '',
     logoUrl: '',
-    // Documents (Local state only, or can be uploaded separately)
-    businessCertificate: null as File | null,
-    representativeId: null as File | null,
-    authorizationLetter: null as File | null,
-  });
-
-  const [sameAsBusinessAddress, setSameAsBusinessAddress] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState({
-    businessCertificate: false,
-    representativeId: false,
-    authorizationLetter: false,
   });
 
   // Redirect if not logged in
@@ -80,28 +67,9 @@ export function BusinessRegistrationPage() {
 
   const updateField = (
     field: string,
-    value: string | number | File | boolean | null
+    value: string | number | boolean | null
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleFileUpload = (
-    field: 'businessCertificate' | 'representativeId' | 'authorizationLetter',
-    file: File | null
-  ) => {
-    updateField(field, file);
-    if (file) {
-      setUploadedFiles((prev) => ({ ...prev, [field]: true }));
-    } else {
-      setUploadedFiles((prev) => ({ ...prev, [field]: false }));
-    }
-  };
-
-  const handleSameAddressChange = (checked: boolean) => {
-    setSameAsBusinessAddress(checked);
-    if (checked) {
-      updateField('billingAddress', formData.address);
-    }
   };
 
   const canProceedStep1 =
@@ -117,11 +85,7 @@ export function BusinessRegistrationPage() {
     formData.email &&
     formData.phone;
 
-  const canProceedStep3 =
-    formData.address &&
-    formData.billingAddress &&
-    uploadedFiles.businessCertificate &&
-    uploadedFiles.representativeId;
+  const canProceedStep3 = !!formData.address;
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -238,7 +202,7 @@ export function BusinessRegistrationPage() {
                 3
               </div>
               <span className="font-semibold text-sm hidden sm:inline">
-                Địa chỉ & Giấy tờ
+                Địa chỉ
               </span>
             </div>
           </div>
@@ -527,7 +491,7 @@ export function BusinessRegistrationPage() {
           </Card>
         )}
 
-        {/* Step 3: Address & Documents */}
+        {/* Step 3: Address */}
         {currentStep === 3 && (
           <Card className="shadow-lg">
             <CardHeader className="border-b bg-linear-to-r from-red-50 to-orange-50">
@@ -536,9 +500,9 @@ export function BusinessRegistrationPage() {
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">Địa chỉ & Giấy tờ</CardTitle>
+                  <CardTitle className="text-2xl">Địa chỉ</CardTitle>
                   <CardDescription>
-                    Địa chỉ trụ sở và các tài liệu pháp lý
+                    Địa chỉ trụ sở doanh nghiệp
                   </CardDescription>
                 </div>
               </div>
@@ -552,113 +516,9 @@ export function BusinessRegistrationPage() {
                   id="address"
                   placeholder="Nhập địa chỉ đầy đủ theo GPKD"
                   value={formData.address}
-                  onChange={(e) => {
-                    updateField('address', e.target.value);
-                    if (sameAsBusinessAddress) {
-                      updateField('billingAddress', e.target.value);
-                    }
-                  }}
+                  onChange={(e) => updateField('address', e.target.value)}
                   className="min-h-[80px]"
                 />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="sameAddress"
-                  checked={sameAsBusinessAddress}
-                  onChange={(e) => handleSameAddressChange(e.target.checked)}
-                  className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
-                />
-                <Label htmlFor="sameAddress" className="cursor-pointer">
-                  Địa chỉ xuất hóa đơn giống địa chỉ trụ sở
-                </Label>
-              </div>
-
-              {!sameAsBusinessAddress && (
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="billingAddress"
-                    className="text-base font-semibold"
-                  >
-                    Địa chỉ xuất hóa đơn <span className="text-red-600">*</span>
-                  </Label>
-                  <Textarea
-                    id="billingAddress"
-                    placeholder="Nhập địa chỉ xuất hóa đơn"
-                    value={formData.billingAddress}
-                    onChange={(e) =>
-                      updateField('billingAddress', e.target.value)
-                    }
-                    className="min-h-[80px]"
-                  />
-                </div>
-              )}
-
-              <div className="border-t pt-6 mt-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  Tài liệu xác minh
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border rounded-lg p-4 bg-gray-50 flex flex-col justify-between">
-                    <div>
-                      <Label className="font-semibold">
-                        GP Kinh doanh <span className="text-red-600">*</span>
-                      </Label>
-                      <p className="text-xs text-gray-500 mb-3">
-                        PDF/Ảnh (Tối đa 5MB)
-                      </p>
-                    </div>
-                    <label className="flex items-center justify-center gap-2 w-full h-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-white transition-colors">
-                      <Upload className="w-4 h-4 text-gray-400" />
-                      <span className="text-xs font-medium">
-                        {uploadedFiles.businessCertificate
-                          ? 'Đã tải lên'
-                          : 'Tải lên'}
-                      </span>
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) =>
-                          handleFileUpload(
-                            'businessCertificate',
-                            e.target.files?.[0] || null
-                          )
-                        }
-                      />
-                    </label>
-                  </div>
-
-                  <div className="border rounded-lg p-4 bg-gray-50 flex flex-col justify-between">
-                    <div>
-                      <Label className="font-semibold">
-                        CMND/CCCD đại diện{' '}
-                        <span className="text-red-600">*</span>
-                      </Label>
-                      <p className="text-xs text-gray-500 mb-3">
-                        Mặt trước & Mặt sau
-                      </p>
-                    </div>
-                    <label className="flex items-center justify-center gap-2 w-full h-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-white transition-colors">
-                      <Upload className="w-4 h-4 text-gray-400" />
-                      <span className="text-xs font-medium">
-                        {uploadedFiles.representativeId
-                          ? 'Đã tải lên'
-                          : 'Tải lên'}
-                      </span>
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) =>
-                          handleFileUpload(
-                            'representativeId',
-                            e.target.files?.[0] || null
-                          )
-                        }
-                      />
-                    </label>
-                  </div>
-                </div>
               </div>
 
               <div className="flex justify-between gap-3 pt-4">
