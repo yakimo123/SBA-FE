@@ -57,8 +57,12 @@ export const VoucherSelector = ({
     );
   });
 
-  const isVoucherValid = (voucher: VoucherResponse) => {
-    return subtotal >= voucher.minOrderValue;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
   };
 
   return (
@@ -102,55 +106,100 @@ export const VoucherSelector = ({
             </div>
           ) : (
             filteredVouchers.map((voucher) => {
-              const isValid = isVoucherValid(voucher);
+              const isOrderValueValid = subtotal >= voucher.minOrderValue;
+              const isUsed = voucher.userStatus === 'USED';
+              const isSelectable = isOrderValueValid && !isUsed;
+
               return (
                 <button
                   key={voucher.voucherId}
-                  onClick={() => isValid && onSelect(voucher)}
-                  disabled={!isValid}
-                  className={`w-full flex items-start gap-3 p-4 bg-white rounded-xl border transition-all text-left group
+                  onClick={() => isSelectable && onSelect(voucher)}
+                  disabled={!isSelectable}
+                  className={`w-full flex items-stretch bg-white rounded-xl border overflow-hidden transition-all text-left group relative
                     ${
-                      isValid
+                      isSelectable
                         ? 'border-gray-200 hover:border-red-500 hover:shadow-md'
-                        : 'opacity-60 grayscale cursor-not-allowed border-gray-100'
+                        : 'border-gray-100 opacity-75'
                     }`}
                 >
+                  {/* Left Ticket Part */}
                   <div
-                    className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 
-                    ${isValid ? 'bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white' : 'bg-gray-100 text-gray-400'}`}
+                    className={`w-24 flex flex-col items-center justify-center shrink-0 border-r border-dashed relative
+                    ${
+                      isSelectable
+                        ? 'bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white'
+                        : 'bg-gray-100 text-gray-400'
+                    }`}
                   >
-                    <Tag className="w-6 h-6" />
+                    {/* Semi-circles for ticket effect */}
+                    <div className="absolute top-0 right-[-6px] w-3 h-3 bg-gray-50 rounded-full -translate-y-1/2" />
+                    <div className="absolute bottom-0 right-[-6px] w-3 h-3 bg-gray-50 rounded-full translate-y-1/2" />
+
+                    <Tag className="w-6 h-6 mb-1" />
+                    <span className="text-sm font-bold">
+                      {voucher.discountType === 'PERCENT'
+                        ? `${voucher.discountValue}%`
+                        : `${voucher.discountValue / 1000}k`}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
+
+                  {/* Right Content Part */}
+                  <div
+                    className={`flex-1 p-4 min-w-0 ${isUsed ? 'grayscale' : ''}`}
+                  >
                     <div className="flex justify-between items-start gap-2 mb-1">
-                      <span className="font-bold text-gray-900 group-hover:text-red-600 truncate transition-colors">
+                      <span
+                        className={`font-bold truncate transition-colors ${
+                          isSelectable
+                            ? 'text-gray-900 group-hover:text-red-600'
+                            : 'text-gray-500'
+                        }`}
+                      >
                         {voucher.voucherCode}
                       </span>
-                      <span className="font-bold text-red-600 whitespace-nowrap">
-                        {voucher.discountType === 'PERCENT'
-                          ? `${voucher.discountValue}%`
-                          : `${voucher.discountValue.toLocaleString('vi-VN')}₫`}
-                      </span>
+                      {isUsed && (
+                        <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] font-bold rounded uppercase tracking-wider">
+                          Đã sử dụng
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+
+                    <p className="text-xs text-gray-600 line-clamp-1 mb-2 font-medium">
                       {voucher.description}
                     </p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      {voucher.minOrderValue > 0 && (
-                        <p className="text-xs text-gray-400">
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={`text-[11px] font-medium ${isOrderValueValid ? 'text-gray-500' : 'text-red-500'}`}
+                        >
                           Đơn tối thiểu{' '}
                           {voucher.minOrderValue.toLocaleString('vi-VN')}₫
                         </p>
-                      )}
-                      {!isValid && (
-                        <p className="text-xs text-red-500 font-medium">
-                          Chưa đủ điều kiện (Thiếu{' '}
-                          {(voucher.minOrderValue - subtotal).toLocaleString(
-                            'vi-VN'
+                        {voucher.discountType === 'PERCENT' &&
+                          voucher.maxDiscount > 0 && (
+                            <p className="text-[11px] text-gray-400">
+                              • Tối đa{' '}
+                              {voucher.maxDiscount.toLocaleString('vi-VN')}₫
+                            </p>
                           )}
-                          ₫)
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <p className="text-[10px] text-gray-400">
+                          HSD: {formatDate(voucher.validTo)}
                         </p>
-                      )}
+
+                        {!isOrderValueValid && !isUsed && (
+                          <p className="text-[10px] text-red-500 italic">
+                            Thiếu{' '}
+                            {(voucher.minOrderValue - subtotal).toLocaleString(
+                              'vi-VN'
+                            )}
+                            ₫
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </button>

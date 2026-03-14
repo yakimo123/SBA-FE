@@ -13,6 +13,7 @@ export interface OrderResponse {
     orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
     shippingAddress: string;
     paymentMethod: string;
+    paymentStatus: string;
     voucherCode: string | null;
     orderItems?: OrderItemResponse[];
 }
