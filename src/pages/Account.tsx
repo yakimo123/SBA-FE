@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
 import { type OrderItemResponse, OrderResponse, orderService } from '../services/orderService';
@@ -30,6 +29,7 @@ interface ReviewDialogState {
 export function AccountPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('orders');
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -294,23 +294,48 @@ export function AccountPage() {
               </div>
 
               <nav className="space-y-1">
-                <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-left">
+                <button 
+                  onClick={() => setActiveTab('profile')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                    activeTab === 'profile' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-100'
+                  }`}
+                >
                   <User className="w-5 h-5" />
                   <span>Thông tin tài khoản</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-red-50 text-red-600 text-left">
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                    activeTab === 'orders' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-100'
+                  }`}
+                >
                   <ShoppingBag className="w-5 h-5" />
                   <span>Đơn hàng của tôi</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-left">
+                <button 
+                  onClick={() => setActiveTab('wishlist')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                    activeTab === 'wishlist' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-100'
+                  }`}
+                >
                   <Heart className="w-5 h-5" />
                   <span>Sản phẩm yêu thích</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-left">
+                <button 
+                  onClick={() => setActiveTab('address')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                    activeTab === 'address' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-100'
+                  }`}
+                >
                   <MapPin className="w-5 h-5" />
                   <span>Địa chỉ giao hàng</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-left">
+                <button 
+                  onClick={() => setActiveTab('vouchers')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                    activeTab === 'vouchers' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-100'
+                  }`}
+                >
                   <Gift className="w-5 h-5" />
                   <span>Ưu đãi của tôi</span>
                 </button>
@@ -328,15 +353,9 @@ export function AccountPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <Tabs defaultValue="profile" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="profile">Thông tin</TabsTrigger>
-                <TabsTrigger value="orders">Đơn hàng</TabsTrigger>
-                <TabsTrigger value="vouchers">Ưu đãi</TabsTrigger>
-              </TabsList>
-
-              {/* Profile Tab */}
-              <TabsContent value="profile">
+            <div className="space-y-6">
+              {/* Profile Section */}
+              {activeTab === 'profile' && (
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold">Thông tin tài khoản</h2>
@@ -402,10 +421,10 @@ export function AccountPage() {
                     </div>
                   </div>
                 </Card>
-              </TabsContent>
+              )}
 
-              {/* Orders Tab */}
-              <TabsContent value="orders">
+              {/* Orders Section */}
+              {activeTab === 'orders' && (
                 <div className="space-y-4">
                   {loadingOrders ? (
                     <div className="flex items-center justify-center py-16">
@@ -509,67 +528,85 @@ export function AccountPage() {
                     ))
                   )}
                 </div>
-              </TabsContent>
+              )}
 
-              {/* Vouchers Tab */}
-              <TabsContent value="vouchers">
-                {loadingVouchers ? (
-                  <div className="flex items-center justify-center py-16">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {voucherList.map((voucher) => (
-                      <Card key={voucher.voucherId} className="overflow-hidden">
-                        <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Gift className="w-5 h-5" />
-                            <span className="font-medium">Mã giảm giá</span>
+              {/* Vouchers Section */}
+              {activeTab === 'vouchers' && (
+                <>
+                  {loadingVouchers ? (
+                    <div className="flex items-center justify-center py-16">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {voucherList.map((voucher) => (
+                        <Card key={voucher.voucherId} className="overflow-hidden">
+                          <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Gift className="w-5 h-5" />
+                              <span className="font-medium">Mã giảm giá</span>
+                            </div>
+                            <div className="text-2xl font-bold mb-1">{voucher.voucherCode}</div>
+                            <p className="text-sm text-white/90">{voucher.description}</p>
                           </div>
-                          <div className="text-2xl font-bold mb-1">{voucher.voucherCode}</div>
-                          <p className="text-sm text-white/90">{voucher.description}</p>
-                        </div>
-                        <div className="p-4 bg-white">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm text-gray-600">
-                              HSD: {new Date(voucher.validTo).toLocaleDateString('vi-VN')}
-                            </span>
-                            {voucher.isValid ? (
-                              <Badge className="bg-green-600">Khả dụng</Badge>
-                            ) : (
-                              <Badge variant="outline">Hết hạn</Badge>
-                            )}
+                          <div className="p-4 bg-white">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-sm text-gray-600">
+                                HSD: {new Date(voucher.validTo).toLocaleDateString('vi-VN')}
+                              </span>
+                              {voucher.isValid ? (
+                                <Badge className="bg-green-600">Khả dụng</Badge>
+                              ) : (
+                                <Badge variant="outline">Hết hạn</Badge>
+                              )}
+                            </div>
+                            <Button
+                              className="w-full bg-red-600 hover:bg-red-700"
+                              disabled={!voucher.isValid}
+                            >
+                              {voucher.isValid ? 'Sử dụng ngay' : 'Hết hạn'}
+                            </Button>
                           </div>
-                          <Button
-                            className="w-full bg-red-600 hover:bg-red-700"
-                            disabled={!voucher.isValid}
-                          >
-                            {voucher.isValid ? 'Sử dụng ngay' : 'Hết hạn'}
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                        </Card>
+                      ))}
+                    </div>
+                  )}
 
-                <Card className="p-6 mt-6 bg-gradient-to-r from-purple-50 to-blue-50">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shrink-0">
-                      <Gift className="w-8 h-8 text-purple-600" />
+                  <Card className="p-6 mt-6 bg-gradient-to-r from-purple-50 to-blue-50">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shrink-0">
+                        <Gift className="w-8 h-8 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold mb-1">Tích điểm đổi quà</h3>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Bạn có <span className="font-bold text-purple-600">{user?.points || 0} điểm</span>
+                        </p>
+                        <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                          Đổi điểm ngay
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold mb-1">Tích điểm đổi quà</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Bạn có <span className="font-bold text-purple-600">{user?.points || 0} điểm</span>
-                      </p>
-                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                        Đổi điểm ngay
-                      </Button>
-                    </div>
-                  </div>
+                  </Card>
+                </>
+              )}
+
+              {/* Wishlist Section - Placeholder */}
+              {activeTab === 'wishlist' && (
+                <Card className="p-6 text-center">
+                  <Heart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-600">Danh sách yêu thích của bạn</p>
                 </Card>
-              </TabsContent>
-            </Tabs>
+              )}
+
+              {/* Address Section - Placeholder */}
+              {activeTab === 'address' && (
+                <Card className="p-6 text-center">
+                  <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-600">Quản lý địa chỉ giao hàng</p>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </div>
