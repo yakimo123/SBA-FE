@@ -12,10 +12,28 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { orderService, OrderResponse, OrderStatus } from '../../services/orderService';
+import {
+  OrderResponse,
+  orderService,
+  OrderStatus,
+} from '../../services/orderService';
 
-const TIMELINE_STEPS: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
-const ALL_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+const TIMELINE_STEPS: OrderStatus[] = [
+  'PENDING',
+  'CONFIRMED',
+  'PROCESSING',
+  'SHIPPED',
+  'DELIVERED',
+];
+const ALL_STATUSES: OrderStatus[] = [
+  'PENDING',
+  'CONFIRMED',
+  'PROCESSING',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELLED',
+  'REFUNDED',
+];
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
@@ -161,6 +179,26 @@ const css = `
     animation: od-spin 0.7s linear infinite;
   }
   @keyframes od-spin { to { transform: rotate(360deg); } }
+
+  .od-item-table { width: 100%; border-collapse: collapse; }
+  .od-item-table th {
+    text-align: left; padding: 12px 16px; font-family: 'DM Mono', monospace;
+    font-size: 0.7rem; color: var(--ink-3); text-transform: uppercase;
+    border-bottom: 1px solid var(--border); background: var(--surface-2);
+  }
+  .od-item-table td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .od-item-table tr:last-child td { border-bottom: none; }
+  .od-item-img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--surface-2); }
+  .od-item-name { font-weight: 600; font-size: 0.9rem; color: var(--ink); margin: 0; }
+  .od-item-branch { font-size: 0.75rem; color: var(--ink-3); margin: 2px 0 0; }
+
+  .od-pay-status {
+    padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.02em;
+  }
+  .od-pay-paid { background: #edf7f2; color: var(--success); }
+  .od-pay-unpaid { background: #fdf2f2; color: var(--danger); }
+  .od-pay-pending { background: #fef6eb; color: var(--warning); }
 `;
 
 const statusClass = (status: OrderStatus) => {
@@ -202,7 +240,10 @@ export function OrderDetail() {
     if (!order) return;
     setUpdating(true);
     try {
-      const updated = await orderService.updateOrderStatus(order.orderId, selectedStatus);
+      const updated = await orderService.updateOrderStatus(
+        order.orderId,
+        selectedStatus
+      );
       setOrder(updated);
       setShowStatusModal(false);
     } finally {
@@ -216,7 +257,9 @@ export function OrderDetail() {
         <style>{css}</style>
         <div className="od-loading">
           <div className="od-spinner" />
-          <p style={{ color: 'var(--ink-3)', fontSize: '0.875rem' }}>Loading order…</p>
+          <p style={{ color: 'var(--ink-3)', fontSize: '0.875rem' }}>
+            Loading order…
+          </p>
         </div>
       </div>
     );
@@ -227,13 +270,19 @@ export function OrderDetail() {
       <div className="od-root">
         <style>{css}</style>
         <div className="od-error">
-          <p style={{ color: 'var(--danger)', margin: 0 }}>{error ?? 'Order not found'}</p>
+          <p style={{ color: 'var(--danger)', margin: 0 }}>
+            {error ?? 'Order not found'}
+          </p>
         </div>
       </div>
     );
   }
 
-  const statusOrder = [...TIMELINE_STEPS, 'CANCELLED', 'REFUNDED'] as OrderStatus[];
+  const statusOrder = [
+    ...TIMELINE_STEPS,
+    'CANCELLED',
+    'REFUNDED',
+  ] as OrderStatus[];
   const currentIdx = statusOrder.indexOf(order.orderStatus);
 
   return (
@@ -250,7 +299,10 @@ export function OrderDetail() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="od-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1
+              className="od-title"
+              style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+            >
               Order #{order.orderId}
               <span className={`od-status ${statusClass(order.orderStatus)}`}>
                 {order.orderStatus}
@@ -288,7 +340,9 @@ export function OrderDetail() {
               onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
             >
               {ALL_STATUSES.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
             <div className="od-modal-actions">
@@ -316,18 +370,149 @@ export function OrderDetail() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div className="od-card">
             <div className="od-card-header">
+              <h2 className="od-card-title">Order Items</h2>
+            </div>
+            <div className="od-card-body" style={{ padding: 0 }}>
+              <table className="od-item-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Branch</th>
+                    <th>Price</th>
+                    <th style={{ textAlign: 'center' }}>Qty</th>
+                    <th style={{ textAlign: 'right' }}>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.orderItems?.map((item) => (
+                    <tr key={item.orderDetailId}>
+                      <td>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                          }}
+                        >
+                          {item.productImage ? (
+                            <img
+                              src={item.productImage}
+                              alt={item.productName}
+                              className="od-item-img"
+                            />
+                          ) : (
+                            <div className="od-item-img" />
+                          )}
+                          <div>
+                            <p className="od-item-name">{item.productName}</p>
+                            <p
+                              className="od-item-branch"
+                              style={{ fontSize: '0.7rem' }}
+                            >
+                              ID: {item.productId}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          style={{ fontSize: '0.85rem', color: 'var(--ink-2)' }}
+                        >
+                          {item.branchName ?? 'N/A'}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          style={{ fontSize: '0.85rem', color: 'var(--ink-2)' }}
+                        >
+                          ₫{item.unitPrice.toLocaleString('vi-VN')}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{ fontWeight: 600 }}>{item.quantity}</span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
+                          ₫{item.subtotal.toLocaleString('vi-VN')}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="od-card">
+            <div className="od-card-header">
               <h2 className="od-card-title">Order Summary</h2>
             </div>
             <div className="od-card-body">
-              {order.voucherCode && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.9rem', color: 'var(--ink-2)' }}>
-                  <span>Voucher</span>
-                  <span style={{ fontWeight: 600, color: 'var(--success)' }}>{order.voucherCode}</span>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '0.9rem',
+                    color: 'var(--ink-2)',
+                  }}
+                >
+                  <span>Subtotal</span>
+                  <span>₫{order.totalAmount.toLocaleString('vi-VN')}</span>
                 </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: '1.1rem', fontWeight: 700 }}>
-                <span>Total</span>
-                <span>₫{order.totalAmount.toLocaleString('vi-VN')}</span>
+
+                {order.voucherCode && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: '0.9rem',
+                      color: 'var(--ink-2)',
+                    }}
+                  >
+                    <div
+                      style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <span>Discount</span>
+                      <span
+                        style={{
+                          padding: '2px 6px',
+                          background: 'var(--accent-soft)',
+                          color: 'var(--accent)',
+                          borderRadius: 4,
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {order.voucherCode}
+                      </span>
+                    </div>
+                    <span style={{ color: 'var(--danger)' }}>
+                      -₫{(order.discountAmount ?? 0).toLocaleString('vi-VN')}
+                    </span>
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    paddingTop: 12,
+                    borderTop: '1px solid var(--border)',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>Grand Total</span>
+                  <span style={{ color: 'var(--accent)' }}>
+                    ₫
+                    {(order.finalAmount ?? order.totalAmount).toLocaleString(
+                      'vi-VN'
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -349,11 +534,20 @@ export function OrderDetail() {
                           isCurrent ? 'current' : isDone ? 'done' : 'pending'
                         }`}
                       >
-                        {s === 'SHIPPED' ? <Truck size={16} /> :
-                          s === 'DELIVERED' ? <CheckCircle size={16} /> :
-                          <Clock size={16} />}
+                        {s === 'SHIPPED' ? (
+                          <Truck size={16} />
+                        ) : s === 'DELIVERED' ? (
+                          <CheckCircle size={16} />
+                        ) : (
+                          <Clock size={16} />
+                        )}
                       </div>
-                      <div className="od-timeline-label" style={{ color: isDone ? 'var(--ink)' : 'var(--ink-3)' }}>
+                      <div
+                        className="od-timeline-label"
+                        style={{
+                          color: isDone ? 'var(--ink)' : 'var(--ink-3)',
+                        }}
+                      >
                         {s}
                       </div>
                     </div>
@@ -371,12 +565,33 @@ export function OrderDetail() {
             </div>
             <div className="od-card-body">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)' }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
+                    background: 'var(--accent-soft)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--accent)',
+                  }}
+                >
                   <User size={20} />
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontWeight: 600 }}>{order.userFullName}</p>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--ink-3)' }}>User ID: {order.userId}</p>
+                  <p style={{ margin: 0, fontWeight: 600 }}>
+                    {order.userFullName}
+                  </p>
+                  <p
+                    style={{
+                      margin: '4px 0 0',
+                      fontSize: '0.8rem',
+                      color: 'var(--ink-3)',
+                    }}
+                  >
+                    User ID: {order.userId}
+                  </p>
                 </div>
               </div>
             </div>
@@ -387,8 +602,18 @@ export function OrderDetail() {
               <h2 className="od-card-title">Shipping Address</h2>
             </div>
             <div className="od-card-body">
-              <div style={{ display: 'flex', gap: 12, fontSize: '0.9rem', color: 'var(--ink-2)' }}>
-                <MapPin size={18} style={{ flexShrink: 0, color: 'var(--ink-3)' }} />
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 12,
+                  fontSize: '0.9rem',
+                  color: 'var(--ink-2)',
+                }}
+              >
+                <MapPin
+                  size={18}
+                  style={{ flexShrink: 0, color: 'var(--ink-3)' }}
+                />
                 <p style={{ margin: 0 }}>{order.shippingAddress}</p>
               </div>
             </div>
@@ -399,13 +624,52 @@ export function OrderDetail() {
               <h2 className="od-card-title">Payment Info</h2>
             </div>
             <div className="od-card-body">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
-                <CreditCard size={18} style={{ color: 'var(--ink-3)' }} />
-                {order.paymentMethod}
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <CreditCard size={18} style={{ color: 'var(--ink-3)' }} />
+                    {order.paymentMethod}
+                  </div>
+                  <span
+                    className={`od-pay-status ${
+                      order.paymentStatus?.toUpperCase() === 'PAID'
+                        ? 'od-pay-paid'
+                        : order.paymentStatus?.toUpperCase() === 'UNPAID'
+                          ? 'od-pay-unpaid'
+                          : 'od-pay-pending'
+                    }`}
+                  >
+                    {order.paymentStatus}
+                  </span>
+                </div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '0.85rem',
+                    color: 'var(--ink-3)',
+                    borderTop: '1px solid var(--border)',
+                    paddingTop: 12,
+                  }}
+                >
+                  Last updated at{' '}
+                  {new Date(order.orderDate).toLocaleTimeString('vi-VN')}
+                </p>
               </div>
-              <p style={{ margin: '12px 0 0', fontSize: '0.85rem', color: 'var(--ink-3)' }}>
-                Ordered on {new Date(order.orderDate).toLocaleDateString('vi-VN')}
-              </p>
             </div>
           </div>
         </div>
