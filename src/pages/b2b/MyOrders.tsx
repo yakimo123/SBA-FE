@@ -80,9 +80,9 @@ export function MyOrders() {
     return result;
   }, [orders, tab, searchQuery, sortBy]);
 
-  const handleCancel = (orderId: string) => {
+  const handleCancel = async (orderId: string) => {
     if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')) return;
-    cancelOrder(orderId);
+    await cancelOrder(orderId);
   };
 
   const countByStatus = (s: BulkOrderStatus) => orders.filter((o) => o.status === s).length;

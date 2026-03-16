@@ -148,10 +148,14 @@ export function BulkOrderCreate() {
   const handleConfirmOrder = async () => {
     setShowConfirm(false);
     setSubmitting(true);
-    addOrder(cartItems, voucherCode, voucherDiscount, note, total, subtotal);
-    await new Promise((r) => setTimeout(r, 600));
+    const result = await addOrder(cartItems, voucherCode, note);
     setSubmitting(false);
-    navigate('/company/orders');
+    if (result) {
+      navigate('/company/orders');
+    } else {
+      // Hiển thị thông báo lỗi nếu cần
+      alert('Tạo đơn hàng thất bại. Vui lòng thử lại.');
+    }
   };
 
   return (

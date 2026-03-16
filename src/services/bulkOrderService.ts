@@ -36,8 +36,11 @@ const bulkOrderService = {
   },
 
   /** Tạo đơn hàng mới */
-  createBulkOrder: async (data: CreateBulkOrderRequest): Promise<BulkOrder> => {
-    const res = await api.post<ApiResponse<BulkOrder>>(BASE, data);
+  createBulkOrder: async (data: CreateBulkOrderRequest, userId: number): Promise<BulkOrder> => {
+    const res = await api.post<ApiResponse<BulkOrder>>(
+      `${BASE}?userId=${userId}`,
+      data
+    );
     return res.data.data;
   },
 

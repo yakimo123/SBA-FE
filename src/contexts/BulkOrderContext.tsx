@@ -1,64 +1,106 @@
-import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
-import { mockBulkOrders } from '../data/mockData';
-import { BulkOrder, BulkOrderItem, BulkOrderStatus } from '../types';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import bulkOrderService from '../services/bulkOrderService';
+import { useAuth } from './AuthContext';
+import { BulkOrder, BulkOrderItem, BulkOrderStatus, CreateBulkOrderRequest } from '../types';
 
 interface BulkOrderContextType {
   orders: BulkOrder[];
-  addOrder: (items: BulkOrderItem[], voucherCode: string, voucherDiscount: number, note: string, total: number, subtotal: number) => BulkOrder;
-  cancelOrder: (orderId: string) => void;
-  updateCustomization: (orderId: string, customization: string) => void;
+  loading: boolean;
+  refreshOrders: () => Promise<void>;
+  addOrder: (items: BulkOrderItem[], voucherCode: string, note: string, companyId?: number) => Promise<BulkOrder | null>;
+  cancelOrder: (orderId: string) => Promise<void>;
+  updateCustomization: (orderId: string, customization: string) => Promise<void>;
 }
+
 
 const BulkOrderContext = createContext<BulkOrderContextType | undefined>(undefined);
 
-let orderCounter = mockBulkOrders.length + 1;
 
 export function BulkOrderProvider({ children }: { children: ReactNode }) {
-  const [orders, setOrders] = useState<BulkOrder[]>(mockBulkOrders);
+  const [orders, setOrders] = useState<BulkOrder[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const { user } = useAuth();
 
-  const addOrder = useCallback((
-    items: BulkOrderItem[],
-    voucherCode: string,
-    voucherDiscount: number,
-    note: string,
-    total: number,
-    subtotal: number,
-  ): BulkOrder => {
-    const now = new Date().toISOString();
-    const padded = String(orderCounter++).padStart(3, '0');
-    const newOrder: BulkOrder = {
-      orderId: `BO-2026-${padded}`,
-      companyId: 1,
-      companyName: 'Company',
-      status: 'PENDING' as BulkOrderStatus,
-      items,
-      voucherCode: voucherCode || undefined,
-      voucherDiscount,
-      subtotal,
-      total,
-      note: note || undefined,
-      createdAt: now,
-      updatedAt: now,
-    };
-    setOrders((prev) => [newOrder, ...prev]);
-    return newOrder;
+  const refreshOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await bulkOrderService.getMyOrders();
+      setOrders(res.content);
+    } catch (e) {
+      // handle error if needed
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const cancelOrder = useCallback((orderId: string) => {
-    setOrders((prev) =>
-      prev.map((o) => o.orderId === orderId ? { ...o, status: 'CANCELLED' as BulkOrderStatus } : o)
-    );
-  }, []);
+  useEffect(() => {
+    refreshOrders();
+  }, [refreshOrders]);
 
-  const updateCustomization = useCallback((orderId: string, customization: string) => {
-    setOrders((prev) =>
-      prev.map((o) => o.orderId === orderId ? { ...o, customization } : o)
-    );
-  }, []);
+  const addOrder = useCallback(
+    async (items: BulkOrderItem[], voucherCode: string, note: string, companyIdParam?: number) => {
+      try {
+        if (!user || user.userId === undefined || user.userId === null) {
+          console.error('BulkOrderContext: user hoặc userId không xác định', user);
+          throw new Error('Không xác định được userId');
+        }
+        let companyId = companyIdParam;
+        if (companyId === undefined || companyId === null) {
+          companyId = (user as any).companyId !== undefined ? (typeof (user as any).companyId === 'string' ? parseInt((user as any).companyId, 10) : (user as any).companyId) : undefined;
+        }
+        if (companyId === undefined || companyId === null) {
+          console.error('BulkOrderContext: Không xác định được companyId (truyền vào hoặc từ user)', user);
+          throw new Error('Không xác định được companyId');
+        }
+        const req: any = {
+          companyId,
+          items: items.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            customization: i.customization,
+          })),
+          voucherCode: voucherCode || undefined,
+          note: note || undefined,
+        };
+        const userIdNum = typeof user.userId === 'string' ? parseInt(user.userId, 10) : user.userId;
+        const order = await bulkOrderService.createBulkOrder(req, userIdNum);
+        await refreshOrders();
+        return order;
+      } catch (e) {
+        console.error('BulkOrderContext: Lỗi khi tạo đơn hàng', e);
+        return null;
+      }
+    },
+    [refreshOrders, user]
+  );
+
+  const cancelOrder = useCallback(
+    async (orderId: string) => {
+      try {
+        await bulkOrderService.cancelOrder(orderId);
+        await refreshOrders();
+      } catch (e) {
+        // handle error
+      }
+    },
+    [refreshOrders]
+  );
+
+  const updateCustomization = useCallback(
+    async (orderId: string, customization: string) => {
+      try {
+        await bulkOrderService.addCustomization(orderId, { customization });
+        await refreshOrders();
+      } catch (e) {
+        // handle error
+      }
+    },
+    [refreshOrders]
+  );
 
   return (
-    <BulkOrderContext.Provider value={{ orders, addOrder, cancelOrder, updateCustomization }}>
+    <BulkOrderContext.Provider value={{ orders, loading, refreshOrders, addOrder, cancelOrder, updateCustomization }}>
       {children}
     </BulkOrderContext.Provider>
   );
