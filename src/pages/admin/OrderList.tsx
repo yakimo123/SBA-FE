@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { orderService, OrderResponse, OrderStatus } from '../../services/orderService';
+import { OrderResponse, orderService, OrderStatus } from '../../services/orderService';
 
 const PAGE_SIZE = 20;
 

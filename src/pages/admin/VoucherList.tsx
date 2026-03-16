@@ -22,30 +22,10 @@ const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
   .vl-root {
-    --bg: #f5f3ef;
-    --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --border-strong: #c9bfad;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
-    --success: #2d7a4f;
-    --success-soft: #edf7f2;
-    --danger: #b03030;
-    --danger-soft: #fdf2f2;
-    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
-    --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
-    --radius: 10px;
-    --radius-lg: 16px;
     font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
+    background: #f5f3ef;
     min-height: 100vh;
-    color: var(--ink);
+    color: #1a1612;
     padding: 32px;
   }
 
@@ -56,34 +36,34 @@ const css = `
   .vl-header-left { display: flex; align-items: center; gap: 16px; }
   .vl-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, #c9521a 0%, #e07040 100%);
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
   }
   .vl-icon-badge svg { color: white; width: 24px; height: 24px; }
   .vl-title {
     font-family: 'DM Serif Display', serif; font-size: 2rem;
-    font-weight: 400; color: var(--ink); line-height: 1;
+    font-weight: 400; color: #1a1612; line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
   .vl-count-pill {
     display: inline-flex; align-items: center;
-    background: var(--violet-soft); color: var(--violet);
+    background: #eeecf8; color: #4a3f8f;
     font-family: 'DM Mono', monospace; font-size: 0.7rem;
     font-weight: 500; padding: 2px 8px; border-radius: 20px;
     margin-left: 8px; letter-spacing: 0.02em;
   }
-  .vl-subtitle { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
+  .vl-subtitle { font-size: 0.875rem; color: #9c9085; margin: 0; }
   .vl-divider {
     width: 32px; height: 2px;
-    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+    background: linear-gradient(90deg, #c9521a 0%, transparent 100%);
     border-radius: 2px; margin: 4px 0 0 68px;
   }
   .vl-add-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    color: white; border: none; border-radius: var(--radius);
+    background: linear-gradient(135deg, #c9521a 0%, #e07040 100%);
+    color: white; border: none; border-radius: 10px;
     font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
     cursor: pointer; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
     transition: all 0.2s; white-space: nowrap;
@@ -91,69 +71,71 @@ const css = `
   .vl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,82,26,0.38); }
 
   .vl-table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
+    background: #ffffff; border: 1px solid #e8e3da;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
+    overflow: hidden;
   }
   .vl-table-toolbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
+    padding: 16px 20px; border-bottom: 1px solid #e8e3da;
+    background: #faf9f7;
   }
   .vl-search-wrap { position: relative; display: flex; align-items: center; }
   .vl-search-wrap svg {
-    position: absolute; left: 10px; color: var(--ink-3);
+    position: absolute; left: 10px; color: #9c9085;
     width: 14px; height: 14px; pointer-events: none;
   }
   .vl-search {
-    padding: 7px 12px 7px 32px; border: 1px solid var(--border);
-    border-radius: 8px; background: var(--surface);
+    padding: 7px 12px 7px 32px; border: 1px solid #e8e3da;
+    border-radius: 8px; background: #ffffff;
     font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
-    color: var(--ink); outline: none; width: 220px;
+    color: #1a1612; outline: none; width: 220px;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .vl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-  .vl-table-meta { font-size: 0.8rem; color: var(--ink-3); }
+  .vl-search:focus { border-color: #c9521a; box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .vl-table-meta { font-size: 0.8rem; color: #9c9085; }
 
   .vl-table { width: 100%; border-collapse: collapse; }
-  .vl-table thead tr { border-bottom: 1px solid var(--border); }
+  .vl-table thead tr { border-bottom: 1px solid #e8e3da; }
   .vl-table th {
     padding: 11px 20px; text-align: left;
     font-family: 'DM Mono', monospace; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-3); background: var(--surface-2);
+    color: #9c9085; background: #faf9f7;
   }
   .vl-table td {
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    padding: 14px 20px; border-bottom: 1px solid #e8e3da;
     vertical-align: middle; transition: background 0.12s;
   }
   .vl-table tbody tr:last-child td { border-bottom: none; }
-  .vl-table tbody tr:hover td { background: var(--accent-soft); }
+  .vl-table tbody tr:hover td { background: #fdf1eb; }
 
   .vl-code-text {
     font-family: 'DM Mono', monospace; font-size: 0.8rem;
-    font-weight: 600; color: var(--violet);
-    background: var(--violet-soft); border: 1px solid rgba(74,63,143,0.2);
+    font-weight: 600; color: #4a3f8f;
+    background: #eeecf8; border: 1px solid rgba(74,63,143,0.2);
     border-radius: 5px; padding: 3px 8px; display: inline-block;
   }
   .vl-discount-text {
     font-family: 'DM Mono', monospace; font-size: 0.82rem;
-    font-weight: 600; color: var(--success);
+    font-weight: 600; color: #2d7a4f;
   }
   .vl-expiry-text {
     font-family: 'DM Mono', monospace; font-size: 0.78rem;
-    color: var(--ink-2);
+    color: #5c5347;
   }
-  .vl-expiry-expired { color: var(--danger); }
+  .vl-expiry-expired { color: #b03030; }
 
   .vl-status-active {
     display: inline-flex; align-items: center; gap: 5px;
-    background: var(--success-soft); color: var(--success);
+    background: #edf7f2; color: #2d7a4f;
     font-size: 0.73rem; font-weight: 600; padding: 3px 10px;
     border-radius: 20px; letter-spacing: 0.02em;
   }
   .vl-status-expired {
     display: inline-flex; align-items: center; gap: 5px;
-    background: var(--danger-soft); color: var(--danger);
+    background: #fdf2f2; color: #b03030;
     font-size: 0.73rem; font-weight: 600; padding: 3px 10px;
     border-radius: 20px; letter-spacing: 0.02em;
   }
@@ -165,15 +147,15 @@ const css = `
   .vl-btn {
     display: flex; align-items: center; justify-content: center;
     width: 30px; height: 30px; border-radius: 7px;
-    border: 1px solid var(--border); background: var(--surface);
+    border: 1px solid #e8e3da; background: #ffffff;
     cursor: pointer; transition: all 0.15s;
   }
-  .vl-btn-copy { color: var(--ink-3); }
-  .vl-btn-copy:hover { background: var(--surface-2); border-color: var(--ink-3); color: var(--ink); }
-  .vl-btn-edit { color: var(--violet); }
-  .vl-btn-edit:hover { background: var(--violet-soft); border-color: var(--violet); }
-  .vl-btn-delete { color: var(--danger); }
-  .vl-btn-delete:hover { background: var(--danger-soft); border-color: #f5c2c2; }
+  .vl-btn-copy { color: #9c9085; }
+  .vl-btn-copy:hover { background: #faf9f7; border-color: #9c9085; color: #1a1612; }
+  .vl-btn-edit { color: #4a3f8f; }
+  .vl-btn-edit:hover { background: #eeecf8; border-color: #4a3f8f; }
+  .vl-btn-delete { color: #b03030; }
+  .vl-btn-delete:hover { background: #fdf2f2; border-color: #f5c2c2; }
 
   .vl-empty {
     display: flex; flex-direction: column; align-items: center;
@@ -181,18 +163,21 @@ const css = `
   }
   .vl-empty-icon {
     width: 56px; height: 56px; border-radius: 14px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center; color: var(--ink-3);
+    background: #faf9f7; border: 1px solid #e8e3da;
+    display: flex; align-items: center; justify-content: center; color: #9c9085;
   }
-  .vl-empty-text { font-size: 0.9rem; color: var(--ink-3); margin: 0; }
+  .vl-empty-text { font-size: 0.9rem; color: #9c9085; margin: 0; }
 `;
 
 export function VoucherList() {
   const [vouchers, setVouchers] = useState<VoucherResponse[]>([]);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [editingVoucher, setEditingVoucher] = useState<VoucherResponse | null>(null);
-  const [assigningVoucher, setAssigningVoucher] = useState<VoucherResponse | null>(null);
+  const [editingVoucher, setEditingVoucher] = useState<VoucherResponse | null>(
+    null
+  );
+  const [assigningVoucher, setAssigningVoucher] =
+    useState<VoucherResponse | null>(null);
   const [search, setSearch] = useState('');
 
   const fetchVouchers = useCallback(async () => {
@@ -261,9 +246,7 @@ export function VoucherList() {
     {
       header: 'Mã',
       accessor: 'voucherCode',
-      render: (v) => (
-        <span className="vl-code-text">{v.voucherCode}</span>
-      ),
+      render: (v) => <span className="vl-code-text">{v.voucherCode}</span>,
     },
     {
       header: 'Giảm giá',
@@ -280,7 +263,7 @@ export function VoucherList() {
       header: 'Loại',
       accessor: 'discountType',
       render: (v) => (
-        <span style={{ fontSize: '0.9rem', color: 'var(--ink-2)' }}>
+        <span style={{ fontSize: '0.9rem', color: '#5c5347' }}>
           {v.discountType === 'PERCENT' ? 'Phần trăm' : 'Cố định'}
         </span>
       ),
@@ -290,15 +273,30 @@ export function VoucherList() {
       accessor: 'usedCount',
       render: (v) => (
         <div style={{ minWidth: 120 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: '0.75rem',
+              marginBottom: 4,
+              color: '#5c5347',
+            }}
+          >
             <span>{v.usedCount} đã dùng</span>
             <span>{v.usageLimit} giới hạn</span>
           </div>
-          <div style={{ height: 6, background: '#eee', borderRadius: 3, overflow: 'hidden' }}>
+          <div
+            style={{
+              height: 6,
+              background: '#e8e3da',
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}
+          >
             <div
               style={{
                 height: '100%',
-                background: v.usedCount >= v.usageLimit ? 'var(--danger)' : 'var(--accent)',
+                background: v.usedCount >= v.usageLimit ? '#b03030' : '#c9521a',
                 width: `${Math.min((v.usedCount / v.usageLimit) * 100, 100)}%`,
               }}
             />
@@ -363,7 +361,7 @@ export function VoucherList() {
               setIsAssignModalOpen(true);
             }}
             className="vl-btn"
-            style={{ color: 'var(--accent)' }}
+            style={{ color: '#c9521a' }}
             title="Tặng cho khách hàng"
           >
             <UserPlus size={14} />

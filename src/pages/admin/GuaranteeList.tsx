@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Column, DataTable } from '../../components/admin/DataTable';
 import { Modal } from '../../components/admin/Modal';
 import { productService } from '../../services/productService';
-import { warrantyService, WarrantyDTO } from '../../services/warrantyService';
+import { WarrantyDTO,warrantyService } from '../../services/warrantyService';
 import { Product } from '../../types/product';
 
 export function GuaranteeList() {

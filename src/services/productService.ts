@@ -1,5 +1,7 @@
+import { PageableResponse } from '../types';
 import {
   ApiResponse,
+  CompanyProduct,
   CreateProductRequest,
   Product,
   ProductFilterParams,
@@ -77,6 +79,32 @@ export const productService = {
     >(`${BASE}/search`, {
       params: { q },
     });
+    return res.data.data;
+  },
+
+  async getCompanyProducts(
+    params: ProductFilterParams = {}
+  ): Promise<PageableResponse<CompanyProduct>> {
+    const query: Record<string, unknown> = {
+      page: params.page ?? 0,
+      size: params.size ?? 10,
+    };
+    if (params.keyword) query.keyword = params.keyword;
+    if (params.categoryId) query.categoryId = params.categoryId;
+    if (params.brandId) query.brandId = params.brandId;
+    if (params.sort) query.sort = params.sort;
+
+    const res = await api.get<ApiResponse<PageableResponse<CompanyProduct>>>(
+      `${BASE}/company/search`,
+      { params: query }
+    );
+    return res.data.data;
+  },
+
+  async getCompanyProductById(id: number): Promise<CompanyProduct> {
+    const res = await api.get<ApiResponse<CompanyProduct>>(
+      `${BASE}/company/${id}`
+    );
     return res.data.data;
   },
 };

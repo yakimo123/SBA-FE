@@ -24,6 +24,7 @@ export interface AuthResponse {
   address?: string;
   role: string;
   rewardPoint?: number;
+  companyId?: number;
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
@@ -52,6 +53,7 @@ export interface AuthUser {
   phoneNumber?: string;
   address?: string;
   rewardPoint?: number;
+  companyId?: number; // B2B company users
   // Backward compatible aliases
   name?: string; // alias for fullName
   phone?: string; // alias for phoneNumber

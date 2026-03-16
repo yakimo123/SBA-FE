@@ -41,11 +41,11 @@ export const clearTokens = (): void => {
   localStorage.removeItem(USER_DATA_KEY);
 };
 
-export const setUserData = (data: { userId: number; email: string; fullName: string; role: string; phoneNumber?: string }): void => {
+export const setUserData = (data: { userId: number; email: string; fullName: string; role: string; phoneNumber?: string; companyId?: number }): void => {
   localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
 };
 
-export const getUserData = (): { userId: number; email: string; fullName: string; role: string; phoneNumber?: string } | null => {
+export const getUserData = (): { userId: number; email: string; fullName: string; role: string; phoneNumber?: string; companyId?: number } | null => {
   try {
     const raw = localStorage.getItem(USER_DATA_KEY);
     if (!raw) return null;

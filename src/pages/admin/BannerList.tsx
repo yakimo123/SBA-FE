@@ -13,12 +13,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { FILE_TYPES } from '../../constants/FILE_TYPES';
-import { sanitizeFileName } from '../../utils/fileUtils';
 import bannerService, {
   type BannerAdminItem,
   type CreateBannerRequest,
 } from '../../services/bannerService';
 import { mediaService } from '../../services/mediaService';
+import { sanitizeFileName } from '../../utils/fileUtils';
 
 const POSITIONS = [
   { value: '', label: 'Tất cả vị trí' },
@@ -161,8 +161,8 @@ export function BannerList() {
   };
 
   const handleSave = async () => {
-    if (!form.title?.trim()) {
-      setFormError('Tiêu đề không được để trống');
+    if (!form.imageUrl?.trim()) {
+      setFormError('Ảnh banner là bắt buộc');
       return;
     }
     if (!form.imageUrl?.trim()) {
@@ -184,7 +184,7 @@ export function BannerList() {
     setFormError(null);
     try {
       const payload: CreateBannerRequest = {
-        title: form.title.trim(),
+        title: form.title?.trim() || undefined,
         subtitle: form.subtitle?.trim() || undefined,
         description: form.description?.trim() || undefined,
         imageUrl: form.imageUrl.trim(),
@@ -219,7 +219,7 @@ export function BannerList() {
   };
 
   const handleDelete = async (b: BannerAdminItem) => {
-    if (!window.confirm(`Xóa banner "${b.title}"?`)) return;
+    if (!window.confirm(`Xóa banner "${b.title || 'không tiêu đề'}"?`)) return;
     try {
       await bannerService.deleteBanner(b.id);
       toast.success('Đã xóa banner');
@@ -554,7 +554,7 @@ export function BannerList() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Tiêu đề *</label>
+                  <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Tiêu đề</label>
                   <input
                     type="text"
                     className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"

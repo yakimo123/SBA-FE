@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
+  BulkOrderStats,
   CustomerGrowthItem,
   dashboardService,
   KPIStats,
@@ -20,6 +21,9 @@ export function useDashboard() {
   const [customerGrowthData, setCustomerGrowthData] = useState<
     CustomerGrowthItem[]
   >([]);
+  const [bulkOrderStats, setBulkOrderStats] = useState<BulkOrderStats | null>(
+    null
+  );
   const [recentOrders, setRecentOrders] = useState<RecentOrderItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +42,7 @@ export function useDashboard() {
         topProductsInfo,
         customerGrowthInfo,
         recentOrdersInfo,
+        bulkOrderStatsInfo,
       ] = await Promise.all([
         dashboardService.getKPIs(),
         dashboardService.getRevenueTrend(30),
@@ -45,9 +50,11 @@ export function useDashboard() {
         dashboardService.getTopProducts(8),
         dashboardService.getCustomerGrowth(6),
         dashboardService.getRecentOrders(5),
+        dashboardService.getBulkOrderStats(),
       ]);
 
       setKpis(kpisData);
+      setBulkOrderStats(bulkOrderStatsInfo);
       setRevenueData(Array.isArray(revenueInfo) ? revenueInfo : []);
 
       // Process pie chart colors if API doesn't send them
@@ -99,6 +106,7 @@ export function useDashboard() {
     orderStatusData,
     topProductsData,
     customerGrowthData,
+    bulkOrderStats,
     recentOrders,
     isLoading,
     error,
