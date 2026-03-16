@@ -20,7 +20,10 @@ export interface AuthResponse {
   userId: number;
   email: string;
   fullName: string;
+  phoneNumber?: string;
+  address?: string;
   role: string;
+  rewardPoint?: number;
   accessToken: string;
   refreshToken: string;
   expiresIn: number;

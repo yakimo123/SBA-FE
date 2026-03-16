@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { type OrderItemResponse, OrderResponse, orderService } from '../services/orderService';
 import { reviewService } from '../services/reviewService';
 import { VoucherResponse,voucherService } from '../services/voucherService';
+import { AddressPage } from './Address';
 
 interface ReviewDialogState {
   isOpen: boolean;
@@ -32,10 +33,19 @@ export function AccountPage() {
   const [activeTab, setActiveTab] = useState('orders');
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    name: user?.fullName || user?.name || '',
     email: user?.email || '',
-    phone: user?.phone || ''
+    phone: user?.phoneNumber || user?.phone || ''
   });
+
+  // Update form data when user changes
+  useEffect(() => {
+    setFormData({
+      name: user?.fullName || user?.name || '',
+      email: user?.email || '',
+      phone: user?.phoneNumber || user?.phone || ''
+    });
+  }, [user?.userId, user?.fullName, user?.name, user?.email, user?.phoneNumber, user?.phone]);
 
   // API data states
   const [orders, setOrders] = useState<OrderResponse[]>([]);
@@ -599,12 +609,9 @@ export function AccountPage() {
                 </Card>
               )}
 
-              {/* Address Section - Placeholder */}
+              {/* Address Section */}
               {activeTab === 'address' && (
-                <Card className="p-6 text-center">
-                  <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-600">Quản lý địa chỉ giao hàng</p>
-                </Card>
+                <AddressPage />
               )}
             </div>
           </div>
