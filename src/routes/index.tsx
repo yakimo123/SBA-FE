@@ -8,7 +8,8 @@ import { RootLayout } from '../layouts/RootLayout';
 import { AccountPage } from '../pages/Account';
 import { AttributeList } from '../pages/admin/AttributeList';
 import { BannerList } from '../pages/admin/BannerList';
-import { BulkRequestList } from '../pages/admin/BulkOrderList';
+import BulkOrderDetail from '../pages/admin/BulkOrderDetail';
+import BulkOrderList from '../pages/admin/BulkOrderList';
 import { CategoryList } from '../pages/admin/CategoryList';
 import { CompanyList } from '../pages/admin/CompanyList';
 import { CustomerDetail } from '../pages/admin/CustomerDetail';
@@ -20,6 +21,7 @@ import { GuaranteeList } from '../pages/admin/GuaranteeList';
 import { MediaLibrary } from '../pages/admin/MediaLibrary';
 import { OrderDetail } from '../pages/admin/OrderDetail';
 import { OrderList } from '../pages/admin/OrderList';
+import { PriceTierManagement } from '../pages/admin/PriceTierManagement';
 import { ProductForm } from '../pages/admin/ProductForm';
 import { ProductList } from '../pages/admin/ProductList';
 import { ReviewList } from '../pages/admin/ReviewList';
@@ -101,11 +103,17 @@ export const router = createBrowserRouter([
           { path: 'products/trademarks', element: <TrademarkList /> },
           { path: 'products/suppliers', element: <SupplierList /> },
           { path: 'products/attributes', element: <AttributeList /> },
+          { path: 'products/price-tiers', element: <PriceTierManagement /> },
+          {
+            path: 'products/price-tiers/:productId',
+            element: <PriceTierManagement />,
+          },
 
           // Orders
           { path: 'orders', element: <OrderList /> },
           { path: 'orders/:id', element: <OrderDetail /> },
-          { path: 'orders/bulk', element: <BulkRequestList /> },
+          { path: 'orders/bulk', element: <BulkOrderList /> },
+          { path: 'orders/bulk/:id', element: <BulkOrderDetail /> },
           { path: 'orders/vouchers', element: <VoucherList /> },
 
           // Customers

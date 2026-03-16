@@ -2,6 +2,7 @@ import {
   ApiResponse,
   CompanyRequest,
   CompanyResponse,
+  CompanyStatus,
   CreateCompanyRequest,
   PageableResponse,
 } from '../types';
@@ -51,6 +52,14 @@ export const companyService = {
     return response.data.data;
   },
 
+  // Get current user's registration status
+  getMyRegistration: async (): Promise<CompanyResponse> => {
+    const response = await api.get<ApiResponse<CompanyResponse>>(
+      '/api/v1/companies/my-registration'
+    );
+    return response.data.data;
+  },
+
   // Update company
   update: async (
     id: number,
@@ -66,5 +75,16 @@ export const companyService = {
   // Delete company
   delete: async (id: number): Promise<void> => {
     await api.delete(`/api/v1/companies/${id}`);
+  },
+
+  // Update company status (Approve/Reject)
+  updateStatus: async (
+    id: number,
+    status: CompanyStatus
+  ): Promise<CompanyResponse> => {
+    const response = await api.patch<ApiResponse<CompanyResponse>>(
+      `/api/v1/companies/${id}/status?status=${status}`
+    );
+    return response.data.data;
   },
 };

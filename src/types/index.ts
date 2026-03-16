@@ -95,14 +95,22 @@ export interface Wishlist {
 }
 
 // Company types
-export type CompanyStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+export type CompanyStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEED_DOCUMENTS';
 
 export interface CompanyRequest {
   companyName: string;
   taxCode: string;
-  email?: string;
-  phone?: string;
+  email: string;
+  phone: string;
   address?: string;
+  representativeName?: string;
+  representativePosition?: string;
+  foundingDate?: string;
+  businessType?: string;
+  employeeCount?: number;
+  industry?: string;
+  logoUrl?: string;
+  status?: CompanyStatus;
 }
 
 export interface CreateCompanyRequest {
@@ -138,6 +146,8 @@ export interface CompanyResponse {
   status: CompanyStatus;
   logoUrl?: string;
   approvedAt?: string;
+  createdAt?: string;
+  userId?: number;
 }
 
 // Shopping Cart API types
@@ -164,59 +174,133 @@ export interface AddToCartRequest {
 }
 
 export type BulkOrderStatus =
-  | 'PENDING'
-  | 'APPROVED'
+  | 'PENDING_REVIEW'
+  | 'CONFIRMED'
+  | 'AWAITING_PAYMENT'
+  | 'PAID'
   | 'PROCESSING'
   | 'SHIPPED'
-  | 'DELIVERED'
-  | 'CANCELLED';
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'REJECTED';
 
 export interface TierPrice {
   minQty: number;
-  maxQty: number | null;
   unitPrice: number;
-  discountPercent: number;
 }
 
+export interface BulkPriceTier {
+  bulkPriceTierId: number;
+  productId: number;
+  minQty: number;
+  maxQty: number | null;
+  unitPrice: number;
+  isActive: boolean;
+  discountPercent: number;
+  createdAt?: string;
+}
+
+export interface BulkOrderCustomization {
+  customizationId?: number;
+  type: string;
+  note?: string;
+  status?: string;
+  extraFee: number;
+  feeType?: string | null;
+  totalFee?: number;
+  adminNote?: string | null;
+}
+
+export interface BulkOrderDetail {
+  bulkOrderDetailId: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPriceSnapshot: number | null;
+  discountSnapshot: number | null;
+  appliedTierPrice: number;
+  customizationFee?: number; // Old field, keeping for compatibility
+  customizationFeeConfirmed?: number;
+  customizationFeePending?: number;
+  lineTotal: number;
+  productImage?: string;
+  basePrice?: number;
+  tierLabel?: string | null;
+  priceTiers?: TierPrice[];
+  customizations: BulkOrderCustomization[];
+}
+
+/** Cart-local item used while building a bulk order */
 export interface BulkOrderItem {
   productId: string | number;
   productName: string;
   productImage?: string;
   quantity: number;
   unitPrice: number;
-  tierPrice?: TierPrice;
+  /** Currently-active tier (local calculation) */
+  activeTierPrice?: number;
   subtotal: number;
-  customization?: string;
+  customizations?: { type: string; note?: string }[];
 }
 
 export interface BulkOrder {
-  orderId: string;
+  bulkOrderId: number;
+  userId: number;
+  userFullName?: string;
+  userEmail?: string;
+  userPhone?: string;
   companyId: number;
   companyName: string;
   status: BulkOrderStatus;
-  items: BulkOrderItem[];
-  voucherCode?: string;
-  voucherDiscount: number;
-  subtotal: number;
-  total: number;
-  note?: string;
-  customization?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
+  subtotalAfterTier: number;
+  voucherCode?: string | null;
+  voucherType?: string | null;
+  voucherDiscountAmount?: number;
+  shippingFee: number;
+  shippingFeeWaived: boolean;
+  finalPrice: number;
+  discountApplied: boolean;
+  cancelReason?: string | null;
+  adminNote?: string | null;
+  basePriceTotal?: number;
+  tierDiscountTotal?: number;
+  customizationFeeConfirmed?: number;
+  customizationFeePending?: number;
+  hasPendingCustomization?: boolean;
+  shippingAddress: string | null;
+  details: BulkOrderDetail[];
 }
 
 export interface CreateBulkOrderRequest {
-  items: {
-    productId: string | number;
-    quantity: number;
-    customization?: string;
-  }[];
   voucherCode?: string;
-  note?: string;
+  shippingAddress?: string;
+  items: {
+    productId: number;
+    quantity: number;
+    customizations?: {
+      type: string;
+      note?: string;
+    }[];
+  }[];
 }
 
 export interface AddCustomizationRequest {
-  customization: string;
+  type: string;
+  note?: string;
+  extraFee: number;
+}
+
+export interface BulkOrderListParams {
+  userId?: number;
+  companyId?: number;
+  status?: BulkOrderStatus;
+  createdAtFrom?: string;
+  createdAtTo?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
 }
 
 // Banner types

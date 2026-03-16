@@ -216,6 +216,32 @@ const css = `
   .db-status-cancelled { background: var(--danger-soft); color: var(--danger); }
   .db-status-pending { background: #fef6eb; color: var(--warning); }
   .db-empty { padding: 48px 24px; text-align: center; color: var(--ink-3); font-size: 0.9rem; }
+
+  .db-bulk-overview {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px; margin-bottom: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .db-bulk-title {
+    font-family: 'DM Serif Display', serif; font-size: 1.25rem;
+    margin: 0 0 20px; color: var(--ink);
+  }
+  .db-bulk-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    margin-bottom: 24px;
+  }
+  .db-bulk-stat-item {
+    padding: 16px; border-radius: var(--radius);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .db-bulk-stat-label { font-size: 0.82rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .db-bulk-stat-value { font-family: 'DM Mono', monospace; font-size: 1.5rem; font-weight: 600; }
+  .db-bulk-footer {
+    padding-top: 16px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .db-bulk-footer-text { font-size: 0.88rem; color: var(--ink-2); }
+  .db-bulk-footer-value { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--ink); }
 `;
 
 export function Dashboard() {
@@ -225,6 +251,7 @@ export function Dashboard() {
     orderStatusData,
     topProductsData,
     customerGrowthData,
+    bulkOrderStats,
     recentOrders,
     isLoading,
     error,
@@ -311,6 +338,58 @@ export function Dashboard() {
           <RefreshCw size={15} /> Refresh Data
         </button>
       </div>
+
+      {bulkOrderStats && (
+        <div className="db-bulk-overview">
+          <h2 className="db-bulk-title">Bulk Orders Overview</h2>
+          <div className="db-bulk-stats">
+            <div className="db-bulk-stat-item" style={{ background: '#fef6eb' }}>
+              <span className="db-bulk-stat-label" style={{ color: '#905a10' }}>
+                <span className="w-2 h-2 rounded-full bg-[#905a10]" />
+                Chờ duyệt
+              </span>
+              <span className="db-bulk-stat-value" style={{ color: '#905a10' }}>
+                {bulkOrderStats.pendingReview} đơn
+              </span>
+            </div>
+            <div className="db-bulk-stat-item" style={{ background: '#eff6ff' }}>
+              <span className="db-bulk-stat-label" style={{ color: '#1a6fa8' }}>
+                <span className="w-2 h-2 rounded-full bg-[#1a6fa8]" />
+                Chờ thanh toán
+              </span>
+              <span className="db-bulk-stat-value" style={{ color: '#1a6fa8' }}>
+                {bulkOrderStats.awaitingPayment} đơn
+              </span>
+            </div>
+            <div className="db-bulk-stat-item" style={{ background: '#ecfdf5' }}>
+              <span className="db-bulk-stat-label" style={{ color: '#065f46' }}>
+                <span className="w-2 h-2 rounded-full bg-[#065f46]" />
+                Đang xử lý
+              </span>
+              <span className="db-bulk-stat-value" style={{ color: '#065f46' }}>
+                {bulkOrderStats.processing} đơn
+              </span>
+            </div>
+          </div>
+          <div className="db-bulk-footer">
+            <div className="db-bulk-footer-text">
+              Tổng doanh thu tháng này:{' '}
+              <span className="db-bulk-footer-value">
+                {new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+                }).format(bulkOrderStats.revenueThisMonth)}
+              </span>
+            </div>
+            <div className="db-bulk-footer-text">
+              Đơn mới hôm nay:{' '}
+              <span className="db-bulk-footer-value">
+                {bulkOrderStats.newOrdersToday}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="db-kpi-grid">
         <div className="db-kpi-card green">
@@ -598,14 +677,8 @@ export function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {recentOrders.map((order: {
-                id?: string;
-                orderCode?: string;
-                customer?: string;
-                amount?: number;
-                status?: string;
-                date?: string;
-              }) => {
+              {recentOrders.map((order, index) => {
+                if (!order) return null;
                 let formattedDate = order.date;
                 try {
                   if (order.date) {
@@ -618,7 +691,7 @@ export function Dashboard() {
                   // fallback
                 }
                 return (
-                  <tr key={order.id || order.orderCode || Math.random()}>
+                  <tr key={order.orderCode || order.id || index}>
                     <td>
                       <span className="db-id-text">
                         {order.orderCode || order.id || '—'}

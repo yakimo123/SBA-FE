@@ -1,330 +1,478 @@
 import {
-  Check,
+  Calendar,
   ChevronLeft,
   ChevronRight,
-  Copy,
-  Search,
-  ShoppingBag,
-  X,
+  Eye,
+  RefreshCw,
+  Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface BulkOrder {
-  id: string;
-  companyName: string;
-  product: string;
-  quantity: number;
-  requestedPrice: number;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  date: string;
-}
-
-const mockBulkOrders: BulkOrder[] = [
-  { id: 'BLK-001', companyName: 'Corporate Solutions Ltd', product: 'MacBook Air M2', quantity: 50, requestedPrice: 25000000, status: 'Pending', date: '2024-01-22' },
-  { id: 'BLK-002', companyName: 'Tech Start Inc', product: 'Sony WH-1000XM5', quantity: 20, requestedPrice: 8500000, status: 'Approved', date: '2024-01-21' },
-  { id: 'BLK-003', companyName: 'Edu Partners', product: 'iPad Air 5', quantity: 100, requestedPrice: 14000000, status: 'Rejected', date: '2024-01-20' },
-];
+import bulkOrderService from '../../services/bulkOrderService';
+import { BulkOrder, BulkOrderStatus } from '../../types';
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-
   .bol-root {
-    --bg: #f5f3ef;
-    --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --border-strong: #c9bfad;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
-    --success: #2d7a4f;
-    --success-soft: #edf7f2;
-    --warning: #905a10;
-    --warning-soft: #fef6eb;
-    --danger: #b03030;
-    --danger-soft: #fdf2f2;
-    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
-    --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
-    --radius: 10px;
-    --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    color: var(--ink);
     padding: 32px;
+    background: #f8f9fa;
+    min-height: 100vh;
+  }
+  .bol-header {
+    margin-bottom: 32px;
+  }
+  .bol-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    color: #1a1a1a;
+    margin: 0;
+  }
+  .bol-subtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 8px 0 0;
   }
 
-  .bol-header {
-    display: flex; align-items: flex-end;
-    justify-content: space-between; gap: 16px; margin-bottom: 28px;
+  .bol-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 2px;
   }
-  .bol-header-left { display: flex; align-items: center; gap: 16px; }
-  .bol-icon-badge {
-    width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+  .bol-tab {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
   }
-  .bol-icon-badge svg { color: white; width: 24px; height: 24px; }
-  .bol-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
-    font-weight: 400; color: var(--ink); line-height: 1;
-    margin: 0 0 4px; letter-spacing: -0.5px;
+  .bol-tab:hover {
+    color: #1a1a1a;
+    background: rgba(0,0,0,0.02);
   }
-  .bol-count-pill {
-    display: inline-flex; align-items: center;
-    background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
-    font-weight: 500; padding: 2px 8px; border-radius: 20px;
-    margin-left: 8px; letter-spacing: 0.02em;
+  .bol-tab.active {
+    color: #7c3aed;
+    border-bottom-color: #7c3aed;
   }
-  .bol-subtitle { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
-  .bol-divider {
-    width: 32px; height: 2px;
-    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
-    border-radius: 2px; margin: 4px 0 0 68px;
+
+  .bol-filters-card {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+  }
+  .bol-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bol-filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .bol-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .bol-input-wrap svg {
+    position: absolute;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+  }
+  .bol-input {
+    padding: 10px 12px 10px 36px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    outline: none;
+    font-size: 0.9rem;
+    width: 220px;
+    color: #1a1a1a;
+  }
+  .bol-input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 2px rgba(124,58,237,0.1);
   }
 
   .bol-table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    overflow: hidden;
   }
-  .bol-table-toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
+  .bol-table {
+    width: 100%;
+    border-collapse: collapse;
   }
-  .bol-search-wrap { position: relative; display: flex; align-items: center; }
-  .bol-search-wrap svg {
-    position: absolute; left: 10px; color: var(--ink-3);
-    width: 14px; height: 14px; pointer-events: none;
-  }
-  .bol-search {
-    padding: 7px 12px 7px 32px; border: 1px solid var(--border);
-    border-radius: 8px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
-    color: var(--ink); outline: none; width: 220px;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .bol-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
-  .bol-table-meta { font-size: 0.8rem; color: var(--ink-3); }
-
-  .bol-table { width: 100%; border-collapse: collapse; }
-  .bol-table thead tr { border-bottom: 1px solid var(--border); }
   .bol-table th {
-    padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
-    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-3); background: var(--surface-2);
+    background: #fdfaf6;
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
   }
   .bol-table td {
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-    vertical-align: middle; transition: background 0.12s;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+    color: #374151;
   }
-  .bol-table tbody tr:last-child td { border-bottom: none; }
-  .bol-table tbody tr:hover td { background: var(--accent-soft); }
+  .bol-table tr:hover td {
+    background: #fdfaf6;
+  }
 
-  .bol-id-text {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
-    color: var(--ink-3); background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: 5px;
-    padding: 2px 7px; display: inline-block;
+  .bol-id {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 6px;
   }
-  .bol-name-text { font-weight: 600; color: var(--ink); font-size: 0.88rem; }
+  .bol-company {
+    font-weight: 600;
+    color: #1a1a1a;
+    display: block;
+  }
+  .bol-user {
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
   .bol-price {
-    font-family: 'DM Mono', monospace; font-size: 0.82rem;
-    font-weight: 500; color: var(--ink); white-space: nowrap;
+    font-family: 'DM Mono', monospace;
+    font-weight: 600;
+    color: #1a1a1a;
   }
+  
+  .bol-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .bol-status-pending_review { background: #fef3c7; color: #92400e; }
+  .bol-status-confirmed { background: #dcfce7; color: #166534; }
+  .bol-status-awaiting_payment { background: #dbeafe; color: #1e40af; }
+  .bol-status-paid { background: #dcfce7; color: #166534; }
+  .bol-status-processing { background: #f3e8ff; color: #6b21a8; }
+  .bol-status-shipped { background: #ecfeff; color: #0891b2; }
+  .bol-status-completed { background: #dcfce7; color: #166534; }
+  .bol-status-rejected { background: #fee2e2; color: #991b1b; }
+  .bol-status-cancelled { background: #f3f4f6; color: #4b5563; }
 
-  .bol-status-pending {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--warning-soft); color: var(--warning);
-    font-size: 0.73rem; font-weight: 600; padding: 3px 10px;
-    border-radius: 20px; letter-spacing: 0.02em;
+  .bol-pagination {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fdfaf6;
   }
-  .bol-status-approved {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--success-soft); color: var(--success);
-    font-size: 0.73rem; font-weight: 600; padding: 3px 10px;
-    border-radius: 20px; letter-spacing: 0.02em;
+  .bol-page-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    color: #374151;
+    transition: all 0.15s;
   }
-  .bol-status-rejected {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--danger-soft); color: var(--danger);
-    font-size: 0.73rem; font-weight: 600; padding: 3px 10px;
-    border-radius: 20px; letter-spacing: 0.02em;
-  }
-  .bol-status-dot {
-    width: 5px; height: 5px; border-radius: 50%; background: currentColor;
-  }
-
-  .bol-actions { display: flex; gap: 6px; align-items: center; }
-  .bol-btn {
-    display: flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; border-radius: 7px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; transition: all 0.15s;
-  }
-  .bol-btn-approve { color: var(--success); }
-  .bol-btn-approve:hover { background: var(--success-soft); border-color: var(--success); }
-  .bol-btn-reject { color: var(--danger); }
-  .bol-btn-reject:hover { background: var(--danger-soft); border-color: #f5c2c2; }
-  .bol-btn-copy { color: var(--ink-3); }
-  .bol-btn-copy:hover { background: var(--surface-2); border-color: var(--ink-3); color: var(--ink); }
-
-  .bol-empty {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 64px 20px; gap: 12px;
-  }
-  .bol-empty-icon {
-    width: 56px; height: 56px; border-radius: 14px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center; color: var(--ink-3);
-  }
-  .bol-empty-text { font-size: 0.9rem; color: var(--ink-3); margin: 0; }
+  .bol-page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .bol-page-btn:not(:disabled):hover { border-color: #7c3aed; color: #7c3aed; }
 `;
 
-export function BulkRequestList() {
-  const [requests] = useState<BulkOrder[]>(mockBulkOrders);
-  const [search, setSearch] = useState('');
+enum TabType {
+  ALL = 'ALL',
+  PENDING = 'PENDING_REVIEW',
+  PAYMENT = 'AWAITING_PAYMENT',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  FINISHED = 'COMPLETED',
+  CANCELLED = 'CANCELLED_REJECTED',
+}
 
-  const filtered = requests.filter(
-    (r) =>
-      r.id.toLowerCase().includes(search.toLowerCase()) ||
-      r.companyName.toLowerCase().includes(search.toLowerCase()) ||
-      r.product.toLowerCase().includes(search.toLowerCase())
-  );
+export default function BulkOrderList() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabType>(TabType.ALL);
+  const [orders, setOrders] = useState<BulkOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
 
-  const statusClass = (status: string) =>
-    status === 'Approved'
-      ? 'bol-status-approved'
-      : status === 'Rejected'
-        ? 'bol-status-rejected'
-        : 'bol-status-pending';
+  // Filters
+  const [companyId, setCompanyId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const status =
+        activeTab === TabType.ALL
+          ? undefined
+          : (activeTab as unknown as BulkOrderStatus);
+      const res = await bulkOrderService.getOrders({
+        status,
+        companyId: companyId ? parseInt(companyId) : undefined,
+        createdAtFrom: startDate
+          ? new Date(startDate).toISOString()
+          : undefined,
+        createdAtTo: endDate ? new Date(endDate).toISOString() : undefined,
+        page: currentPage,
+        size: 10,
+      });
+      setOrders(res.content);
+      setTotalPages(res.totalPages);
+    } catch (error) {
+      console.error('Failed to load bulk orders', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, companyId, startDate, endDate, currentPage]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setCurrentPage(0);
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.replace(/_/g, ' ');
+  };
 
   return (
     <div className="bol-root">
       <style>{css}</style>
 
       <div className="bol-header">
-        <div className="bol-header-left">
-          <div className="bol-icon-badge">
-            <ShoppingBag />
-          </div>
-          <div>
-            <h1 className="bol-title">
-              Bulk Order Requests
-              {requests.length > 0 && (
-                <span className="bol-count-pill">{requests.length}</span>
-              )}
-            </h1>
-            <div className="bol-divider" />
-            <p className="bol-subtitle" style={{ marginTop: 6 }}>
-              Manage B2B wholesale pricing requests
-            </p>
-          </div>
+        <h1 className="bol-title">Bulk Orders</h1>
+        <p className="bol-subtitle">
+          Manage large-scale B2B orders and wholesale pricing
+        </p>
+      </div>
+
+      <div className="bol-tabs">
+        <div
+          className={`bol-tab ${activeTab === TabType.ALL ? 'active' : ''}`}
+          onClick={() => handleTabChange(TabType.ALL)}
+        >
+          All Orders
+        </div>
+        <div
+          className={`bol-tab ${activeTab === TabType.PENDING ? 'active' : ''}`}
+          onClick={() => handleTabChange(TabType.PENDING)}
+        >
+          Pending Review
+        </div>
+        <div
+          className={`bol-tab ${activeTab === TabType.PAYMENT ? 'active' : ''}`}
+          onClick={() => handleTabChange(TabType.PAYMENT)}
+        >
+          Awaiting Payment
+        </div>
+        <div
+          className={`bol-tab ${activeTab === TabType.PROCESSING ? 'active' : ''}`}
+          onClick={() => handleTabChange(TabType.PROCESSING)}
+        >
+          Processing
+        </div>
+        <div
+          className={`bol-tab ${activeTab === TabType.SHIPPED ? 'active' : ''}`}
+          onClick={() => handleTabChange(TabType.SHIPPED)}
+        >
+          Shipped
+        </div>
+        <div
+          className={`bol-tab ${activeTab === TabType.FINISHED ? 'active' : ''}`}
+          onClick={() => handleTabChange(TabType.FINISHED)}
+        >
+          Finished
         </div>
       </div>
 
-      <div className="bol-table-card">
-        <div className="bol-table-toolbar">
-          <div className="bol-search-wrap">
-            <Search />
+      <div className="bol-filters-card">
+        <div className="bol-filter-group">
+          <label className="bol-filter-label">Search Company</label>
+          <div className="bol-input-wrap">
+            <Users />
             <input
-              className="bol-search"
-              placeholder="Search requests…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              className="bol-input"
+              placeholder="Company ID or Name..."
+              value={companyId}
+              onChange={(e) => setCompanyId(e.target.value)}
             />
           </div>
-          <span className="bol-table-meta">
-            {filtered.length} result{filtered.length !== 1 ? 's' : ''}
-          </span>
         </div>
 
-        {filtered.length === 0 ? (
-          <div className="bol-empty">
-            <div className="bol-empty-icon">
-              <ShoppingBag size={22} />
-            </div>
-            <p className="bol-empty-text">No bulk requests found</p>
+        <div className="bol-filter-group">
+          <label className="bol-filter-label">From Date</label>
+          <div className="bol-input-wrap">
+            <Calendar />
+            <input
+              type="date"
+              className="bol-input"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
           </div>
-        ) : (
-          <table className="bol-table">
-            <thead>
+        </div>
+
+        <div className="bol-filter-group">
+          <label className="bol-filter-label">To Date</label>
+          <div className="bol-input-wrap">
+            <Calendar />
+            <input
+              type="date"
+              className="bol-input"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <button
+          className="bol-page-btn"
+          title="Refresh"
+          onClick={loadOrders}
+          style={{ width: 42, height: 42, color: '#7c3aed' }}
+        >
+          <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
+      <div className="bol-table-card">
+        <table className="bol-table">
+          <thead>
+            <tr>
+              <th>Order Code</th>
+              <th>Company</th>
+              <th>Created At</th>
+              <th>Items</th>
+              <th>Total Value</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
               <tr>
-                <th>Request ID</th>
-                <th>Company</th>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>Target Price</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
+                <td colSpan={7} style={{ textAlign: 'center', padding: 48 }}>
+                  <RefreshCw
+                    size={24}
+                    className="animate-spin"
+                    style={{ color: '#9ca3af' }}
+                  />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.map((req) => (
-                <tr key={req.id}>
+            ) : orders.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  style={{ textAlign: 'center', padding: 48, color: '#9ca3af' }}
+                >
+                  No orders found matching criteria.
+                </td>
+              </tr>
+            ) : (
+              orders.map((order) => (
+                <tr key={order.bulkOrderId}>
                   <td>
-                    <span className="bol-id-text">{req.id}</span>
+                    <span className="bol-id">#{order.bulkOrderId}</span>
                   </td>
                   <td>
-                    <span className="bol-name-text">{req.companyName}</span>
+                    <span className="bol-company">
+                      {order.companyName || `Company ${order.companyId}`}
+                    </span>
+                    <span className="bol-user">User ID: {order.userId}</span>
                   </td>
-                  <td>{req.product}</td>
+                  <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td>
-                    <span className="bol-price">{req.quantity}</span>
+                    <span style={{ fontWeight: 500 }}>
+                      {order.details.length} Products
+                    </span>
                   </td>
                   <td>
                     <span className="bol-price">
-                      ₫{req.requestedPrice.toLocaleString('vi-VN')}
+                      {new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND',
+                      }).format(order.finalPrice)}
                     </span>
                   </td>
                   <td>
-                    <span className={statusClass(req.status)}>
-                      <span className="bol-status-dot" />
-                      {req.status}
+                    <span
+                      className={`bol-status bol-status-${order.status.toLowerCase()}`}
+                    >
+                      {getStatusLabel(order.status)}
                     </span>
                   </td>
-                  <td>{req.date}</td>
                   <td>
-                    <div className="bol-actions">
-                      {req.status === 'Pending' && (
-                        <>
-                          <button
-                            type="button"
-                            className="bol-btn bol-btn-approve"
-                            title="Approve"
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            className="bol-btn bol-btn-reject"
-                            title="Reject"
-                          >
-                            <X size={14} />
-                          </button>
-                        </>
-                      )}
-                      <button
-                        type="button"
-                        className="bol-btn bol-btn-copy"
-                        title="Copy"
-                      >
-                        <Copy size={14} />
-                      </button>
-                    </div>
+                    <button
+                      className="bol-page-btn"
+                      onClick={() =>
+                        navigate(`/admin/orders/bulk/${order.bulkOrderId}`)
+                      }
+                      title="View Details"
+                    >
+                      <Eye size={16} />
+                    </button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {totalPages > 1 && (
+          <div className="bol-pagination">
+            <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="bol-page-btn"
+                disabled={currentPage === 0}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                className="bol-page-btn"
+                disabled={currentPage === totalPages - 1}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

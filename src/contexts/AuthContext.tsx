@@ -33,6 +33,7 @@ interface AuthContextType extends AuthState {
   ) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  refreshUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -113,6 +114,7 @@ const getStoredAuthState = (): Partial<AuthState> => {
           name: savedUser.fullName,
           phone: savedUser.phoneNumber,
           points: 0,
+          companyId: savedUser.companyId,
         } as AuthUser,
       };
     }
@@ -148,6 +150,10 @@ const getStoredAuthState = (): Partial<AuthState> => {
           phoneNumber:
             typeof claims.phoneNumber === 'string'
               ? claims.phoneNumber
+              : undefined,
+          companyId:
+            typeof claims.companyId === 'number'
+              ? claims.companyId
               : undefined,
           // Backward compatible aliases
           name:
@@ -285,6 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: authData.email,
           fullName: authData.fullName,
           role: authData.role,
+          companyId: authData.companyId,
         });
 
         setState({
@@ -299,6 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: authData.fullName,
             phone: authData.phoneNumber,
             points: authData.rewardPoint || 0,
+            companyId: authData.companyId,
           },
           accessToken: authData.accessToken,
           refreshToken: authData.refreshToken,
@@ -439,6 +447,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, error: null }));
   }, []);
 
+  const refreshUser = useCallback(() => {
+    const savedUser = getUserData();
+    if (savedUser) {
+      setState((prev) => ({
+        ...prev,
+        user: {
+          ...prev.user,
+          ...savedUser,
+          fullName: savedUser.fullName,
+          phoneNumber: savedUser.phoneNumber,
+          name: savedUser.fullName,
+          phone: savedUser.phoneNumber,
+        } as AuthUser,
+      }));
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -448,6 +473,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         clearError,
+        refreshUser,
       }}
     >
       {children}

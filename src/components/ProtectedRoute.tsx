@@ -43,6 +43,15 @@ export function ProtectedRoute({
     if (!normalizedRoles.includes(userRole)) {
       return <Navigate to="/unauthorized" replace />;
     }
+
+    // Special check: If user is COMPANY but has no companyId, they are still pending approval.
+    // They should not access protected /company/* routes yet.
+    if (userRole === 'COMPANY' && !user.companyId) {
+      // Check if we are trying to access a B2B feature
+      if (location.pathname.startsWith('/company')) {
+        return <Navigate to="/approval-pending" replace />;
+      }
+    }
   }
 
   return <>{children || <Outlet />}</>;

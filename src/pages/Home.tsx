@@ -116,20 +116,21 @@ const defaultSideBanners = [
 // Convert API banner to slide format
 const convertBannerToSlide = (banner: Banner) => ({
   badge: banner.subtitle || '',
-  title: banner.title,
+  title: banner.title || '',
   description: banner.description || '',
-  image: banner.imageUrl,
+  image: banner.imageUrl || '',
   gradient: 'from-red-600 via-red-500 to-orange-500',
-  cta: banner.buttonText || 'Mua ngay',
+  cta: banner.buttonText || '',
   ctaSecondary: 'Xem thêm',
   link: banner.buttonLink || '/products',
 });
 
 // Convert API banner to side banner format
 const convertBannerToSideBanner = (banner: Banner, index: number) => ({
-  title: banner.title,
+  title: banner.title || '',
   subtitle: banner.subtitle || '',
-  gradient: index === 0 ? 'from-orange-500 to-red-500' : 'from-emerald-500 to-teal-600',
+  gradient:
+    index === 0 ? 'from-orange-500 to-red-500' : 'from-emerald-500 to-teal-600',
   icon: index === 0 ? '🎫' : '🚚',
   link: banner.buttonLink || '/products',
   image: banner.imageUrl || '',
@@ -154,7 +155,9 @@ export function HomePage() {
     if (!carouselApi) return;
     onSelect();
     carouselApi.on('select', onSelect);
-    return () => { carouselApi.off('select', onSelect); };
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
   }, [carouselApi, onSelect]);
 
   // State
@@ -183,9 +186,14 @@ export function HomePage() {
         }
 
         // Combine rightTop and rightBottom for side banners (max 2)
-        const rightBanners = [...(banners.rightTop || []), ...(banners.rightBottom || [])].slice(0, 2);
+        const rightBanners = [
+          ...(banners.rightTop || []),
+          ...(banners.rightBottom || []),
+        ].slice(0, 2);
         if (rightBanners.length > 0) {
-          setSideBanners(rightBanners.map((b, i) => convertBannerToSideBanner(b, i)));
+          setSideBanners(
+            rightBanners.map((b, i) => convertBannerToSideBanner(b, i))
+          );
         }
 
         // Fetch other data in parallel
@@ -198,7 +206,7 @@ export function HomePage() {
             }),
             productService.getProducts({ sort: 'createdDate,desc', size: 4 }),
             productService.getProducts({ sort: 'soldCount,desc', size: 4 }),
-            brandService.getBrands(0, 20),
+            brandService.getBrands(0, 11),
             branchService.getBranches({ size: 10 }),
           ]);
 
@@ -260,84 +268,86 @@ export function HomePage() {
               <CarouselContent className="ml-0 h-full">
                 {heroSlides.map((slide, index) => (
                   <CarouselItem key={index} className="pl-0 h-full">
-                    <div className="relative h-full min-h-[320px] md:min-h-[460px] w-full overflow-hidden rounded-xl">
-                    {/* Ảnh full nền */}
-                    <ImageWithFallback
-                      src={slide.image}
-                      alt={slide.title}
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                    {/* Overlay nhẹ để chữ đọc được, ảnh vẫn rõ */}
                     <div
-                      className="absolute inset-0 bg-linear-to-r from-black/50 via-black/25 to-transparent"
-                      aria-hidden
-                    />
-                    {/* Nội dung đè lên ảnh – font Outfit */}
-                    <div className="relative z-10 flex h-full flex-col justify-center px-6 md:px-10 py-8 md:py-12 font-['Outfit',sans-serif]">
-                      <div className="max-w-xl">
-                        <Badge className="bg-white/20 text-white mb-3 backdrop-blur-md border-0 font-semibold">
-                          {slide.badge}
-                        </Badge>
-                        <h1 className="text-2xl md:text-4xl font-extrabold mb-3 tracking-tight leading-tight text-white drop-shadow-md">
-                          {slide.title.split('\n').map((line, i) => (
-                            <span key={i}>
-                              {i > 0 && <br />}
-                              {line}
-                            </span>
-                          ))}
-                        </h1>
-                        <p className="text-sm mb-5 text-white/90 max-w-md drop-shadow-sm font-medium">
-                          {slide.description}
-                        </p>
-                        <div className="flex flex-wrap gap-3">
-                          <Button
-                            size="lg"
-                            className="bg-white text-red-600 hover:bg-gray-100 font-bold shadow-lg"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(slide.link);
-                            }}
-                          >
-                            {slide.cta}
-                            <ChevronRight className="ml-1 w-4 h-4" />
-                          </Button>
+                      className="relative h-full min-h-[320px] md:min-h-[460px] w-full overflow-hidden rounded-xl cursor-pointer group/banner"
+                      onClick={() => navigate(slide.link)}
+                    >
+                      {/* Ảnh full nền */}
+                      <ImageWithFallback
+                        src={slide.image}
+                        alt={slide.title}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      {/* Nội dung đè lên ảnh – font Outfit */}
+                      <div className="relative z-10 flex h-full flex-col justify-center px-6 md:px-10 py-8 md:py-12 font-['Outfit',sans-serif]">
+                        <div className="max-w-xl">
+                          <Badge className="bg-white/20 text-white mb-3 backdrop-blur-md border-0 font-semibold">
+                            {slide.badge}
+                          </Badge>
+                          {slide.title && (
+                            <h1 className="text-2xl md:text-4xl font-extrabold mb-3 tracking-tight leading-tight text-white drop-shadow-md">
+                              {slide.title.split('\n').map((line, i) => (
+                                <span key={i}>
+                                  {i > 0 && <br />}
+                                  {line}
+                                </span>
+                              ))}
+                            </h1>
+                          )}
+                          <p className="text-sm mb-5 text-white/90 max-w-md drop-shadow-sm font-medium">
+                            {slide.description}
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            {slide.cta && (
+                              <Button
+                                size="lg"
+                                className="bg-white text-red-600 hover:bg-gray-100 font-bold shadow-lg"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(slide.link);
+                                }}
+                              >
+                                {slide.cta}
+                                <ChevronRight className="ml-1 w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
 
-            {/* Navigation Arrows */}
-            <button
-              onClick={() => carouselApi?.scrollPrev()}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors shadow-md"
-            >
-              <ChevronRight className="w-5 h-5 rotate-180" />
-            </button>
-            <button
-              onClick={() => carouselApi?.scrollNext()}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors shadow-md"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+              {/* Navigation Arrows */}
+              <button
+                onClick={() => carouselApi?.scrollPrev()}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors shadow-md"
+              >
+                <ChevronRight className="w-5 h-5 rotate-180" />
+              </button>
+              <button
+                onClick={() => carouselApi?.scrollNext()}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors shadow-md"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
 
-            {/* Dot Indicators */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
-              {heroSlides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => carouselApi?.scrollTo(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    currentSlide === index
-                      ? 'w-7 bg-white shadow'
-                      : 'w-2 bg-white/50 hover:bg-white/70'
-                  }`}
-                />
-              ))}
-            </div>
-          </Carousel>
+              {/* Dot Indicators */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+                {heroSlides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => carouselApi?.scrollTo(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      currentSlide === index
+                        ? 'w-7 bg-white shadow'
+                        : 'w-2 bg-white/50 hover:bg-white/70'
+                    }`}
+                  />
+                ))}
+              </div>
+            </Carousel>
           </div>
 
           {/* Side Banners (right) – 2 ô bằng nhau, tổng cao = banner chính */}
@@ -357,7 +367,6 @@ export function HomePage() {
                       alt={banner.title}
                       className="absolute inset-0 h-full w-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/30" aria-hidden />
                   </>
                 ) : (
                   <div
@@ -367,9 +376,11 @@ export function HomePage() {
                 )}
                 <div className="relative z-10">
                   <span className="text-2xl mb-2 block">{banner.icon}</span>
-                  <h3 className="text-lg font-bold leading-tight drop-shadow-sm">
-                    {banner.title}
-                  </h3>
+                  {banner.title && (
+                    <h3 className="text-lg font-bold leading-tight drop-shadow-sm">
+                      {banner.title}
+                    </h3>
+                  )}
                   <p className="text-xl font-extrabold mt-1 drop-shadow-sm">
                     {banner.subtitle}
                   </p>

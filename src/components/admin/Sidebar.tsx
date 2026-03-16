@@ -62,6 +62,11 @@ const navigation: NavigationItem[] = [
         href: '/admin/products/attributes',
         icon: FileText,
       },
+      {
+        title: 'Price Tiers',
+        href: '/admin/products/price-tiers',
+        icon: Tag,
+      },
     ],
   },
   {

@@ -1,4 +1,4 @@
-import { Edit, Plus, Trash2, Tag, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight,Edit, Plus, Search, Tag, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { Column, DataTable } from '../../components/admin/DataTable';

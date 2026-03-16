@@ -22,6 +22,7 @@ export const userService = {
     page?: number;
     size?: number;
     keyword?: string;
+    role?: string;
   }): Promise<PageResponse<UserResponse>> {
     const response = await api.get<ApiResponse<PageResponse<UserResponse>>>(
       '/api/v1/users',

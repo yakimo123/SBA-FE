@@ -25,17 +25,19 @@ export function VoucherAssignModal({
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<UserResponse[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'CUSTOMER' | 'COMPANY'>(
+    'ALL'
+  );
   const [isAssigning, setIsAssigning] = useState(false);
 
-  const fetchUsers = async (query = '') => {
+  const fetchUsers = async (query = '', role: string = roleFilter) => {
     try {
-      const data = await userService.getUsers({ keyword: query, size: 100 });
-      // Ensure each user has an id or fallback to userId if the API returns that
-      const sanitizedUsers = data.content.map((u) => ({
-        ...u,
-        id: u.id || (u as any).userId, // Robustness for potential API field naming variations
-      }));
-      setUsers(sanitizedUsers);
+      const data = await userService.getUsers({
+        keyword: query,
+        size: 100,
+        role: role === 'ALL' ? undefined : role,
+      });
+      setUsers(data.content);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Không thể tải danh sách người dùng');
@@ -44,15 +46,21 @@ export function VoucherAssignModal({
 
   useEffect(() => {
     if (isOpen) {
-      fetchUsers();
+      fetchUsers('', roleFilter);
       setSelectedUsers([]);
       setSearchQuery('');
     }
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, roleFilter]);
+
+  const handleRoleFilterChange = (role: 'ALL' | 'CUSTOMER' | 'COMPANY') => {
+    setRoleFilter(role);
+    setSelectedUsers([]);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchUsers(searchQuery);
+    fetchUsers(searchQuery, roleFilter);
   };
 
   const handleAssign = async () => {
@@ -64,7 +72,7 @@ export function VoucherAssignModal({
     setIsAssigning(true);
     try {
       const userIds = selectedUsers
-        .map((u) => u.id)
+        .map((u) => u.userId)
         .filter((id) => id !== undefined && id !== null);
 
       if (userIds.length === 0) {
@@ -88,9 +96,9 @@ export function VoucherAssignModal({
   const columns: Column<UserResponse>[] = [
     {
       header: 'ID',
-      accessor: 'id',
+      accessor: 'userId',
       render: (u) => (
-        <span className="font-mono text-gray-500 font-medium">#{u.id}</span>
+        <span className="font-mono text-gray-500 font-medium">#{u.userId}</span>
       ),
     },
     {
@@ -112,17 +120,22 @@ export function VoucherAssignModal({
     {
       header: 'Vai trò',
       accessor: 'role',
-      render: (u) => (
-        <span
-          className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
-            u.role === 'ADMIN'
-              ? 'bg-red-100 text-red-700'
-              : 'bg-blue-100 text-blue-700'
-          }`}
-        >
-          {u.role}
-        </span>
-      ),
+      render: (u) => {
+        const roleColors: Record<string, string> = {
+          ADMIN: 'bg-red-100 text-red-700',
+          CUSTOMER: 'bg-blue-100 text-blue-700',
+          COMPANY: 'bg-indigo-100 text-indigo-700',
+        };
+        return (
+          <span
+            className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
+              roleColors[u.role] ?? 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            {u.role}
+          </span>
+        );
+      },
     },
     {
       header: 'Trạng thái',
@@ -147,7 +160,37 @@ export function VoucherAssignModal({
       title={`Cấp phát Voucher: ${voucherCode}`}
       size="2xl"
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
+        {/* Role filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-gray-600 mr-1">
+            Lọc theo vai trò:
+          </span>
+          {(['ALL', 'CUSTOMER', 'COMPANY'] as const).map((role) => (
+            <button
+              key={role}
+              type="button"
+              onClick={() => handleRoleFilterChange(role)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                roleFilter === role
+                  ? role === 'COMPANY'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow'
+                    : role === 'CUSTOMER'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow'
+                      : 'bg-gray-700 text-white border-gray-700 shadow'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+              }`}
+            >
+              {role === 'ALL'
+                ? 'Tất cả'
+                : role === 'COMPANY'
+                  ? 'Doanh nghiệp'
+                  : 'Khách hàng'}
+            </button>
+          ))}
+        </div>
+
+        {/* Search bar */}
         <form onSubmit={handleSearch} className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -170,7 +213,7 @@ export function VoucherAssignModal({
           <DataTable
             columns={columns}
             data={users}
-            keyField="id"
+            keyField="userId"
             selectable={true}
             onSelectionChange={setSelectedUsers}
             pageSize={10}

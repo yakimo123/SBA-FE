@@ -101,6 +101,18 @@ export interface Product {
   imageUrls?: string[];
 }
 
+export interface BulkPriceTier {
+  minQty: number;
+  maxQty: number | null;
+  unitPrice: number;
+  discountPercent: number;
+  isActive: boolean;
+}
+
+export interface CompanyProduct extends Product {
+  priceTiers: BulkPriceTier[];
+}
+
 export interface CreateProductRequest {
   productName: string;
   description?: string;

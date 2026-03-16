@@ -1,83 +1,100 @@
 import {
   ArrowLeft,
-  ChevronRight,
+  Calendar,
   CheckCircle2,
+  ChevronRight,
   Clock,
+  Copy,
+  DollarSign,
+  Download,
+  MoreVertical,
   Package,
   Pencil,
+  Tag,
   Truck,
   XCircle,
-  Copy,
-  MoreVertical,
-  Download,
-  Calendar,
-  DollarSign,
-  Tag,
-  FileText,
-  AlertCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { useBulkOrders } from '../../contexts/BulkOrderContext';
+import { vnpayService } from '../../services/vnpayService';
 import { BulkOrderStatus } from '../../types';
 
 const STATUS_LABEL: Record<BulkOrderStatus, string> = {
-  PENDING: 'Chờ duyệt',
-  APPROVED: 'Đã duyệt',
+  PENDING_REVIEW: 'Chờ duyệt',
+  CONFIRMED: 'Đã xác nhận',
+  AWAITING_PAYMENT: 'Chờ thanh toán',
+  PAID: 'Đã thanh toán',
   PROCESSING: 'Đang xử lý',
   SHIPPED: 'Đang giao',
-  DELIVERED: 'Đã giao',
+  COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy',
+  REJECTED: 'Từ chối',
 };
 
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
-  PENDING: 'bg-amber-50 text-amber-700 border border-amber-300',
-  APPROVED: 'bg-blue-50 text-blue-700 border border-blue-300',
-  PROCESSING: 'bg-blue-50 text-blue-700 border border-blue-300',
+  PENDING_REVIEW: 'bg-amber-50 text-amber-700 border border-amber-300',
+  CONFIRMED: 'bg-blue-50 text-blue-700 border border-blue-300',
+  AWAITING_PAYMENT: 'bg-orange-50 text-orange-700 border border-orange-300',
+  PAID: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
+  PROCESSING: 'bg-indigo-50 text-indigo-700 border border-indigo-300',
   SHIPPED: 'bg-purple-50 text-purple-700 border border-purple-300',
-  DELIVERED: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
+  COMPLETED: 'bg-green-50 text-green-700 border border-green-300',
   CANCELLED: 'bg-slate-100 text-slate-600 border border-slate-300',
+  REJECTED: 'bg-red-50 text-red-700 border border-red-300',
 };
 
-const TIMELINE = [
-  { status: 'PENDING' as BulkOrderStatus, label: 'Chờ duyệt', icon: Clock },
-  { status: 'APPROVED' as BulkOrderStatus, label: 'Đã duyệt', icon: CheckCircle2 },
-  { status: 'PROCESSING' as BulkOrderStatus, label: 'Đang xử lý', icon: Package },
-  { status: 'SHIPPED' as BulkOrderStatus, label: 'Vận chuyển', icon: Truck },
-  { status: 'DELIVERED' as BulkOrderStatus, label: 'Hoàn thành', icon: CheckCircle2 },
+const TIMELINE: {
+  status: BulkOrderStatus;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { status: 'PENDING_REVIEW', label: 'Chờ duyệt', icon: Clock },
+  { status: 'CONFIRMED', label: 'Đã xác nhận', icon: CheckCircle2 },
+  { status: 'AWAITING_PAYMENT', label: 'Chờ thanh toán', icon: DollarSign },
+  { status: 'PAID', label: 'Đã thanh toán', icon: CheckCircle2 },
+  { status: 'PROCESSING', label: 'Đang sản xuất', icon: Package },
+  { status: 'SHIPPED', label: 'Vận chuyển', icon: Truck },
+  { status: 'COMPLETED', label: 'Hoàn thành', icon: CheckCircle2 },
 ];
 
 const STATUS_ORDER: BulkOrderStatus[] = [
-  'PENDING',
-  'APPROVED',
+  'PENDING_REVIEW',
+  'CONFIRMED',
+  'AWAITING_PAYMENT',
+  'PAID',
   'PROCESSING',
   'SHIPPED',
-  'DELIVERED',
+  'COMPLETED',
 ];
 
-const STEP_ICON_STYLE: Record<BulkOrderStatus, string> = {
-  PENDING: 'bg-amber-50 text-amber-600 border-amber-200',
-  APPROVED: 'bg-sky-50 text-sky-600 border-sky-200',
+const STEP_ICON_STYLE: Partial<Record<BulkOrderStatus, string>> = {
+  PENDING_REVIEW: 'bg-amber-50 text-amber-600 border-amber-200',
+  CONFIRMED: 'bg-sky-50 text-sky-600 border-sky-200',
+  AWAITING_PAYMENT: 'bg-orange-50 text-orange-600 border-orange-200',
+  PAID: 'bg-emerald-50 text-emerald-600 border-emerald-200',
   PROCESSING: 'bg-indigo-50 text-indigo-600 border-indigo-200',
   SHIPPED: 'bg-violet-50 text-violet-600 border-violet-200',
-  DELIVERED: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  COMPLETED: 'bg-green-50 text-green-600 border-green-200',
   CANCELLED: 'bg-slate-100 text-slate-500 border-slate-200',
+  REJECTED: 'bg-red-50 text-red-500 border-red-200',
 };
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+    n
+  );
 
 export function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { orders, cancelOrder, updateCustomization } = useBulkOrders();
-  const [customInput, setCustomInput] = useState('');
-  const [saving, setSaving] = useState(false);
+  const { orders, cancelOrder } = useBulkOrders();
   const [copied, setCopied] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [isPaying, setIsPaying] = useState(false);
 
-  const order = orders.find((o) => o.orderId === id);
+  const order = orders.find((o) => String(o.bulkOrderId) === id);
 
   if (!order) {
     return (
@@ -86,7 +103,9 @@ export function OrderDetail() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
             <XCircle className="h-8 w-8 text-slate-400" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">Không tìm thấy đơn hàng</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">
+            Không tìm thấy đơn hàng
+          </h2>
           <p className="text-sm text-slate-600 mb-6">
             Đơn hàng này không tồn tại hoặc đã bị xóa
           </p>
@@ -102,37 +121,50 @@ export function OrderDetail() {
     );
   }
 
-  const normalizedStatus = String(order.status).toUpperCase() as BulkOrderStatus;
+  const normalizedStatus = String(
+    order.status
+  ).toUpperCase() as BulkOrderStatus;
   const currentStatus =
-    normalizedStatus === 'CANCELLED' || STATUS_ORDER.includes(normalizedStatus)
+    normalizedStatus === 'CANCELLED' ||
+    normalizedStatus === 'REJECTED' ||
+    STATUS_ORDER.includes(normalizedStatus)
       ? normalizedStatus
-      : 'PENDING';
-  const currentStep = currentStatus === 'CANCELLED' ? -1 : STATUS_ORDER.indexOf(currentStatus);
-
-  const handleSaveCustomization = async () => {
-    if (!customInput.trim()) return;
-    setSaving(true);
-    setSaveMessage('');
-    await updateCustomization(order.orderId, customInput.trim());
-    setCustomInput('');
-    setSaving(false);
-    setSaveMessage('Đã lưu yêu cầu tùy chỉnh thành công.');
-    setTimeout(() => setSaveMessage(''), 2500);
-  };
+      : 'PENDING_REVIEW';
+  const currentStep =
+    currentStatus === 'CANCELLED' || currentStatus === 'REJECTED'
+      ? -1
+      : STATUS_ORDER.indexOf(currentStatus);
 
   const handleCancel = async () => {
     if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')) return;
-    await cancelOrder(order.orderId);
+    await cancelOrder(order.bulkOrderId);
+  };
+
+  const handlePayment = async () => {
+    try {
+      setIsPaying(true);
+      const res = await vnpayService.createPaymentUrl(
+        order.bulkOrderId,
+        'BULK'
+      );
+      if (res && res.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      } else {
+        toast.error('Không thể tạo link thanh toán VNPay');
+      }
+    } catch (error) {
+      console.error('Lỗi khi tạo payment url:', error);
+      toast.error('Có lỗi xảy ra khi tạo thanh toán');
+    } finally {
+      setIsPaying(false);
+    }
   };
 
   const handleCopyOrderId = () => {
-    navigator.clipboard.writeText(order.orderId);
+    navigator.clipboard.writeText(String(order.bulkOrderId));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const isSaveDisabled = saving || !customInput.trim();
-  const saveButtonLabel = saving ? 'Đang lưu...' : 'Lưu yêu cầu tùy chỉnh';
 
   return (
     <div className="min-h-screen bg-slate-100/60">
@@ -140,7 +172,10 @@ export function OrderDetail() {
       <div className="sticky top-14 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <nav className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-600">
-            <button onClick={() => navigate('/company')} className="hover:text-slate-900 transition-colors">
+            <button
+              onClick={() => navigate('/company')}
+              className="hover:text-slate-900 transition-colors"
+            >
               B2B Portal
             </button>
             <ChevronRight className="h-4 w-4 text-slate-300" />
@@ -151,7 +186,9 @@ export function OrderDetail() {
               Đơn hàng
             </button>
             <ChevronRight className="h-4 w-4 text-slate-300" />
-            <span className="font-medium text-slate-900">{order.orderId}</span>
+            <span className="font-medium text-slate-900">
+              #{order.bulkOrderId}
+            </span>
           </nav>
         </div>
       </div>
@@ -162,7 +199,9 @@ export function OrderDetail() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-slate-900">Đơn hàng #{order.orderId}</h1>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  Đơn hàng #{order.bulkOrderId}
+                </h1>
                 <button
                   onClick={handleCopyOrderId}
                   className="p-1.5 hover:bg-slate-100 rounded-md transition-colors group relative"
@@ -179,12 +218,16 @@ export function OrderDetail() {
               <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4 text-slate-400" />
-                  <span>{new Date(order.createdAt).toLocaleString('vi-VN')}</span>
+                  <span>
+                    {new Date(order.createdAt).toLocaleString('vi-VN')}
+                  </span>
                 </div>
                 <span className="text-slate-300">•</span>
                 <div className="flex items-center gap-1.5">
                   <Package className="h-4 w-4 text-slate-400" />
-                  <span>{order.items.length} sản phẩm</span>
+                  <span className="font-medium text-slate-900">
+                    {order.details.length} sản phẩm
+                  </span>
                 </div>
                 <span className="text-slate-300">•</span>
                 <span
@@ -197,7 +240,18 @@ export function OrderDetail() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
-              {currentStatus === 'PENDING' && (
+              {currentStatus === 'AWAITING_PAYMENT' && (
+                <button
+                  onClick={handlePayment}
+                  disabled={isPaying}
+                  className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg shadow-sm transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <DollarSign className="h-4 w-4" />
+                  {isPaying ? 'Đang xử lý...' : 'Thanh toán ngay'}
+                </button>
+              )}
+              {(currentStatus === 'PENDING_REVIEW' ||
+                currentStatus === 'CONFIRMED') && (
                 <button
                   onClick={handleCancel}
                   className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
@@ -226,16 +280,18 @@ export function OrderDetail() {
         </button>
 
         {/* ── Progress Stepper ── */}
-        {currentStatus !== 'CANCELLED' ? (
+        {currentStatus !== 'CANCELLED' && currentStatus !== 'REJECTED' ? (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-6">Tiến trình đơn hàng</h2>
+            <h2 className="text-sm font-semibold text-slate-900 mb-6">
+              Tiến trình đơn hàng
+            </h2>
             <div className="relative">
               {/* Progress Line */}
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200">
                 <div
                   className="h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-500"
                   style={{
-                    width: `${(currentStep / (TIMELINE.length - 1)) * 100}%`,
+                    width: `${currentStep >= 0 ? (currentStep / (TIMELINE.length - 1)) * 100 : 0}%`,
                   }}
                 />
               </div>
@@ -247,37 +303,44 @@ export function OrderDetail() {
                   const active = idx === currentStep;
                   const Icon = step.icon;
                   return (
-                    <div key={step.status} className="flex flex-col items-center">
-                      {/* Icon Circle */}
+                    <div
+                      key={step.status}
+                      className="flex flex-col items-center"
+                    >
                       <div
-                        className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${active
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-700 shadow-lg shadow-blue-500/40 scale-110'
-                          : done
-                            ? STEP_ICON_STYLE[step.status]
-                            : 'bg-white text-slate-400 border-slate-200'
-                          }`}
+                        className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${
+                          active
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-700 shadow-lg shadow-blue-500/40 scale-110'
+                            : done
+                              ? (STEP_ICON_STYLE[step.status] ??
+                                'bg-white text-slate-400 border-slate-200')
+                              : 'bg-white text-slate-400 border-slate-200'
+                        }`}
                       >
                         <Icon
-                          className={`h-5 w-5 transition-colors ${active ? 'text-white' : done ? '' : 'text-slate-400'
-                            }`}
+                          className={`h-5 w-5 transition-colors ${
+                            active ? 'text-white' : done ? '' : 'text-slate-400'
+                          }`}
                         />
                       </div>
 
-                      {/* Label */}
                       <div className="mt-3 text-center">
                         <p
-                          className={`text-xs font-semibold ${active
-                            ? 'text-blue-700'
-                            : done
-                              ? 'text-slate-700'
-                              : 'text-slate-400'
-                            }`}
+                          className={`text-xs font-semibold ${
+                            active
+                              ? 'text-blue-700'
+                              : done
+                                ? 'text-slate-700'
+                                : 'text-slate-400'
+                          }`}
                         >
                           {step.label}
                         </p>
                         {active && order.createdAt && (
                           <p className="text-[10px] text-slate-500 mt-1">
-                            {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                            {new Date(order.createdAt).toLocaleDateString(
+                              'vi-VN'
+                            )}
                           </p>
                         )}
                       </div>
@@ -288,17 +351,38 @@ export function OrderDetail() {
             </div>
           </div>
         ) : (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+          <div
+            className={`${
+              currentStatus === 'REJECTED'
+                ? 'bg-red-50 border-red-200'
+                : 'bg-slate-50 border-slate-200'
+            } border rounded-xl p-6`}
+          >
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+              <div
+                className={`p-2 rounded-lg ${currentStatus === 'REJECTED' ? 'bg-red-100' : 'bg-slate-100'}`}
+              >
+                <XCircle
+                  className={`h-5 w-5 ${currentStatus === 'REJECTED' ? 'text-red-600' : 'text-slate-600'}`}
+                />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-red-900 mb-1">
-                  Đơn hàng đã bị hủy
+                <h3
+                  className={`text-sm font-semibold mb-1 ${
+                    currentStatus === 'REJECTED'
+                      ? 'text-red-900'
+                      : 'text-slate-900'
+                  }`}
+                >
+                  Đơn hàng đã bị{' '}
+                  {currentStatus === 'REJECTED' ? 'từ chối' : 'hủy'}
                 </h3>
-                <p className="text-sm text-red-700">
-                  Đơn hàng này đã bị hủy và không thể tiếp tục xử lý.
+                <p
+                  className={`text-sm ${currentStatus === 'REJECTED' ? 'text-red-700' : 'text-slate-600'}`}
+                >
+                  Đơn hàng này đã bị{' '}
+                  {currentStatus === 'REJECTED' ? 'từ chối' : 'hủy'} và không
+                  thể tiếp tục xử lý.
                 </p>
               </div>
             </div>
@@ -311,7 +395,9 @@ export function OrderDetail() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-                <h2 className="text-sm font-semibold text-slate-900">Chi tiết sản phẩm</h2>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Chi tiết sản phẩm
+                </h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -332,37 +418,86 @@ export function OrderDetail() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {order.items.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                    {order.details.map((detail) => (
+                      <tr
+                        key={detail.bulkOrderDetailId}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
                         <td className="px-6 py-4">
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">
-                              {item.productName}
-                            </p>
-                            {item.tierPrice && item.tierPrice.discountPercent > 0 && (
-                              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                                <Tag className="h-3 w-3" />
-                                Giảm {item.tierPrice.discountPercent}% (≥{item.tierPrice.minQty} sp)
-                              </span>
+                          <div className="flex items-center gap-4">
+                            {detail.productImage ? (
+                              <img
+                                src={detail.productImage}
+                                alt={detail.productName}
+                                className="w-12 h-12 rounded-lg object-cover border border-slate-200"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center border border-slate-200">
+                                <Package className="h-6 w-6 text-slate-300" />
+                              </div>
                             )}
-                            {item.customization && (
-                              <p className="mt-1 flex items-center gap-1 text-xs text-slate-600">
-                                <Pencil className="h-3 w-3 text-slate-400" />
-                                {item.customization}
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">
+                                {detail.productName}
                               </p>
-                            )}
+                              {(detail.tierLabel ||
+                                (detail.priceTiers &&
+                                  detail.priceTiers.length > 0)) && (
+                                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                  <Tag className="h-3 w-3" />
+                                  {detail.tierLabel || 'Tier giá'}:{' '}
+                                  {detail.appliedTierPrice.toLocaleString(
+                                    'vi-VN'
+                                  )}
+                                  đ/sp
+                                </span>
+                              )}
+                              {detail.customizations?.length > 0 && (
+                                <div className="mt-2 space-y-1.5">
+                                  {detail.customizations.map((c) => (
+                                    <div
+                                      key={c.customizationId}
+                                      className="flex items-center gap-2 text-xs"
+                                    >
+                                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
+                                        <Pencil className="h-3 w-3 text-slate-400" />
+                                        {c.type}
+                                      </div>
+                                      <span className="text-slate-500 italic">
+                                        {c.note}
+                                      </span>
+                                      {c.totalFee && c.totalFee > 0 ? (
+                                        <span className="text-indigo-600 font-bold">
+                                          +{fmt(c.totalFee)}
+                                        </span>
+                                      ) : (
+                                        <span className="text-amber-600 font-medium italic">
+                                          (Phí:{' '}
+                                          {c.status === 'CONFIRMED'
+                                            ? 'Miễn phí'
+                                            : 'Chờ duyệt'}
+                                          )
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-slate-100 rounded-md text-sm font-medium text-slate-700">
-                            {item.quantity}
+                            {detail.quantity}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right text-sm text-slate-600">
-                          {fmt(item.unitPrice)}
+                          {detail.unitPriceSnapshot !== null
+                            ? fmt(detail.unitPriceSnapshot)
+                            : fmt(detail.appliedTierPrice)}
                         </td>
                         <td className="px-6 py-4 text-right text-sm font-bold text-slate-900">
-                          {fmt(item.subtotal)}
+                          {fmt(detail.lineTotal)}
                         </td>
                       </tr>
                     ))}
@@ -372,18 +507,66 @@ export function OrderDetail() {
             </div>
           </div>
 
-          {/* Right Column - Summary & Details */}
+          {/* Right Column - Summary */}
           <div className="space-y-6">
             {/* Payment Summary */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign className="h-5 w-5 text-slate-400" />
-                <h2 className="text-sm font-semibold text-slate-900">Thông tin thanh toán</h2>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Thông tin thanh toán
+                </h2>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Tạm tính</span>
-                  <span className="font-medium text-slate-900">{fmt(order.subtotal)}</span>
+                  <span className="text-slate-600">Giá gốc (Tổng)</span>
+                  <span className="font-medium text-slate-900">
+                    {fmt(order.basePriceTotal || 0)}
+                  </span>
+                </div>
+                {order.tierDiscountTotal && order.tierDiscountTotal < 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-600">Giảm giá theo số lượng</span>
+                    <span className="font-medium text-emerald-600">
+                      {fmt(order.tierDiscountTotal)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm pt-1 border-t border-slate-50">
+                  <span className="text-slate-600">Tổng sau chiết khấu</span>
+                  <span className="font-medium text-slate-900">
+                    {fmt(order.subtotalAfterTier)}
+                  </span>
+                </div>
+                {(order.customizationFeeConfirmed || order.customizationFeePending) && (
+                  <div className="space-y-2 py-2 border-t border-slate-50">
+                    {order.customizationFeeConfirmed ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Phí tùy chỉnh (Đã duyệt)</span>
+                        <span className="font-medium text-indigo-600">
+                          +{fmt(order.customizationFeeConfirmed)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {order.customizationFeePending ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">Phí tùy chỉnh (Chờ duyệt)</span>
+                        <span className="font-medium text-amber-600 italic">
+                          +{fmt(order.customizationFeePending)}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+                <div className="flex justify-between text-sm pt-1 border-t border-slate-50">
+                  <span className="text-slate-600">Phí vận chuyển</span>
+                  <span className="font-medium text-slate-900">
+                    {order.shippingFeeWaived ? (
+                      <span className="text-emerald-600 font-bold">Miễn phí</span>
+                    ) : (
+                      fmt(order.shippingFee || 0)
+                    )}
+                  </span>
                 </div>
                 {order.voucherCode && (
                   <div className="flex justify-between text-sm">
@@ -392,81 +575,35 @@ export function OrderDetail() {
                       Voucher {order.voucherCode}
                     </span>
                     <span className="font-medium text-emerald-600">
-                      -{fmt(order.voucherDiscount)}
+                      -{fmt(order.voucherDiscountAmount ?? 0)}
                     </span>
                   </div>
                 )}
                 <div className="h-px bg-slate-200"></div>
                 <div className="flex justify-between items-center pt-1">
-                  <span className="text-sm font-semibold text-slate-900">Tổng cộng</span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    Tổng cộng
+                  </span>
                   <span className="text-xl font-bold text-slate-900">
-                    {fmt(order.total)}
+                    {fmt(order.finalPrice)}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Notes */}
-            {order.note && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="h-5 w-5 text-slate-400" />
-                  <h2 className="text-sm font-semibold text-slate-900">Ghi chú</h2>
-                </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{order.note}</p>
-              </div>
-            )}
-
-            {/* Customization */}
+            {/* Company Info */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Pencil className="h-5 w-5 text-slate-400" />
-                <h2 className="text-sm font-semibold text-slate-900">Yêu cầu tùy chỉnh</h2>
-              </div>
-              {order.customization && (
-                <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
-                  <p className="text-sm text-blue-900">{order.customization}</p>
-                </div>
+              <h2 className="text-sm font-semibold text-slate-900 mb-3">
+                Thông tin công ty
+              </h2>
+              <p className="text-sm text-slate-700 font-medium">
+                {order.companyName}
+              </p>
+              {order.userFullName && (
+                <p className="text-sm text-slate-500 mt-1">
+                  {order.userFullName}
+                </p>
               )}
-              {currentStatus === 'PENDING' ? (
-                <div className="space-y-3">
-                  <textarea
-                    value={customInput}
-                    onChange={(e) => setCustomInput(e.target.value)}
-                    placeholder="Màu sắc, kích thước, khắc tên, thiết kế đặc biệt..."
-                    rows={4}
-                    className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none"
-                  />
-                  <button
-                    onClick={handleSaveCustomization}
-                    disabled={isSaveDisabled}
-                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
-                    style={
-                      isSaveDisabled
-                        ? {
-                          background: '#e2e8f0',
-                          color: '#334155',
-                          border: '1px solid #cbd5e1',
-                        }
-                        : {
-                          background: 'linear-gradient(90deg, #4f46e5 0%, #2563eb 100%)',
-                          color: '#ffffff',
-                          border: '1px solid #4338ca',
-                        }
-                    }
-                  >
-                    {saveButtonLabel}
-                  </button>
-                  {saveMessage && (
-                    <p className="text-sm font-medium text-emerald-600">{saveMessage}</p>
-                  )}
-                  {!saveMessage && !customInput.trim() && (
-                    <p className="text-xs text-slate-500">Nhập nội dung tùy chỉnh để lưu.</p>
-                  )}
-                </div>
-              ) : !order.customization ? (
-                <p className="text-sm text-slate-500 italic">Không có yêu cầu tùy chỉnh</p>
-              ) : null}
             </div>
           </div>
         </div>

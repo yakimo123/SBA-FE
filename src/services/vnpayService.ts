@@ -29,15 +29,19 @@ export interface PaymentTransactionResponse {
 const ENDPOINTS = {
   CREATE_PAYMENT: '/api/v1/payments/vnpay/create',
   RETURN: '/api/v1/payments/vnpay/return',
-  TRANSACTIONS_BY_ORDER: (orderId: number) => `/api/v1/payments/orders/${orderId}`,
+  TRANSACTIONS_BY_ORDER: (orderId: number) =>
+    `/api/v1/payments/orders/${orderId}`,
 };
 
 export const vnpayService = {
-  async createPaymentUrl(orderId: number): Promise<VNPayPaymentUrlResponse> {
+  async createPaymentUrl(
+    orderId: number,
+    type: string = 'NORMAL'
+  ): Promise<VNPayPaymentUrlResponse> {
     const response = await api.post<ApiResponse<VNPayPaymentUrlResponse>>(
       ENDPOINTS.CREATE_PAYMENT,
       null,
-      { params: { orderId } }
+      { params: { orderId, type } }
     );
     return response.data.data;
   },

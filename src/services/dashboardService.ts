@@ -8,6 +8,14 @@ export interface KPIStats {
   totalCustomers: { value: number; change: number };
 }
 
+export interface BulkOrderStats {
+  pendingReview: number;
+  awaitingPayment: number;
+  processing: number;
+  revenueThisMonth: number;
+  newOrdersToday: number;
+}
+
 export interface RevenueTrendItem {
   day: string;
   revenue: number;
@@ -92,6 +100,13 @@ export const dashboardService = {
       {
         params: { limit },
       }
+    );
+    return response.data.data;
+  },
+
+  getBulkOrderStats: async (): Promise<BulkOrderStats> => {
+    const response = await api.get<ApiResponse<BulkOrderStats>>(
+      '/api/v1/admin/dashboard/bulk-order-stats'
     );
     return response.data.data;
   },
