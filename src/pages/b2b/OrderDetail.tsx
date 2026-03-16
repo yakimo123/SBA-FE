@@ -113,17 +113,16 @@ export function OrderDetail() {
     if (!customInput.trim()) return;
     setSaving(true);
     setSaveMessage('');
-    await new Promise((r) => setTimeout(r, 500));
-    updateCustomization(order.orderId, customInput.trim());
+    await updateCustomization(order.orderId, customInput.trim());
     setCustomInput('');
     setSaving(false);
     setSaveMessage('Đã lưu yêu cầu tùy chỉnh thành công.');
     setTimeout(() => setSaveMessage(''), 2500);
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')) return;
-    cancelOrder(order.orderId);
+    await cancelOrder(order.orderId);
   };
 
   const handleCopyOrderId = () => {
