@@ -1,4 +1,11 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { useState } from 'react';
 
 export interface Column<T> {
@@ -16,6 +23,7 @@ export interface DataTableProps<T> {
   selectable?: boolean;
   onSelectionChange?: (selectedItems: T[]) => void;
   pageSize?: number;
+  getRowClassName?: (item: T) => string;
 }
 
 const css = `
@@ -145,16 +153,21 @@ export function DataTable<T extends Record<string, any>>({
   selectable = false,
   onSelectionChange,
   pageSize = 10,
+  getRowClassName,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<any>>(new Set());
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
 
   // ── Sort ──
   const sortedData = [...data];
   if (sortConfig) {
     sortedData.sort((a, b) => {
-      const av = a[sortConfig.key], bv = b[sortConfig.key];
+      const av = a[sortConfig.key],
+        bv = b[sortConfig.key];
       if (av < bv) return sortConfig.direction === 'asc' ? -1 : 1;
       if (av > bv) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
@@ -167,7 +180,8 @@ export function DataTable<T extends Record<string, any>>({
   const currentData = sortedData.slice(startIndex, startIndex + pageSize);
 
   // ── Select ──
-  const allSelected = currentData.length > 0 && selectedIds.size === currentData.length;
+  const allSelected =
+    currentData.length > 0 && selectedIds.size === currentData.length;
 
   const toggleSelectAll = () => {
     if (allSelected) {
@@ -198,7 +212,10 @@ export function DataTable<T extends Record<string, any>>({
   const handleSort = (accessor: string) => {
     setSortConfig((prev) =>
       prev?.key === accessor
-        ? { key: accessor, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+        ? {
+            key: accessor,
+            direction: prev.direction === 'asc' ? 'desc' : 'asc',
+          }
         : { key: accessor, direction: 'asc' }
     );
     setCurrentPage(1);
@@ -250,7 +267,10 @@ export function DataTable<T extends Record<string, any>>({
           <tbody className="dt-tbody">
             {currentData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + (selectable ? 1 : 0)} className="dt-empty">
+                <td
+                  colSpan={columns.length + (selectable ? 1 : 0)}
+                  className="dt-empty"
+                >
                   No data available
                 </td>
               </tr>
@@ -264,13 +284,19 @@ export function DataTable<T extends Record<string, any>>({
                     className={[
                       onRowClick ? 'clickable' : '',
                       isSelected ? 'selected' : '',
-                    ].filter(Boolean).join(' ')}
+                      getRowClassName?.(item) || '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                   >
                     {selectable && (
                       <td className="dt-td dt-td-select">
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); toggleSelectItem(item); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectItem(item);
+                          }}
                           className={`dt-checkbox${isSelected ? ' checked' : ''}`}
                         >
                           {isSelected && <Check />}
@@ -297,8 +323,10 @@ export function DataTable<T extends Record<string, any>>({
         <div className="dt-footer">
           <span className="dt-results">
             Showing{' '}
-            <strong>{startIndex + 1}–{Math.min(startIndex + pageSize, data.length)}</strong>
-            {' '}of <strong>{data.length}</strong>
+            <strong>
+              {startIndex + 1}–{Math.min(startIndex + pageSize, data.length)}
+            </strong>{' '}
+            of <strong>{data.length}</strong>
             {selectable && selectedIds.size > 0 && (
               <span className="dt-sel-pill">{selectedIds.size} selected</span>
             )}
@@ -312,7 +340,9 @@ export function DataTable<T extends Record<string, any>>({
             >
               <ChevronLeft />
             </button>
-            <span className="dt-page-info">{currentPage} / {totalPages}</span>
+            <span className="dt-page-info">
+              {currentPage} / {totalPages}
+            </span>
             <button
               type="button"
               disabled={currentPage === totalPages}
