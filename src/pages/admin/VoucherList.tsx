@@ -167,6 +167,19 @@ const css = `
     display: flex; align-items: center; justify-content: center; color: #9c9085;
   }
   .vl-empty-text { font-size: 0.9rem; color: #9c9085; margin: 0; }
+
+  .vl-row-invalid td {
+    opacity: 0.6;
+    filter: grayscale(0.5);
+    background: #f9f8f6 !important;
+  }
+  .vl-btn-disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5;
+    background: #f5f5f5 !important;
+    border-color: #e0e0e0 !important;
+    color: #9e9e9e !important;
+  }
 `;
 
 export function VoucherList() {
@@ -357,12 +370,15 @@ export function VoucherList() {
           </button>
           <button
             onClick={() => {
-              setAssigningVoucher(v);
-              setIsAssignModalOpen(true);
+              if (v.isValid) {
+                setAssigningVoucher(v);
+                setIsAssignModalOpen(true);
+              }
             }}
-            className="vl-btn"
-            style={{ color: '#c9521a' }}
-            title="Tặng cho khách hàng"
+            className={`vl-btn ${!v.isValid ? 'vl-btn-disabled' : ''}`}
+            style={{ color: v.isValid ? '#c9521a' : '#9e9e9e' }}
+            title={v.isValid ? 'Tặng cho khách hàng' : 'Voucher không khả dụng'}
+            disabled={!v.isValid}
           >
             <UserPlus size={14} />
           </button>
@@ -443,6 +459,7 @@ export function VoucherList() {
           data={filtered}
           keyField="voucherId"
           pageSize={10}
+          getRowClassName={(v) => (!v.isValid ? 'vl-row-invalid' : '')}
         />
       </div>
 
