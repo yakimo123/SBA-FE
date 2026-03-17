@@ -15,8 +15,6 @@ import { CompanyList } from '../pages/admin/CompanyList';
 import { CustomerDetail } from '../pages/admin/CustomerDetail';
 import { CustomerList } from '../pages/admin/CustomerList';
 import { Dashboard } from '../pages/admin/Dashboard';
-import { FavoriteList } from '../pages/admin/FavoriteList';
-import { FeedbackList } from '../pages/admin/FeedbackList';
 import { GuaranteeList } from '../pages/admin/GuaranteeList';
 import { MediaLibrary } from '../pages/admin/MediaLibrary';
 import { OrderDetail } from '../pages/admin/OrderDetail';
@@ -120,8 +118,6 @@ export const router = createBrowserRouter([
           { path: 'customers', element: <CustomerList /> },
           { path: 'customers/:id', element: <CustomerDetail /> },
           { path: 'customers/companies', element: <CompanyList /> },
-          { path: 'customers/favorites', element: <FavoriteList /> },
-          { path: 'customers/feedback', element: <FeedbackList /> },
           { path: 'customers/reviews', element: <ReviewList /> },
 
           // Settings

@@ -2,10 +2,8 @@ import {
   Building,
   ChevronRight,
   FileText,
-  Heart,
   Image as ImageIcon,
   LayoutDashboard,
-  MessageSquare,
   MinusCircle,
   Package,
   Plus,
@@ -103,12 +101,6 @@ const navigation: NavigationItem[] = [
         title: 'Companies',
         href: '/admin/customers/companies',
         icon: Building,
-      },
-      { title: 'Favorites', href: '/admin/customers/favorites', icon: Heart },
-      {
-        title: 'Feedback',
-        href: '/admin/customers/feedback',
-        icon: MessageSquare,
       },
       {
         title: 'Reviews',

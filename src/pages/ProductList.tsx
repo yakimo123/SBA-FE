@@ -68,6 +68,48 @@ export function ProductListPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
+  // Sync URL search params with local state
+  useEffect(() => {
+    const catId = searchParams.get('categoryId');
+    const brandId = searchParams.get('brandId');
+    const catName = searchParams.get('categoryName');
+    const q = searchParams.get('q') || searchParams.get('keyword');
+    const sortParam = searchParams.get('sortBy') || searchParams.get('sort');
+
+    if (catId) {
+      setSelectedCategoryIds([Number(catId)]);
+    } else if (catName && categories.length > 0) {
+      const found = categories.find(
+        (c) => c.categoryName.toLowerCase() === catName.toLowerCase()
+      );
+      if (found) {
+        setSelectedCategoryIds([found.categoryId]);
+      } else {
+        setSelectedCategoryIds([]);
+      }
+    } else {
+      setSelectedCategoryIds([]);
+    }
+
+    if (brandId) {
+      setSelectedBrandIds([Number(brandId)]);
+    } else {
+      setSelectedBrandIds([]);
+    }
+
+    if (q !== null) {
+      setKeyword(q || '');
+    } else {
+      setKeyword('');
+    }
+
+    if (sortParam) {
+      setSortBy(sortParam);
+    } else {
+      setSortBy('popular');
+    }
+  }, [searchParams, categories]);
+
   // Load filter options once
   useEffect(() => {
     const loadFilters = async () => {
@@ -116,6 +158,7 @@ export function ProductListPage() {
       if (selectedCategoryIds.length === 1)
         params.categoryId = selectedCategoryIds[0];
       if (selectedBrandIds.length === 1) params.brandId = selectedBrandIds[0];
+      if (sortBy && sortBy !== 'popular') params.sort = sortBy;
 
       const data = await productService.getProducts(
         params as Parameters<typeof productService.getProducts>[0]
@@ -129,13 +172,13 @@ export function ProductListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, keyword, selectedCategoryIds, selectedBrandIds]);
+  }, [page, keyword, selectedCategoryIds, selectedBrandIds, sortBy]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Reset page when filters change
+  // Reset page when filters change (except sortBy which is handled by URL or select)
   useEffect(() => {
     setPage(0);
   }, [keyword, selectedCategoryIds, selectedBrandIds]);
