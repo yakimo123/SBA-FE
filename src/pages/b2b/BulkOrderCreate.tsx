@@ -68,6 +68,7 @@ export function BulkOrderCreate() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [shippingAddress, setShippingAddress] = useState('');
 
   // ── Customizations ───────────────────────────────────────────────────────
@@ -249,6 +250,7 @@ export function BulkOrderCreate() {
   const handleSubmit = () => {
     if (cartItems.length === 0) return;
     setSubmitError('');
+    setFieldErrors({});
     setShowConfirm(true);
   };
 
@@ -280,16 +282,28 @@ export function BulkOrderCreate() {
       );
       await refreshOrders();
       navigate('/company/orders');
-    } catch (err: unknown) {
-      const msg =
-        (
-          err as {
-            response?: { data?: { message?: string } };
-            message?: string;
-          }
-        )?.response?.data?.message ||
-        (err instanceof Error ? err.message : null) ||
-        'Tạo đơn hàng thất bại. Vui lòng thử lại.';
+    } catch (err: any) {
+      const data = err.response?.data;
+      let msg = 'Tạo đơn hàng thất bại. Vui lòng thử lại.';
+
+      if (
+        data?.data &&
+        typeof data.data === 'object' &&
+        !Array.isArray(data.data)
+      ) {
+        // Case where errors are in 'data' field as key-value pairs
+        setFieldErrors(data.data);
+        const errorDetails = Object.values(data.data).join('. ');
+        msg = `${data.message || 'Lỗi dữ liệu'}: ${errorDetails}`;
+      } else if (data?.errors && Array.isArray(data.errors)) {
+        // Case for standard spring validation errors
+        msg = data.errors[0]?.defaultMessage || data.message || msg;
+      } else if (data?.message) {
+        msg = data.message;
+      } else if (err.message) {
+        msg = err.message;
+      }
+
       setSubmitError(msg);
     } finally {
       setSubmitting(false);
@@ -963,11 +977,30 @@ export function BulkOrderCreate() {
                 <div className="space-y-3">
                   <textarea
                     value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
+                    onChange={(e) => {
+                      setShippingAddress(e.target.value);
+                      if (fieldErrors.shippingAddress) {
+                        setFieldErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.shippingAddress;
+                          return next;
+                        });
+                      }
+                    }}
                     placeholder="Nhập địa chỉ giao hàng chi tiết..."
                     rows={3}
-                    className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 py-3 px-4 text-sm font-medium outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                    className={`w-full rounded-xl border-2 py-3 px-4 text-sm font-medium outline-none transition-all focus:bg-white focus:ring-4 ${
+                      fieldErrors.shippingAddress
+                        ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-100'
+                        : 'border-slate-200 bg-slate-50 focus:border-indigo-400 focus:ring-indigo-100'
+                    }`}
                   />
+                  {fieldErrors.shippingAddress && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-red-500 pl-1 animate-in fade-in slide-in-from-left-1 duration-200">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {fieldErrors.shippingAddress}
+                    </div>
+                  )}
                   <p className="text-[10px] text-slate-400 italic">
                     * Đơn hàng sỉ sẽ được admin liên hệ xác nhận địa chỉ và phí
                     vận chuyển sau khi đặt.

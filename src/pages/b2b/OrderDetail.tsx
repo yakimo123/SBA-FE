@@ -93,6 +93,9 @@ export function OrderDetail() {
   const { orders, cancelOrder } = useBulkOrders();
   const [copied, setCopied] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReasonText, setCancelReasonText] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const order = orders.find((o) => String(o.bulkOrderId) === id);
 
@@ -135,9 +138,25 @@ export function OrderDetail() {
       ? -1
       : STATUS_ORDER.indexOf(currentStatus);
 
-  const handleCancel = async () => {
-    if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này không?')) return;
-    await cancelOrder(order.bulkOrderId);
+  const handleCancelClick = () => {
+    setShowCancelModal(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelReasonText.trim()) {
+      toast.error('Vui lòng nhập lý do hủy');
+      return;
+    }
+    setIsCancelling(true);
+    try {
+      await cancelOrder(order.bulkOrderId, cancelReasonText);
+      toast.success('Đã gửi yêu cầu hủy đơn hàng');
+      setShowCancelModal(false);
+    } catch {
+      toast.error('Không thể hủy đơn hàng');
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   const handlePayment = async () => {
@@ -253,7 +272,7 @@ export function OrderDetail() {
               {(currentStatus === 'PENDING_REVIEW' ||
                 currentStatus === 'CONFIRMED') && (
                 <button
-                  onClick={handleCancel}
+                  onClick={handleCancelClick}
                   className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
                 >
                   Hủy đơn
@@ -384,6 +403,16 @@ export function OrderDetail() {
                   {currentStatus === 'REJECTED' ? 'từ chối' : 'hủy'} và không
                   thể tiếp tục xử lý.
                 </p>
+                {(order.cancelReason || order.adminNote) && (
+                  <div className={`mt-3 p-3 rounded-lg border ${currentStatus === 'REJECTED' ? 'bg-red-100/50 border-red-200' : 'bg-slate-100 border-slate-200'}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${currentStatus === 'REJECTED' ? 'text-red-800' : 'text-slate-500'}`}>
+                      {order.adminNote && !order.cancelReason ? 'Ghi chú từ Admin:' : 'Lý do:'}
+                    </p>
+                    <p className={`text-sm italic ${currentStatus === 'REJECTED' ? 'text-red-900' : 'text-slate-700'}`}>
+                      {order.cancelReason || order.adminNote}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -608,6 +637,64 @@ export function OrderDetail() {
           </div>
         </div>
       </div>
+      {/* ── Cancel Order Modal ── */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3 text-red-600 mb-2">
+                <div className="p-2 rounded-full bg-red-50">
+                  <XCircle className="h-6 w-6" />
+                </div>
+                <h2 className="text-xl font-bold">Xác nhận hủy đơn hàng</h2>
+              </div>
+              <p className="text-sm text-slate-500">
+                Lưu ý: Hành động này không thể hoàn tác. Vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này.
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Lý do hủy đơn <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={cancelReasonText}
+                  onChange={(e) => setCancelReasonText(e.target.value)}
+                  placeholder="Vd: Tôi thay đổi quyết định, Sai địa chỉ, Muốn đặt sản phẩm khác..."
+                  rows={4}
+                  className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 py-3 px-4 text-sm font-medium outline-none transition-all focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 bg-slate-50 px-6 py-4">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={isCancelling}
+                className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-50"
+              >
+                Quay lại
+              </button>
+              <button
+                onClick={confirmCancel}
+                disabled={isCancelling || !cancelReasonText.trim()}
+                className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/30 hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isCancelling ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  'Xác nhận hủy'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

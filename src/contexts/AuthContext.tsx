@@ -265,7 +265,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Handle standard API response error message
-      if (data?.message) return data.message;
+      // Handle standard API response error message
+      if (data?.message) {
+        if (data?.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+          // Case where errors are in 'data' field as key-value pairs (e.g. { shippingAddress: '...' })
+          const errorDetails = Object.values(data.data).join('. ');
+          return `${data.message}: ${errorDetails}`;
+        }
+        return data.message;
+      }
 
       // Handle generic Spring Boot error
       if (data?.error) return data.error;

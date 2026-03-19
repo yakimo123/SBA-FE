@@ -15,6 +15,7 @@ export interface OrderResponse {
     paymentMethod: string;
     paymentStatus: string;
     voucherCode: string | null;
+    cancelReason?: string;
     orderItems?: OrderItemResponse[];
 }
 
@@ -88,9 +89,9 @@ export const orderService = {
     /**
      * Update order status (Admin)
      */
-    async updateOrderStatus(id: string | number, status: OrderStatus): Promise<OrderResponse> {
+    async updateOrderStatus(id: string | number, status: OrderStatus, cancelReason?: string): Promise<OrderResponse> {
         const response = await api.patch<ApiResponse<OrderResponse>>(ENDPOINTS.UPDATE_STATUS(id), null, {
-            params: { status },
+            params: { status, cancelReason },
         });
         return response.data.data;
     },
@@ -108,8 +109,10 @@ export const orderService = {
     /**
      * Cancel an order
      */
-    async cancelOrder(id: string | number): Promise<void> {
-        await api.post<ApiResponse<null>>(ENDPOINTS.CANCEL(id));
+    async cancelOrder(id: string | number, cancelReason?: string): Promise<void> {
+        await api.post<ApiResponse<null>>(ENDPOINTS.CANCEL(id), null, {
+            params: { cancelReason }
+        });
     },
 };
 

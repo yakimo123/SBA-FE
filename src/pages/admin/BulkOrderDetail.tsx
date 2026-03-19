@@ -28,6 +28,8 @@ export default function BulkOrderDetail() {
   const [shippingFee, setShippingFee] = useState<number>(0);
   const [shippingFeeSuccess, setShippingFeeSuccess] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
 
   const loadOrder = useCallback(async () => {
     if (!id) return;
@@ -949,8 +951,8 @@ export default function BulkOrderDetail() {
                       opacity: isUpdatingStatus ? 0.6 : 1,
                     }}
                     onClick={() => {
-                      const note = window.prompt('Lý do từ chối:');
-                      if (note !== null) handleUpdateStatus('REJECTED', note);
+                      setShowRejectModal(true);
+                      setRejectReason('');
                     }}
                     disabled={isUpdatingStatus}
                   >
@@ -1227,6 +1229,61 @@ export default function BulkOrderDetail() {
           </div>
         </div>
       </div>
+      {/* ── Reject Modal ── */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
+            <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-red-50 to-white">
+              <div className="flex items-center gap-3 text-red-600 mb-2">
+                <XCircle className="h-6 w-6" />
+                <h2 className="text-xl font-bold">Từ chối đơn hàng</h2>
+              </div>
+              <p className="text-sm text-slate-500">
+                Lưu ý: Hành động này sẽ từ chối đơn hàng sỉ này. Vui lòng nhập lý do để khách hàng nắm rõ thông tin.
+              </p>
+            </div>
+
+            <div className="p-6">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Lý do từ chối <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Vd: Hiện tại xưởng đã hết nguyên liệu cho mẫu này, Sản phẩm đã ngừng sản xuất..."
+                rows={4}
+                className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 py-3 px-4 text-sm font-medium outline-none transition-all focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100">
+              <button
+                className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                onClick={() => setShowRejectModal(false)}
+                disabled={isUpdatingStatus}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-200 py-2.5 text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                onClick={async () => {
+                  if (!rejectReason.trim()) return;
+                  await handleUpdateStatus('REJECTED', rejectReason);
+                  setShowRejectModal(false);
+                }}
+                disabled={isUpdatingStatus || !rejectReason.trim()}
+              >
+                {isUpdatingStatus ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  'Xác nhận từ chối'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

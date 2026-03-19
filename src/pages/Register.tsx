@@ -39,7 +39,7 @@ export function RegisterPage() {
 
     try {
       await register(name, email, password, phone);
-      navigate('/');
+      navigate('/verify-email');
     } catch (err) {
       console.error('Registration failed', err);
     }

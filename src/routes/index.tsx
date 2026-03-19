@@ -49,6 +49,7 @@ import { SearchResultsPage } from '../pages/SearchResultsPage';
 import { UnauthorizedPage } from '../pages/Unauthorized';
 import { VNPayReturnPage } from '../pages/VNPayReturn';
 import { WishlistPage } from '../pages/Wishlist';
+import VerifyEmailPage from '../pages/VerifyEmail';
 
 export const router = createBrowserRouter([
   // ── Public / Customer routes ──────────────────────────────────────────────
@@ -66,6 +67,7 @@ export const router = createBrowserRouter([
       { path: 'unauthorized', element: <UnauthorizedPage /> },
       { path: 'approval-pending', element: <BusinessApprovalPendingPage /> },
       { path: 'payment/vnpay/return', element: <VNPayReturnPage /> },
+      { path: 'verify-email', element: <VerifyEmailPage /> },
       // Protected routes (chỉ cần đăng nhập, không yêu cầu role cụ thể)
       {
         element: <ProtectedRoute />,
