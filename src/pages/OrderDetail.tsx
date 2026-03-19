@@ -78,6 +78,8 @@ export function OrderDetailPage() {
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const fetchOrder = useCallback(async () => {
     if (!id) return;
@@ -96,12 +98,22 @@ export function OrderDetailPage() {
     fetchOrder();
   }, [fetchOrder]);
 
-  const handleCancel = async () => {
+  const handleCancelClick = () => {
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
     if (!order) return;
+    if (!cancelReason.trim()) {
+      toast.error('Vui lòng nhập lý do hủy đơn hàng');
+      return;
+    }
+
     setCancelling(true);
     try {
-      await orderService.cancelOrder(order.orderId);
-      toast.success('Đã hủy đơn hàng thành công');
+      await orderService.cancelOrder(order.orderId, cancelReason);
+      toast.success('Đã gửi yêu cầu hủy đơn hàng thành công');
+      setShowCancelModal(false);
       fetchOrder();
     } catch {
       toast.error('Không thể hủy đơn hàng');
@@ -172,61 +184,77 @@ export function OrderDetailPage() {
 
         <div className="space-y-4">
           {/* Order progress tracker */}
-          {!isCancelled && (
-            <Card className="p-6">
-              <h2 className="font-bold mb-6 flex items-center gap-2">
-                <Truck className="w-5 h-5 text-red-600" />
-                Trạng thái đơn hàng
-              </h2>
-              <div className="flex items-start justify-between relative">
-                {/* Connecting line */}
-                <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 z-0" />
-                <div
-                  className="absolute top-5 left-0 h-0.5 bg-red-600 z-0 transition-all"
-                  style={{
-                    width:
-                      currentStepIndex < 0
+          {(true) /* Show timeline even if cancelled, handled inside */}
+          <Card className="p-6">
+            <h2 className="font-bold mb-6 flex items-center gap-2">
+              <Truck className="w-5 h-5 text-red-600" />
+              Trạng thái đơn hàng
+            </h2>
+            <div className="flex items-start justify-between relative">
+              {/* Connecting line */}
+              <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 z-0" />
+              <div
+                className="absolute top-5 left-0 h-0.5 bg-red-600 z-0 transition-all"
+                style={{
+                  width:
+                    isCancelled
+                      ? '100%'
+                      : currentStepIndex < 0
                         ? '0%'
                         : `${(currentStepIndex / (STATUS_STEPS.length - 1)) * 100}%`,
-                  }}
-                />
+                  backgroundColor: isCancelled ? '#ef4444' : undefined
+                }}
+              />
 
-                {STATUS_STEPS.map((step, idx) => {
-                  const done = currentStepIndex >= idx;
-                  const Icon = step.icon;
-                  return (
-                    <div key={step.key} className="flex flex-col items-center z-10 flex-1">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                          done
+              {(isCancelled 
+                ? [...STATUS_STEPS.filter(s => s.key !== 'DELIVERED'), { key: 'CANCELLED', label: 'Đã hủy', icon: XCircle }]
+                : STATUS_STEPS
+              ).map((step, idx) => {
+                const done = isCancelled ? (idx < 4 || step.key === 'CANCELLED') : (currentStepIndex >= idx);
+                const Icon = step.icon;
+                const isStepCancelled = step.key === 'CANCELLED';
+                
+                return (
+                  <div key={step.key} className="flex flex-col items-center z-10 flex-1">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+                        isStepCancelled
+                          ? 'bg-red-600 border-red-600 text-white'
+                          : done
                             ? 'bg-red-600 border-red-600 text-white'
                             : 'bg-white border-gray-300 text-gray-400'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span
-                        className={`text-xs mt-2 text-center max-w-[70px] leading-tight ${
-                          done ? 'text-red-600 font-medium' : 'text-gray-400'
-                        }`}
-                      >
-                        {step.label}
-                      </span>
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
                     </div>
-                  );
-                })}
-              </div>
-            </Card>
-          )}
+                    <span
+                      className={`text-xs mt-2 text-center max-w-[70px] leading-tight ${
+                        (done || isStepCancelled) ? 'text-red-600 font-medium' : 'text-gray-400'
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
 
           {isCancelled && (
             <Card className="p-4 border-red-200 bg-red-50">
-              <div className="flex items-center gap-3 text-red-600">
-                <XCircle className="w-5 h-5 shrink-0" />
-                <span className="font-medium">
-                  Đơn hàng này đã bị{' '}
-                  {order.orderStatus === 'REFUNDED' ? 'hoàn tiền' : 'hủy'}.
-                </span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3 text-red-600">
+                  <XCircle className="w-5 h-5 shrink-0" />
+                  <span className="font-medium">
+                    Đơn hàng này đã bị{' '}
+                    {order.orderStatus === 'REFUNDED' ? 'hoàn tiền' : 'hủy'}.
+                  </span>
+                </div>
+                {order.cancelReason && (
+                  <p className="text-sm text-red-500 mt-1 italic pl-8">
+                    Lý do: {order.cancelReason}
+                  </p>
+                )}
               </div>
             </Card>
           )}
@@ -360,10 +388,10 @@ export function OrderDetailPage() {
               <Button
                 variant="outline"
                 className="text-red-600 border-red-200 hover:bg-red-50"
-                onClick={handleCancel}
+                onClick={handleCancelClick}
                 disabled={cancelling}
               >
-                {cancelling ? 'Đang hủy...' : 'Hủy đơn hàng'}
+                Hủy đơn hàng
               </Button>
             )}
 
@@ -376,6 +404,59 @@ export function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Custom Cancel Modal ── */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3 text-red-600 mb-2">
+                <XCircle className="w-6 h-6" />
+                <h2 className="text-xl font-bold">Xác nhận hủy đơn hàng</h2>
+              </div>
+              <p className="text-sm text-gray-500">
+                Lưu ý: Hành động này không thể hoàn tác. Vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này.
+              </p>
+            </div>
+
+            <div className="p-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Lý do hủy đơn <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Vd: Tôi muốn thay đổi hình thức thanh toán, Đặt nhầm sản phẩm..."
+                rows={4}
+                className="w-full rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-50 outline-none p-3 text-sm transition-all"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3 px-6 py-4 bg-gray-50">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+              >
+                Quay lại
+              </Button>
+              <Button
+                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-200"
+                onClick={handleConfirmCancel}
+                disabled={cancelling || !cancelReason.trim()}
+              >
+                {cancelling ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  'Xác nhận hủy'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
