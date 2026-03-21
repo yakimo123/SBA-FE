@@ -22,7 +22,7 @@ const css = `
     margin-bottom: 32px;
   }
   .bol-title {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 2.5rem;
     color: #1a1a1a;
     margin: 0;
@@ -142,7 +142,7 @@ const css = `
   }
 
   .bol-id {
-    font-family: 'DM Mono', monospace;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.8rem;
     color: #6b7280;
     background: #f3f4f6;
@@ -159,7 +159,7 @@ const css = `
     color: #9ca3af;
   }
   .bol-price {
-    font-family: 'DM Mono', monospace;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     color: #1a1a1a;
   }
@@ -174,7 +174,7 @@ const css = `
   }
   .bol-status-pending_review { background: #fef3c7; color: #92400e; }
   .bol-status-confirmed { background: #dcfce7; color: #166534; }
-  .bol-status-awaiting_payment { background: #dbeafe; color: #1e40af; }
+  .bol-status-awaiting_payment { background: #fef2f2; color: #d73211; }
   .bol-status-paid { background: #dcfce7; color: #166534; }
   .bol-status-processing { background: #f3e8ff; color: #6b21a8; }
   .bol-status-shipped { background: #ecfeff; color: #0891b2; }

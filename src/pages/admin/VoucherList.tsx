@@ -19,10 +19,10 @@ const formatCurrency = (value: number) => {
 };
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .vl-root {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: #f5f3ef;
     min-height: 100vh;
     color: #1a1612;
@@ -36,39 +36,39 @@ const css = `
   .vl-header-left { display: flex; align-items: center; gap: 16px; }
   .vl-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, #c9521a 0%, #e07040 100%);
+    background: linear-gradient(135deg, #ee4d2d 0%, #d73211 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(238,77,45,0.35); flex-shrink: 0;
   }
   .vl-icon-badge svg { color: white; width: 24px; height: 24px; }
   .vl-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-family: 'Outfit', sans-serif; font-size: 2rem;
     font-weight: 400; color: #1a1612; line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
   .vl-count-pill {
     display: inline-flex; align-items: center;
-    background: #eeecf8; color: #4a3f8f;
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    background: #fff1f0; color: #ee4d2d;
+    font-family: 'Outfit', sans-serif; font-size: 0.7rem;
     font-weight: 500; padding: 2px 8px; border-radius: 20px;
     margin-left: 8px; letter-spacing: 0.02em;
   }
   .vl-subtitle { font-size: 0.875rem; color: #9c9085; margin: 0; }
   .vl-divider {
     width: 32px; height: 2px;
-    background: linear-gradient(90deg, #c9521a 0%, transparent 100%);
+    background: linear-gradient(90deg, #ee4d2d 0%, transparent 100%);
     border-radius: 2px; margin: 4px 0 0 68px;
   }
   .vl-add-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, #c9521a 0%, #e07040 100%);
+    background: linear-gradient(135deg, #ee4d2d 0%, #d73211 100%);
     color: white; border: none; border-radius: 10px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
-    cursor: pointer; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
+    font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(238,77,45,0.3);
     transition: all 0.2s; white-space: nowrap;
   }
-  .vl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,82,26,0.38); }
+  .vl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(238,77,45,0.38); }
 
   .vl-table-card {
     background: #ffffff; border: 1px solid #e8e3da;
@@ -89,18 +89,18 @@ const css = `
   .vl-search {
     padding: 7px 12px 7px 32px; border: 1px solid #e8e3da;
     border-radius: 8px; background: #ffffff;
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
     color: #1a1612; outline: none; width: 220px;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .vl-search:focus { border-color: #c9521a; box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .vl-search:focus { border-color: #ee4d2d; box-shadow: 0 0 0 3px rgba(238,77,45,0.12); }
   .vl-table-meta { font-size: 0.8rem; color: #9c9085; }
 
   .vl-table { width: 100%; border-collapse: collapse; }
   .vl-table thead tr { border-bottom: 1px solid #e8e3da; }
   .vl-table th {
     padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: #9c9085; background: #faf9f7;
   }
@@ -109,20 +109,20 @@ const css = `
     vertical-align: middle; transition: background 0.12s;
   }
   .vl-table tbody tr:last-child td { border-bottom: none; }
-  .vl-table tbody tr:hover td { background: #fdf1eb; }
+  .vl-table tbody tr:hover td { background: #fff1f0; }
 
   .vl-code-text {
-    font-family: 'DM Mono', monospace; font-size: 0.8rem;
-    font-weight: 600; color: #4a3f8f;
-    background: #eeecf8; border: 1px solid rgba(74,63,143,0.2);
+    font-family: 'Outfit', sans-serif; font-size: 0.8rem;
+    font-weight: 600; color: #ee4d2d;
+    background: #fff1f0; border: 1px solid rgba(74,63,143,0.2);
     border-radius: 5px; padding: 3px 8px; display: inline-block;
   }
   .vl-discount-text {
-    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.82rem;
     font-weight: 600; color: #2d7a4f;
   }
   .vl-expiry-text {
-    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.78rem;
     color: #5c5347;
   }
   .vl-expiry-expired { color: #b03030; }
@@ -152,10 +152,10 @@ const css = `
   }
   .vl-btn-copy { color: #9c9085; }
   .vl-btn-copy:hover { background: #faf9f7; border-color: #9c9085; color: #1a1612; }
-  .vl-btn-edit { color: #4a3f8f; }
-  .vl-btn-edit:hover { background: #eeecf8; border-color: #4a3f8f; }
+  .vl-btn-edit { color: #ee4d2d; }
+  .vl-btn-edit:hover { background: #fff1f0; border-color: #ee4d2d; }
   .vl-btn-delete { color: #b03030; }
-  .vl-btn-delete:hover { background: #fdf2f2; border-color: #f5c2c2; }
+  .vl-btn-delete:hover { background: #fdf2f2; border-color: #f8aba6; }
 
   .vl-empty {
     display: flex; flex-direction: column; align-items: center;
@@ -309,7 +309,7 @@ export function VoucherList() {
             <div
               style={{
                 height: '100%',
-                background: v.usedCount >= v.usageLimit ? '#b03030' : '#c9521a',
+                background: v.usedCount >= v.usageLimit ? '#b03030' : '#ee4d2d',
                 width: `${Math.min((v.usedCount / v.usageLimit) * 100, 100)}%`,
               }}
             />
@@ -376,7 +376,7 @@ export function VoucherList() {
               }
             }}
             className={`vl-btn ${!v.isValid ? 'vl-btn-disabled' : ''}`}
-            style={{ color: v.isValid ? '#c9521a' : '#9e9e9e' }}
+            style={{ color: v.isValid ? '#ee4d2d' : '#9e9e9e' }}
             title={v.isValid ? 'Tặng cho khách hàng' : 'Voucher không khả dụng'}
             disabled={!v.isValid}
           >

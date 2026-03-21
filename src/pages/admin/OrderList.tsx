@@ -14,22 +14,22 @@ import { OrderResponse, orderService, OrderStatus } from '../../services/orderSe
 const PAGE_SIZE = 20;
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .ol-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --border-strong: #c9bfad;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --accent-mid: #f4c4a8;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --accent-mid: #fca5a5;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --success: #2d7a4f;
     --success-soft: #edf7f2;
     --warning: #905a10;
@@ -40,7 +40,7 @@ const css = `
     --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -54,20 +54,20 @@ const css = `
   .ol-header-left { display: flex; align-items: center; gap: 16px; }
   .ol-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(238,77,45,0.35); flex-shrink: 0;
   }
   .ol-icon-badge svg { color: white; width: 24px; height: 24px; }
   .ol-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-family: 'Outfit', sans-serif; font-size: 2rem;
     font-weight: 400; color: var(--ink); line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
   .ol-count-pill {
     display: inline-flex; align-items: center;
     background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.7rem;
     font-weight: 500; padding: 2px 8px; border-radius: 20px;
     margin-left: 8px; letter-spacing: 0.02em;
   }
@@ -80,7 +80,7 @@ const css = `
 
   .ol-error {
     display: flex; align-items: center; gap: 10px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
+    background: var(--danger-soft); border: 1px solid #f8aba6;
     border-left: 3px solid var(--danger); color: var(--danger);
     border-radius: var(--radius); padding: 12px 16px;
     font-size: 0.875rem; margin-bottom: 20px;
@@ -115,18 +115,18 @@ const css = `
   .ol-search {
     padding: 7px 12px 7px 32px; border: 1px solid var(--border);
     border-radius: 8px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
     color: var(--ink); outline: none; width: 220px;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .ol-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .ol-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(238,77,45,0.12); }
   .ol-table-meta { font-size: 0.8rem; color: var(--ink-3); }
 
   .ol-table { width: 100%; border-collapse: collapse; }
   .ol-table thead tr { border-bottom: 1px solid var(--border); }
   .ol-table th {
     padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); background: var(--surface-2);
   }
@@ -138,14 +138,14 @@ const css = `
   .ol-table tbody tr:hover td { background: var(--accent-soft); }
 
   .ol-id-text {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem;
     color: var(--ink-3); background: var(--surface-2);
     border: 1px solid var(--border); border-radius: 5px;
     padding: 2px 7px; display: inline-block;
   }
   .ol-name-text { font-weight: 600; color: var(--ink); font-size: 0.88rem; }
   .ol-price {
-    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.82rem;
     font-weight: 500; color: var(--ink); white-space: nowrap;
   }
 
@@ -217,14 +217,14 @@ const css = `
   .ol-page-btn {
     display: flex; align-items: center; gap: 4px;
     padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--surface); font-family: 'DM Sans', sans-serif;
+    background: var(--surface); font-family: 'Inter', sans-serif;
     font-size: 0.85rem; font-weight: 500; color: var(--ink-2);
     cursor: pointer; transition: all 0.15s;
   }
   .ol-page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
   .ol-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .ol-page-info {
-    font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--ink-3); padding: 0 8px;
+    font-family: 'Outfit', sans-serif; font-size: 0.78rem; color: var(--ink-3); padding: 0 8px;
   }
 `;
 

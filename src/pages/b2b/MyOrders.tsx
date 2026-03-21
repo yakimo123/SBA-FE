@@ -32,11 +32,11 @@ const STATUS_LABEL: Record<BulkOrderStatus, string> = {
 
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
   PENDING_REVIEW: 'bg-amber-50 text-amber-700 border border-amber-300',
-  CONFIRMED: 'bg-blue-50 text-blue-700 border border-blue-300',
+  CONFIRMED: 'bg-red-50 text-[#d73211] border -[#fca5a5]',
   AWAITING_PAYMENT: 'bg-orange-50 text-orange-700 border border-orange-300',
   PAID: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
-  PROCESSING: 'bg-indigo-50 text-indigo-700 border border-indigo-300',
-  SHIPPED: 'bg-purple-50 text-purple-700 border border-purple-300',
+  PROCESSING: 'bg-red-50 text-[#d73211] border -[#fca5a5]',
+  SHIPPED: '-[#fff1f0] -[#d73211] border -[#fca5a5]',
   COMPLETED: 'bg-green-50 text-green-700 border border-green-300',
   CANCELLED: 'bg-slate-100 text-slate-600 border border-slate-300',
   REJECTED: 'bg-red-50 text-red-700 border border-red-300',
@@ -148,7 +148,7 @@ export function MyOrders() {
           </div>
           <button
             onClick={() => navigate('/company/orders/new')}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ee4d2d] to-[#ee4d2d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:from-[#d73211] hover:to-[#d73211] focus:outline-none focus:ring-2 focus:ring-[#ee4d2d] focus:ring-offset-2 transition-all"
           >
             <Plus className="h-4 w-4" />
             Tạo đơn hàng mới
@@ -168,8 +168,8 @@ export function MyOrders() {
                   {stats.totalOrders}
                 </p>
               </div>
-              <div className="p-3 bg-indigo-50 rounded-lg">
-                <ShoppingBag className="h-6 w-6 text-indigo-600" />
+              <div className="p-3 bg-red-50 rounded-lg">
+                <ShoppingBag className="h-6 w-6 text-[#ee4d2d]" />
               </div>
             </div>
             <p className="mt-4 flex items-center text-sm text-emerald-600">
@@ -226,8 +226,8 @@ export function MyOrders() {
                   {stats.completedOrders}
                 </p>
               </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-red-50 rounded-lg">
+                <CheckCircle2 className="h-6 w-6 text-[#ee4d2d]" />
               </div>
             </div>
             <p className="mt-4 text-sm text-slate-500">
@@ -252,15 +252,15 @@ export function MyOrders() {
                 style={
                   tab === 'ALL'
                     ? {
-                        backgroundColor: '#4f46e5',
+                        backgroundColor: '#ee4d2d',
                         color: '#ffffff',
-                        borderColor: '#4f46e5',
+                        borderColor: '#ee4d2d',
                       }
                     : {}
                 }
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
                   tab === 'ALL'
-                    ? 'shadow-sm hover:bg-indigo-700'
+                    ? 'shadow-sm hover:bg-[#d73211]'
                     : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200'
                 }`}
               >
@@ -294,8 +294,8 @@ export function MyOrders() {
                     color: '#ffffff',
                   },
                   CONFIRMED: {
-                    bg: '#2563eb',
-                    border: '#2563eb',
+                    bg: '#ee4d2d',
+                    border: '#ee4d2d',
                     color: '#ffffff',
                   },
                   AWAITING_PAYMENT: {
@@ -305,8 +305,8 @@ export function MyOrders() {
                   },
                   PAID: { bg: '#059669', border: '#059669', color: '#ffffff' },
                   PROCESSING: {
-                    bg: '#4f46e5',
-                    border: '#4f46e5',
+                    bg: '#ee4d2d',
+                    border: '#ee4d2d',
                     color: '#ffffff',
                   },
                   SHIPPED: {
@@ -369,7 +369,7 @@ export function MyOrders() {
                 placeholder="Tìm kiếm theo mã đơn hoặc sản phẩm..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#ee4d2d] focus:border-transparent transition-all"
               />
             </div>
 
@@ -403,7 +403,7 @@ export function MyOrders() {
               </div>
               <button
                 onClick={() => navigate('/company/orders/new')}
-                className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-sm"
+                className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ee4d2d] to-[#ee4d2d] text-white rounded-lg font-semibold hover:from-[#d73211] hover:to-[#d73211] transition-all shadow-sm"
               >
                 <Plus className="h-4 w-4" />
                 Tạo đơn hàng đầu tiên
@@ -445,8 +445,8 @@ export function MyOrders() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
-                            <ShoppingBag className="h-5 w-5 text-indigo-600" />
+                          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                            <ShoppingBag className="h-5 w-5 text-[#ee4d2d]" />
                           </div>
                           <span className="font-mono text-sm font-semibold text-slate-900">
                             #{order.bulkOrderId}
@@ -494,7 +494,7 @@ export function MyOrders() {
                             onClick={() =>
                               navigate(`/company/orders/${order.bulkOrderId}`)
                             }
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#ee4d2d] hover:text-[#d73211] hover:bg-red-50 rounded-md transition-colors"
                           >
                             <Eye className="h-4 w-4" />
                             Chi tiết

@@ -6,26 +6,26 @@ import { Modal } from '../../components/admin/Modal';
 import { BranchResponse, branchService } from '../../services/branchService';
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .stl-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --danger: #b03030;
     --danger-soft: #fdf2f2;
     --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -39,20 +39,20 @@ const css = `
   .stl-header-left { display: flex; align-items: center; gap: 16px; }
   .stl-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(238,77,45,0.35); flex-shrink: 0;
   }
   .stl-icon-badge svg { color: white; width: 24px; height: 24px; }
   .stl-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-family: 'Outfit', sans-serif; font-size: 2rem;
     font-weight: 400; color: var(--ink); line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
   .stl-count-pill {
     display: inline-flex; align-items: center;
     background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.7rem;
     font-weight: 500; padding: 2px 8px; border-radius: 20px;
     margin-left: 8px; letter-spacing: 0.02em;
   }
@@ -65,13 +65,13 @@ const css = `
   .stl-add-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
     color: white; border: none; border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
-    cursor: pointer; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
+    font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(238,77,45,0.3);
     transition: all 0.2s; white-space: nowrap;
   }
-  .stl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,82,26,0.38); }
+  .stl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(238,77,45,0.38); }
 
   .stl-table-card {
     background: var(--surface); border: 1px solid var(--border);
@@ -90,18 +90,18 @@ const css = `
   .stl-search {
     padding: 7px 12px 7px 32px; border: 1px solid var(--border);
     border-radius: 8px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
     color: var(--ink); outline: none; width: 220px;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .stl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .stl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(238,77,45,0.12); }
   .stl-table-meta { font-size: 0.8rem; color: var(--ink-3); }
 
   .stl-table { width: 100%; border-collapse: collapse; }
   .stl-table thead tr { border-bottom: 1px solid var(--border); }
   .stl-table th {
     padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); background: var(--surface-2);
   }
@@ -129,7 +129,7 @@ const css = `
     border: 1px solid var(--border); background: var(--surface);
     color: var(--danger); cursor: pointer; transition: all 0.15s;
   }
-  .stl-btn-delete:hover { background: var(--danger-soft); border-color: #f5c2c2; }
+  .stl-btn-delete:hover { background: var(--danger-soft); border-color: #f8aba6; }
 
   .stl-loading {
     display: flex; flex-direction: column; align-items: center;
@@ -249,7 +249,7 @@ export function StoreBranchList() {
   };
 
   const columns: Column<BranchResponse>[] = [
-    { header: 'Branch Name', accessor: 'branchName', render: (s) => <span className="font-medium text-purple-900">{s.branchName}</span> },
+    { header: 'Branch Name', accessor: 'branchName', render: (s) => <span className="font-medium text-red-900">{s.branchName}</span> },
     { header: 'Address', accessor: 'location', render: (s) => <div className="flex items-center gap-1 text-sm"><MapPin className="h-3 w-3 text-gray-400"/> {s.location}</div> },
     { header: 'Phone', accessor: 'contactNumber', render: (s) => <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3 text-gray-400"/> {s.contactNumber}</div> },
     { header: 'Manager', accessor: 'managerName' },
@@ -259,8 +259,8 @@ export function StoreBranchList() {
       sortable: false,
       render: (s) => (
         <div className="flex gap-2">
-          <button type="button" onClick={() => openEdit(s)} className="rounded-lg p-1.5 text-purple-600 hover:bg-purple-50" title="Edit"><Edit className="h-4 w-4" /></button>
-          <button type="button" onClick={() => handleDelete(s)} className="rounded-lg p-1.5 text-red-600 hover:bg-red-50" title="Delete"><Trash2 className="h-4 w-4" /></button>
+          <button type="button" onClick={() => openEdit(s)} className="rounded-[10px] p-1.5 text-[#ee4d2d] hover:bg-red-50" title="Edit"><Edit className="h-4 w-4" /></button>
+          <button type="button" onClick={() => handleDelete(s)} className="rounded-[10px] p-1.5 text-[#ee4d2d] hover:bg-red-50" title="Delete"><Trash2 className="h-4 w-4" /></button>
         </div>
       ),
     },
@@ -270,8 +270,8 @@ export function StoreBranchList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-['Fira_Code'] text-3xl font-bold text-purple-900">Store Branches</h1>
-          <p className="mt-1 font-['Fira_Sans'] text-gray-600">
+          <h1 className="font-['Outfit'] text-3xl font-bold text-red-900">Store Branches</h1>
+          <p className="mt-1 font-['Inter'] text-gray-600">
             Manage physical store locations
             {totalElements > 0 && (
               <span className="ml-2 text-sm text-gray-400">({totalElements} total)</span>
@@ -281,21 +281,21 @@ export function StoreBranchList() {
         <button
           type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 font-['Fira_Sans'] font-semibold text-white shadow-md hover:bg-orange-600"
+          className="flex items-center gap-2 rounded-[10px] bg-[#ee4d2d] px-4 py-2 font-['Inter'] font-semibold text-white shadow-md hover:bg-[#ee4d2d]"
         >
           <Plus className="h-5 w-5" /> Add New Branch
         </button>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#ee4d2d] border-t-transparent" />
         </div>
       ) : (
         <DataTable columns={columns} data={branches} keyField="branchId" pageSize={PAGE_SIZE} />
@@ -307,18 +307,18 @@ export function StoreBranchList() {
             type="button"
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            className="rounded-[10px] border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
             Previous
           </button>
-          <span className="font-['Fira_Sans'] text-sm text-gray-600">
+          <span className="font-['Inter'] text-sm text-gray-600">
             Page {page + 1} of {totalPages}
           </span>
           <button
             type="button"
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            className="rounded-[10px] border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
             Next
           </button>
@@ -336,7 +336,7 @@ export function StoreBranchList() {
               value={form.branchName}
               onChange={(e) => setForm({ ...form, branchName: e.target.value })}
               placeholder="e.g. Hanoi Branch"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+              className="w-full rounded-[10px] border border-gray-300 px-4 py-2 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
             />
           </div>
           <div>
@@ -346,7 +346,7 @@ export function StoreBranchList() {
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
               placeholder="123 Ba Dinh, Hanoi"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+              className="w-full rounded-[10px] border border-gray-300 px-4 py-2 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -357,7 +357,7 @@ export function StoreBranchList() {
                 value={form.managerName}
                 onChange={(e) => setForm({ ...form, managerName: e.target.value })}
                 placeholder="Tran Van B"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+                className="w-full rounded-[10px] border border-gray-300 px-4 py-2 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
               />
             </div>
             <div>
@@ -367,18 +367,18 @@ export function StoreBranchList() {
                 value={form.contactNumber}
                 onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
                 placeholder="0912345678"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+                className="w-full rounded-[10px] border border-gray-300 px-4 py-2 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
               />
             </div>
           </div>
           {formError && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</p>
+            <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-[#ee4d2d]">{formError}</p>
           )}
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -386,7 +386,7 @@ export function StoreBranchList() {
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-[10px] bg-[#ee4d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ee4d2d] disabled:opacity-50"
             >
               {isSaving && (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

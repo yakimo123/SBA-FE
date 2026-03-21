@@ -8,18 +8,18 @@ export function CompanyAccount() {
   return (
     <div className="space-y-6 font-['Fira_Sans']">
       <div>
-        <h1 className="font-['Fira_Code'] text-3xl font-bold text-blue-900">Tài khoản</h1>
+        <h1 className="font-['Fira_Code'] text-3xl font-bold -[#7f1d1d]">Tài khoản</h1>
         <p className="mt-1 text-sm text-gray-500">Thông tin tài khoản công ty</p>
       </div>
 
-      <div className="max-w-lg rounded-xl border border-blue-100 bg-white p-6 shadow-sm space-y-5">
+      <div className="max-w-lg rounded-xl border border-red-100 bg-white p-6 shadow-sm space-y-5">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white text-2xl font-bold">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#ee4d2d] text-white text-2xl font-bold">
             {(user?.fullName || user?.name || 'C')[0].toUpperCase()}
           </div>
           <div>
             <p className="text-lg font-semibold text-gray-900">{user?.fullName || user?.name}</p>
-            <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+            <span className="inline-block rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-[#d73211]">
               B2B Company
             </span>
           </div>

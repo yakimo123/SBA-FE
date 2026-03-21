@@ -36,11 +36,11 @@ const STATUS_LABEL: Record<BulkOrderStatus, string> = {
 
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
   PENDING_REVIEW: 'bg-amber-50 text-amber-700 border border-amber-300',
-  CONFIRMED: 'bg-blue-50 text-blue-700 border border-blue-300',
+  CONFIRMED: 'bg-red-50 text-[#d73211] border -[#fca5a5]',
   AWAITING_PAYMENT: 'bg-orange-50 text-orange-700 border border-orange-300',
   PAID: 'bg-emerald-50 text-emerald-700 border border-emerald-300',
-  PROCESSING: 'bg-indigo-50 text-indigo-700 border border-indigo-300',
-  SHIPPED: 'bg-purple-50 text-purple-700 border border-purple-300',
+  PROCESSING: 'bg-red-50 text-[#d73211] border -[#fca5a5]',
+  SHIPPED: '-[#fff1f0] -[#d73211] border -[#fca5a5]',
   COMPLETED: 'bg-green-50 text-green-700 border border-green-300',
   CANCELLED: 'bg-slate-100 text-slate-600 border border-slate-300',
   REJECTED: 'bg-red-50 text-red-700 border border-red-300',
@@ -75,8 +75,8 @@ const STEP_ICON_STYLE: Partial<Record<BulkOrderStatus, string>> = {
   CONFIRMED: 'bg-sky-50 text-sky-600 border-sky-200',
   AWAITING_PAYMENT: 'bg-orange-50 text-orange-600 border-orange-200',
   PAID: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  PROCESSING: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-  SHIPPED: 'bg-violet-50 text-violet-600 border-violet-200',
+  PROCESSING: 'bg-red-50 text-[#ee4d2d] border-[#fca5a5]',
+  SHIPPED: '-[#fff1f0] text-[#ee4d2d] -[#fca5a5]',
   COMPLETED: 'bg-green-50 text-green-600 border-green-200',
   CANCELLED: 'bg-slate-100 text-slate-500 border-slate-200',
   REJECTED: 'bg-red-50 text-red-500 border-red-200',
@@ -263,7 +263,7 @@ export function OrderDetail() {
                 <button
                   onClick={handlePayment}
                   disabled={isPaying}
-                  className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg shadow-sm transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-[#ee4d2d] to-[#d73211] hover:from-[#d73211] hover:-[#b03030] rounded-lg shadow-sm transition-all disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   <DollarSign className="h-4 w-4" />
                   {isPaying ? 'Đang xử lý...' : 'Thanh toán ngay'}
@@ -308,7 +308,7 @@ export function OrderDetail() {
               {/* Progress Line */}
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#ee4d2d] to-[#d73211] transition-all duration-500"
                   style={{
                     width: `${currentStep >= 0 ? (currentStep / (TIMELINE.length - 1)) * 100 : 0}%`,
                   }}
@@ -329,7 +329,7 @@ export function OrderDetail() {
                       <div
                         className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${
                           active
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-700 shadow-lg shadow-blue-500/40 scale-110'
+                            ? 'bg-gradient-to-r from-[#ee4d2d] to-[#d73211] border-[#d73211] shadow-lg shadow-[#ee4d2d]/40 scale-110'
                             : done
                               ? (STEP_ICON_STYLE[step.status] ??
                                 'bg-white text-slate-400 border-slate-200')
@@ -347,7 +347,7 @@ export function OrderDetail() {
                         <p
                           className={`text-xs font-semibold ${
                             active
-                              ? 'text-blue-700'
+                              ? 'text-[#d73211]'
                               : done
                                 ? 'text-slate-700'
                                 : 'text-slate-400'
@@ -496,7 +496,7 @@ export function OrderDetail() {
                                         {c.note}
                                       </span>
                                       {c.totalFee && c.totalFee > 0 ? (
-                                        <span className="text-indigo-600 font-bold">
+                                        <span className="text-[#ee4d2d] font-bold">
                                           +{fmt(c.totalFee)}
                                         </span>
                                       ) : (
@@ -572,7 +572,7 @@ export function OrderDetail() {
                     {order.customizationFeeConfirmed ? (
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-600">Phí tùy chỉnh (Đã duyệt)</span>
-                        <span className="font-medium text-indigo-600">
+                        <span className="font-medium text-[#ee4d2d]">
                           +{fmt(order.customizationFeeConfirmed)}
                         </span>
                       </div>

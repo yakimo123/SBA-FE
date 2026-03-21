@@ -139,7 +139,7 @@ export function VoucherFormModal({
             <div className="relative">
               <Input
                 id="voucherCode"
-                className={`h-14 text-lg font-mono tracking-widest uppercase pl-4 ${fieldErrors.voucherCode ? 'border-red-500 ring-red-500' : 'border-purple-100 focus:border-purple-500'}`}
+                className={`h-14 text-lg font-mono tracking-widest uppercase pl-4 ${fieldErrors.voucherCode ? 'border-red-500 ring-red-500' : 'border-red-100 focus:border-red-500'}`}
                 value={formData.voucherCode}
                 onChange={(e) =>
                   setFormData({
@@ -174,8 +174,8 @@ export function VoucherFormModal({
                 }
                 className={`h-14 flex items-center justify-center rounded-xl border-2 font-bold transition-all ${
                   formData.discountType === 'PERCENT'
-                    ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-md'
-                    : 'border-gray-100 bg-white text-gray-500 hover:border-purple-200'
+                    ? 'border-[#ee4d2d] bg-red-50 text-red-700 shadow-md'
+                    : 'border-gray-100 bg-white text-gray-500 hover:border-red-200'
                 }`}
               >
                 % Phần trăm
@@ -187,8 +187,8 @@ export function VoucherFormModal({
                 }
                 className={`h-14 flex items-center justify-center rounded-xl border-2 font-bold transition-all ${
                   formData.discountType === 'FIXED'
-                    ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-md'
-                    : 'border-gray-100 bg-white text-gray-500 hover:border-purple-200'
+                    ? 'border-[#ee4d2d] bg-red-50 text-red-700 shadow-md'
+                    : 'border-gray-100 bg-white text-gray-500 hover:border-red-200'
                 }`}
               >
                 ₫ Số tiền cố định
@@ -208,7 +208,7 @@ export function VoucherFormModal({
           </Label>
           <Input
             id="description"
-            className={`h-14 text-base ${fieldErrors.description ? 'border-red-500 ring-red-500' : 'border-purple-100'}`}
+            className={`h-14 text-base ${fieldErrors.description ? 'border-red-500 ring-red-500' : 'border-red-100'}`}
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
@@ -233,7 +233,7 @@ export function VoucherFormModal({
             <div className="relative group">
               <Input
                 id="discountValue"
-                className={`h-14 text-xl font-bold pr-12 ${fieldErrors.discountValue ? 'border-red-500 ring-red-500' : 'border-purple-100'}`}
+                className={`h-14 text-xl font-bold pr-12 ${fieldErrors.discountValue ? 'border-red-500 ring-red-500' : 'border-red-100'}`}
                 type="number"
                 value={formData.discountValue}
                 onChange={(e) =>
@@ -244,7 +244,7 @@ export function VoucherFormModal({
                 }
                 required
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-xl text-purple-400 group-focus-within:text-purple-600">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-xl text-red-400 group-focus-within:text-[#ee4d2d]">
                 {formData.discountType === 'PERCENT' ? '%' : '₫'}
               </span>
             </div>
@@ -255,7 +255,7 @@ export function VoucherFormModal({
                     key={amt}
                     type="button"
                     onClick={() => addAmount('discountValue', amt)}
-                    className="px-3 py-1.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-600 hover:bg-purple-100 hover:text-purple-700 transition-colors border border-gray-200"
+                    className="px-3 py-1.5 rounded-[10px] bg-gray-100 text-xs font-bold text-gray-600 hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200"
                   >
                     +{new Intl.NumberFormat('vi-VN').format(amt / 1000)}k
                   </button>
@@ -281,7 +281,7 @@ export function VoucherFormModal({
             <Input
               id="usageLimit"
               type="number"
-              className={`h-14 text-xl font-bold ${fieldErrors.usageLimit ? 'border-red-500 ring-red-500' : 'border-purple-100'}`}
+              className={`h-14 text-xl font-bold ${fieldErrors.usageLimit ? 'border-red-500 ring-red-500' : 'border-red-100'}`}
               value={formData.usageLimit}
               onChange={(e) =>
                 setFormData({ ...formData, usageLimit: Number(e.target.value) })
@@ -300,7 +300,7 @@ export function VoucherFormModal({
           <div className="space-y-3">
             <Label
               htmlFor="minOrderValue"
-              className="text-base font-bold text-gray-700 text-orange-700"
+              className="text-base font-bold text-gray-700 text-[#ee4d2d]"
             >
               Đơn hàng tối thiểu (₫)
             </Label>
@@ -308,7 +308,7 @@ export function VoucherFormModal({
               <Input
                 id="minOrderValue"
                 type="number"
-                className={`h-14 text-xl font-bold pr-12 ${fieldErrors.minOrderValue ? 'border-red-500 ring-red-500' : 'border-orange-100 focus:border-orange-400 focus:ring-orange-100'}`}
+                className={`h-14 text-xl font-bold pr-12 ${fieldErrors.minOrderValue ? 'border-red-500 ring-red-500' : 'border-[#fff1f0] focus:border-orange-400 focus:ring-[#fff1f0]'}`}
                 value={formData.minOrderValue}
                 onChange={(e) =>
                   setFormData({
@@ -328,7 +328,7 @@ export function VoucherFormModal({
                   key={amt}
                   type="button"
                   onClick={() => addAmount('minOrderValue', amt)}
-                  className="px-3 py-1.5 rounded-lg bg-orange-50 text-xs font-bold text-orange-600 hover:bg-orange-100 transition-colors border border-orange-100"
+                  className="px-3 py-1.5 rounded-[10px] bg-[#fff1f0] text-xs font-bold text-[#ee4d2d] hover:bg-[#fff1f0] transition-colors border border-[#fff1f0]"
                 >
                   +{new Intl.NumberFormat('vi-VN').format(amt / 1000)}k
                 </button>
@@ -345,7 +345,7 @@ export function VoucherFormModal({
           <div className="space-y-3 text-gray-400">
             <Label
               htmlFor="maxDiscount"
-              className={`text-base font-bold ${formData.discountType === 'FIXED' ? 'text-gray-300' : 'text-purple-700'}`}
+              className={`text-base font-bold ${formData.discountType === 'FIXED' ? 'text-gray-300' : 'text-red-700'}`}
             >
               Giảm tối đa (₫)
             </Label>
@@ -359,7 +359,7 @@ export function VoucherFormModal({
                     ? 'bg-gray-50 border-gray-200'
                     : fieldErrors.maxDiscount
                       ? 'border-red-500 ring-red-500'
-                      : 'border-purple-100'
+                      : 'border-red-100'
                 }`}
                 value={formData.maxDiscount}
                 onChange={(e) =>
@@ -371,19 +371,19 @@ export function VoucherFormModal({
                 required={formData.discountType === 'PERCENT'}
               />
               <span
-                className={`absolute right-4 top-1/2 -translate-y-1/2 font-bold text-xl ${formData.discountType === 'FIXED' ? 'text-gray-300' : 'text-purple-400'}`}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 font-bold text-xl ${formData.discountType === 'FIXED' ? 'text-gray-300' : 'text-red-400'}`}
               >
                 ₫
               </span>
             </div>
             {formData.discountType === 'PERCENT' && (
-              <div className="flex flex-wrap gap-2 mt-2 font-['Fira_Sans']">
+              <div className="flex flex-wrap gap-2 mt-2 font-['Inter']">
                 {[20000, 50000, 100000, 200000].map((amt) => (
                   <button
                     key={amt}
                     type="button"
                     onClick={() => addAmount('maxDiscount', amt)}
-                    className="px-3 py-1.5 rounded-lg bg-purple-50 text-xs font-bold text-purple-600 hover:bg-purple-100 transition-colors border border-purple-100"
+                    className="px-3 py-1.5 rounded-[10px] bg-red-50 text-xs font-bold text-[#ee4d2d] hover:bg-red-100 transition-colors border border-red-100"
                   >
                     +{new Intl.NumberFormat('vi-VN').format(amt / 1000)}k
                   </button>
@@ -411,7 +411,7 @@ export function VoucherFormModal({
             <Input
               id="validFrom"
               type="datetime-local"
-              className={`h-14 text-base border-purple-100 ${fieldErrors.validFrom ? 'border-red-500' : ''}`}
+              className={`h-14 text-base border-red-100 ${fieldErrors.validFrom ? 'border-red-500' : ''}`}
               value={formData.validFrom}
               onChange={(e) =>
                 setFormData({ ...formData, validFrom: e.target.value })
@@ -432,7 +432,7 @@ export function VoucherFormModal({
             <Input
               id="validTo"
               type="datetime-local"
-              className={`h-14 text-base border-purple-100 ${fieldErrors.validTo ? 'border-red-500' : ''}`}
+              className={`h-14 text-base border-red-100 ${fieldErrors.validTo ? 'border-red-500' : ''}`}
               value={formData.validTo}
               onChange={(e) =>
                 setFormData({ ...formData, validTo: e.target.value })
@@ -455,7 +455,7 @@ export function VoucherFormModal({
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-purple-600 hover:bg-purple-700 h-14 px-12 text-lg font-bold shadow-xl shadow-purple-100 active:scale-95 transition-all"
+            className="bg-gradient-to-r from-[#ee4d2d] to-[#d73211] hover:opacity-90 h-14 px-12 text-lg font-bold shadow-xl shadow-red-100 active:scale-95 transition-all"
           >
             {isSubmitting
               ? 'Đang xử lý...'

@@ -7,29 +7,30 @@ import {
   Phone,
   ShoppingBag,
   Star,
+  Loader2
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import userService, { UserDashboardResponse } from '../../services/userService';
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-
   .cd-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
     --success: #2d7a4f;
     --success-soft: #edf7f2;
-    --violet: #4a3f8f;
+    --violet: #ee4d2d;
     --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -48,10 +49,10 @@ const css = `
   }
   .cd-back-btn:hover { background: var(--surface-2); border-color: var(--ink-3); color: var(--ink); }
   .cd-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.5rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.5rem;
     font-weight: 400; color: var(--ink); margin: 0 0 4px;
   }
-  .cd-id { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--ink-3); }
+  .cd-id { font-family: 'Outfit', sans-serif; font-size: 0.85rem; color: var(--ink-3); }
 
   .cd-grid { display: grid; gap: 24px; grid-template-columns: 1fr 2fr; }
   @media (max-width: 900px) { .cd-grid { grid-template-columns: 1fr; } }
@@ -66,7 +67,7 @@ const css = `
     background: var(--surface-2);
   }
   .cd-card-title {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem;
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-3); margin: 0;
     display: flex; align-items: center; gap: 8px;
@@ -74,9 +75,9 @@ const css = `
   .cd-card-body { padding: 24px; }
   .cd-avatar {
     width: 96px; height: 96px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-soft) 0%, #f4c4a8 100%);
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #fca5a5 100%);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Serif Display', serif; font-size: 2.5rem;
+    font-family: 'Outfit', sans-serif; font-size: 2.5rem;
     color: var(--accent); margin: 0 auto 16px;
   }
   .cd-name { font-size: 1.25rem; font-weight: 600; text-align: center; margin: 0 0 8px; }
@@ -96,14 +97,14 @@ const css = `
     padding-top: 20px; border-top: 1px solid var(--border);
   }
   .cd-stat { text-align: center; }
-  .cd-stat-value { font-family: 'DM Mono', monospace; font-size: 1.5rem; font-weight: 700; }
+  .cd-stat-value { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; }
   .cd-stat-label { font-size: 0.75rem; color: var(--ink-3); text-transform: uppercase; margin-top: 4px; }
   .cd-order-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 0; border-bottom: 1px solid var(--border);
   }
   .cd-order-row:last-child { border-bottom: none; }
-  .cd-order-id { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--violet); }
+  .cd-order-id { font-family: 'Outfit', sans-serif; font-weight: 500; color: var(--violet); }
   .cd-order-date { font-size: 0.85rem; color: var(--ink-3); }
   .cd-order-amount { font-weight: 600; }
   .cd-order-status {
@@ -111,11 +112,53 @@ const css = `
     font-size: 0.72rem; font-weight: 600;
     background: var(--success-soft); color: var(--success);
   }
+  .cd-empty {
+    text-align: center; padding: 24px 0; color: var(--ink-3);
+    font-size: 0.9rem; font-family: 'Inter', sans-serif;
+  }
 `;
+
+const getInitials = (name?: string) => {
+  if (!name) return 'U';
+  return name.trim().split(/\\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+};
 
 export function CustomerDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const [dashboard, setDashboard] = useState<UserDashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      userService.getUserDashboard(id)
+        .then(res => setDashboard(res))
+        .catch(err => console.error('Failed to load dashboard', err))
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="cd-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <style>{css}</style>
+        <Loader2 className="animate-spin" size={32} color="var(--accent)" />
+      </div>
+    );
+  }
+
+  if (!dashboard) {
+    return (
+      <div className="cd-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <style>{css}</style>
+        <div className="cd-empty">User not found</div>
+      </div>
+    );
+  }
+
+  const user = dashboard.userInfo;
 
   return (
     <div className="cd-root">
@@ -131,75 +174,89 @@ export function CustomerDetail() {
         </button>
         <div>
           <h1 className="cd-title">Customer Profile</h1>
-          <p className="cd-id">ID: {id}</p>
+          <p className="cd-id">ID: {user?.userId}</p>
         </div>
       </div>
 
       <div className="cd-grid">
+        {/* LEFT COLUMN: User Info */}
         <div className="cd-card">
           <div className="cd-card-body" style={{ textAlign: 'center' }}>
-            <div className="cd-avatar">N</div>
-            <h2 className="cd-name">Nguyen Van A</h2>
-            <span className="cd-status">Active</span>
+            <div className="cd-avatar">{getInitials(user?.fullName)}</div>
+            <h2 className="cd-name">{user?.fullName || 'No Name'}</h2>
+            <span
+              className="cd-status"
+              style={{
+                background: user?.isActive ? 'var(--success-soft)' : '#fdf2f2',
+                color: user?.isActive ? 'var(--success)' : '#b03030'
+              }}
+            >
+              {user?.isActive ? 'Active' : 'Blocked'}
+            </span>
             <div style={{ textAlign: 'left' }}>
               <div className="cd-info-row">
                 <Mail size={16} />
-                <span>vana@example.com</span>
+                <span>{user?.email || 'No email provided'}</span>
               </div>
               <div className="cd-info-row">
                 <Phone size={16} />
-                <span>+84 123 456 789</span>
+                <span>{user?.phoneNumber || 'No phone provided'}</span>
               </div>
               <div className="cd-info-row">
                 <MapPin size={16} />
-                <span>Ho Chi Minh City, Vietnam</span>
+                <span>{user?.address || 'N/A'}</span>
               </div>
               <div className="cd-info-row">
                 <Calendar size={16} />
-                <span>Joined Jan 2023</span>
+                <span>Joined {new Date(user?.registrationDate).toLocaleDateString('vi-VN')}</span>
               </div>
             </div>
             <div className="cd-stats">
               <div className="cd-stat">
-                <div className="cd-stat-value">15</div>
+                <div className="cd-stat-value">{dashboard.totalOrders || 0}</div>
                 <div className="cd-stat-label">Orders</div>
               </div>
               <div className="cd-stat">
-                <div className="cd-stat-value">₫25M</div>
+                <div className="cd-stat-value">₫{dashboard.totalSpent?.toLocaleString('vi-VN') || 0}</div>
                 <div className="cd-stat-label">Spent</div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* RIGHT COLUMN: Orders, Reviews, Wishlist */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Recent Orders */}
           <div className="cd-card">
             <div className="cd-card-header">
               <h3 className="cd-card-title">
                 <ShoppingBag size={14} /> Recent Orders
               </h3>
-              <button style={{ fontSize: '0.85rem', color: 'var(--violet)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
-                View All
-              </button>
             </div>
             <div className="cd-card-body">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="cd-order-row">
-                  <div>
-                    <p className="cd-order-id" style={{ margin: 0 }}>#ORD-240{i}</p>
-                    <p className="cd-order-date" style={{ margin: '4px 0 0' }}>Jan 2{i}, 2024</p>
+              {dashboard.recentOrders?.length > 0 ? (
+                dashboard.recentOrders.map((order: any, i: number) => (
+                  <div key={i} className="cd-order-row">
+                    <div>
+                      <p className="cd-order-id" style={{ margin: 0 }}>#{order.orderCode || order.id}</p>
+                      <p className="cd-order-date" style={{ margin: '4px 0 0' }}>
+                        {new Date(order.orderDate || order.createdAt).toLocaleDateString('vi-VN')}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p className="cd-order-amount" style={{ margin: 0 }}>₫{order.totalAmount?.toLocaleString('vi-VN') || 0}</p>
+                    </div>
+                    <span className="cd-order-status">{order.status || 'Completed'}</span>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p className="cd-order-amount" style={{ margin: 0 }}>₫{i},500,000</p>
-                    <p className="cd-order-date" style={{ margin: '4px 0 0' }}>3 items</p>
-                  </div>
-                  <span className="cd-order-status">Delivered</span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <div className="cd-empty">No recent orders found.</div>
+              )}
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            {/* Built-in Reviews */}
             <div className="cd-card">
               <div className="cd-card-header">
                 <h3 className="cd-card-title">
@@ -207,16 +264,27 @@ export function CustomerDetail() {
                 </h3>
               </div>
               <div className="cd-card-body">
-                <div style={{ display: 'flex', gap: 4, color: 'var(--accent)', marginBottom: 8 }}>
-                  {[1, 2, 3, 4, 5].map((_) => <Star key={_} size={14} fill="currentColor" />)}
-                </div>
-                <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem' }}>iPhone 15 Pro Max</p>
-                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--ink-2)', fontStyle: 'italic' }}>
-                  "Great product, highly recommend!"
-                </p>
+                {dashboard.recentReviews?.length > 0 ? (
+                  dashboard.recentReviews.map((review: any, i: number) => (
+                    <div key={i} style={{ marginBottom: i !== dashboard.recentReviews.length - 1 ? 16 : 0 }}>
+                      <div style={{ display: 'flex', gap: 4, color: 'var(--accent)', marginBottom: 8 }}>
+                        {[...Array(5)].map((_, idx) => (
+                          <Star key={idx} size={14} fill={idx < (review.rating || 5) ? 'currentColor' : 'none'} color={idx < (review.rating || 5) ? 'currentColor' : '#ccc'} />
+                        ))}
+                      </div>
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem' }}>{review.productName || 'Product'}</p>
+                      <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--ink-2)', fontStyle: 'italic' }}>
+                        "{review.comment || review.content || 'Great!'}"
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="cd-empty">No written reviews yet.</div>
+                )}
               </div>
             </div>
 
+            {/* Wishlist */}
             <div className="cd-card">
               <div className="cd-card-header">
                 <h3 className="cd-card-title">
@@ -224,20 +292,21 @@ export function CustomerDetail() {
                 </h3>
               </div>
               <div className="cd-card-body">
-                <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                  <div style={{ width: 40, height: 40, background: 'var(--surface-2)', borderRadius: 8 }} />
-                  <div>
-                    <p style={{ margin: 0, fontWeight: 500, fontSize: '0.9rem' }}>MacBook Air M2</p>
-                    <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--ink-3)' }}>Added Jan 15</p>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, background: 'var(--surface-2)', borderRadius: 8 }} />
-                  <div>
-                    <p style={{ margin: 0, fontWeight: 500, fontSize: '0.9rem' }}>Sony WH-1000XM5</p>
-                    <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--ink-3)' }}>Added Jan 10</p>
-                  </div>
-                </div>
+                {dashboard.wishlist?.length > 0 ? (
+                  dashboard.wishlist.map((item: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i !== dashboard.wishlist.length - 1 ? 12 : 0 }}>
+                      <div style={{ width: 40, height: 40, background: 'var(--surface-2)', borderRadius: 8 }} />
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 500, fontSize: '0.9rem' }}>{item.productName || 'Product'}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--ink-3)' }}>
+                          Added {new Date(item.addedAt || new Date()).toLocaleDateString('vi-VN')}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="cd-empty">Wishlist is empty.</div>
+                )}
               </div>
             </div>
           </div>

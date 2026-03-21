@@ -244,19 +244,19 @@ export function BannerList() {
       {/* Header */}
       <div className="mb-7 flex items-end justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#c9521a] to-[#e07040] text-white shadow-lg shadow-[#c9521a]/35">
+          <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#ee4d2d] to-[#d73211] text-white shadow-lg shadow-[#ee4d2d]/35">
             <ImageIcon size={24} />
           </div>
           <div>
             <h1 className="font-serif text-3xl tracking-tight text-[#1a1612]">
               Banners
               {totalElements > 0 && (
-                <span className="ml-2 inline-flex items-center rounded-full bg-[#eeecf8] px-2 py-0.5 font-mono text-[0.7rem] font-medium tracking-wide text-[#4a3f8f]">
+                <span className="ml-2 inline-flex items-center rounded-full bg-[#fff1f0] px-2 py-0.5 font-mono text-[0.7rem] font-medium tracking-wide text-[#ee4d2d]">
                   {totalElements}
                 </span>
               )}
             </h1>
-            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#c9521a] to-transparent ml-[1px]" />
+            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#ee4d2d] to-transparent ml-[1px]" />
             <p className="mt-1.5 text-sm text-[#9c9085]">
               Quản lý banner trang chủ (MAIN, RIGHT_TOP, RIGHT_BOTTOM)
             </p>
@@ -265,14 +265,14 @@ export function BannerList() {
         <button
           type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.9rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-[#c9521a]/38 active:translate-y-0"
+          className="flex items-center gap-2 rounded-[10px] bg-linear-to-br from-[#ee4d2d] to-[#d73211] px-5 py-2.5 text-[0.9rem] font-semibold text-white shadow-md shadow-[#ee4d2d]/30 transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-[#ee4d2d]/38 active:translate-y-0"
         >
           <Plus size={17} /> Thêm banner
         </button>
       </div>
 
       {error && (
-        <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-[#f5c2c2] border-l-[3px] border-l-[#b03030] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b03030]">
+        <div className="mb-5 flex items-center gap-2.5 rounded-[10px] border border-[#f8aba6] border-l-[3px] border-l-[#b03030] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b03030]">
           ⚠ {error}
         </div>
       )}
@@ -284,7 +284,7 @@ export function BannerList() {
             <div className="relative flex items-center">
               <Search className="absolute left-2.5 h-3.5 w-3.5 text-[#9c9085]" />
               <input
-                className="w-[200px] rounded-lg border border-[#e8e3da] bg-white py-1.5 pl-8 pr-3 text-[0.85rem] text-[#1a1612] outline-none transition-all focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                className="w-[200px] rounded-[10px] border border-[#e8e3da] bg-white py-1.5 pl-8 pr-3 text-[0.85rem] text-[#1a1612] outline-none transition-all focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                 placeholder="Tìm theo tiêu đề..."
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
@@ -292,7 +292,7 @@ export function BannerList() {
               />
             </div>
             <select
-              className="rounded-lg border border-[#e8e3da] bg-white px-3 py-1.5 text-[0.85rem] text-[#1a1612] outline-none focus:border-[#c9521a]"
+              className="rounded-[10px] border border-[#e8e3da] bg-white px-3 py-1.5 text-[0.85rem] text-[#1a1612] outline-none focus:border-[#ee4d2d]"
               value={positionFilter}
               onChange={(e) => {
                 setPositionFilter(e.target.value);
@@ -304,7 +304,7 @@ export function BannerList() {
               ))}
             </select>
             <select
-              className="rounded-lg border border-[#e8e3da] bg-white px-3 py-1.5 text-[0.85rem] text-[#1a1612] outline-none focus:border-[#c9521a]"
+              className="rounded-[10px] border border-[#e8e3da] bg-white px-3 py-1.5 text-[0.85rem] text-[#1a1612] outline-none focus:border-[#ee4d2d]"
               value={isActiveFilter}
               onChange={(e) => {
                 setIsActiveFilter(e.target.value);
@@ -323,7 +323,7 @@ export function BannerList() {
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-4 py-20">
-            <Loader2 className="h-9 w-9 animate-spin text-[#c9521a]" />
+            <Loader2 className="h-9 w-9 animate-spin text-[#ee4d2d]" />
             <p className="text-sm text-[#9c9085]">Đang tải...</p>
           </div>
         ) : list.length === 0 ? (
@@ -335,7 +335,7 @@ export function BannerList() {
             <button
               type="button"
               onClick={openCreate}
-              className="mt-2 rounded-lg border border-[#c9521a] bg-[#fdf1eb] px-4 py-2 text-[0.85rem] font-medium text-[#c9521a] hover:bg-[#c9521a] hover:text-white"
+              className="mt-2 rounded-[10px] border border-[#ee4d2d] bg-[#fff1f0] px-4 py-2 text-[0.85rem] font-medium text-[#ee4d2d] hover:bg-[#ee4d2d] hover:text-white"
             >
               Thêm banner đầu tiên
             </button>
@@ -371,10 +371,10 @@ export function BannerList() {
               {list.map((b) => (
                 <tr
                   key={b.id}
-                  className="border-b border-[#e8e3da] last:border-b-0 hover:bg-[#fdf1eb]/50"
+                  className="border-b border-[#e8e3da] last:border-b-0 hover:bg-[#fff1f0]/50"
                 >
                   <td className="px-5 py-3.5">
-                    <div className="h-12 w-20 overflow-hidden rounded-lg bg-[#faf9f7] border border-[#e8e3da]">
+                    <div className="h-12 w-20 overflow-hidden rounded-[10px] bg-[#faf9f7] border border-[#e8e3da]">
                       {b.imageUrl ? (
                         <img
                           src={b.imageUrl}
@@ -399,7 +399,7 @@ export function BannerList() {
                     )}
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="inline-block rounded-md border border-[#e8e3da] bg-[#faf9f7] px-2 py-0.5 font-mono text-[0.75rem] text-[#5c5347]">
+                    <span className="inline-block rounded-[10px] border border-[#e8e3da] bg-[#faf9f7] px-2 py-0.5 font-mono text-[0.75rem] text-[#5c5347]">
                       {b.position}
                     </span>
                   </td>
@@ -425,7 +425,7 @@ export function BannerList() {
                     <div className="flex gap-1.5">
                       <button
                         type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#4a3f8f] transition-all hover:border-[#4a3f8f] hover:bg-[#eeecf8]"
+                        className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#e8e3da] bg-white text-[#ee4d2d] transition-all hover:border-[#ee4d2d] hover:bg-[#fff1f0]"
                         title="Sửa"
                         onClick={() => openEdit(b)}
                       >
@@ -433,7 +433,7 @@ export function BannerList() {
                       </button>
                       <button
                         type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#5c5347] transition-all hover:border-[#c9521a] hover:bg-[#fdf1eb]"
+                        className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#e8e3da] bg-white text-[#5c5347] transition-all hover:border-[#ee4d2d] hover:bg-[#fff1f0]"
                         title={b.isActive ? 'Tắt' : 'Bật'}
                         onClick={() => handleToggleStatus(b)}
                       >
@@ -441,7 +441,7 @@ export function BannerList() {
                       </button>
                       <button
                         type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:border-[#f5c2c2] hover:bg-[#fdf2f2]"
+                        className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:border-[#f8aba6] hover:bg-[#fdf2f2]"
                         title="Xóa"
                         onClick={() => handleDelete(b)}
                       >
@@ -463,7 +463,7 @@ export function BannerList() {
             type="button"
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
-            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-[10px] border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#ee4d2d] hover:not-disabled:bg-[#fff1f0] hover:not-disabled:text-[#ee4d2d] disabled:opacity-35 disabled:cursor-not-allowed"
           >
             <ChevronLeft size={15} /> Trước
           </button>
@@ -474,7 +474,7 @@ export function BannerList() {
             type="button"
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
-            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-[10px] border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#ee4d2d] hover:not-disabled:bg-[#fff1f0] hover:not-disabled:text-[#ee4d2d] disabled:opacity-35 disabled:cursor-not-allowed"
           >
             Sau <ChevronRight size={15} />
           </button>
@@ -497,7 +497,7 @@ export function BannerList() {
               </h2>
               <button
                 type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] text-[1.1rem] text-[#9c9085] transition-all hover:bg-[#faf9f7] hover:text-[#1a1612]"
+                className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#e8e3da] text-[1.1rem] text-[#9c9085] transition-all hover:bg-[#faf9f7] hover:text-[#1a1612]"
                 onClick={() => setIsModalOpen(false)}
               >
                 <X size={18} />
@@ -508,7 +508,7 @@ export function BannerList() {
               {/* Image */}
               <div>
                 <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
-                  Ảnh banner <span className="text-[#c9521a]">*</span>
+                  Ảnh banner <span className="text-[#ee4d2d]">*</span>
                 </label>
                 <div className="flex gap-4">
                   <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-xl border border-[#e8e3da] bg-[#faf9f7]">
@@ -531,7 +531,7 @@ export function BannerList() {
                     )}
                   </div>
                   <div className="flex flex-1 flex-col justify-center">
-                    <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[#c9bfad] bg-[#faf9f7] px-4 py-3 text-[0.8rem] font-medium text-[#c9521a] hover:border-[#c9521a]/50 hover:bg-[#fdf1eb]">
+                    <label className="inline-flex cursor-pointer items-center justify-center rounded-[10px] border border-dashed border-[#c9bfad] bg-[#faf9f7] px-4 py-3 text-[0.8rem] font-medium text-[#ee4d2d] hover:border-[#ee4d2d]/50 hover:bg-[#fff1f0]">
                       {isUploading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -557,7 +557,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Tiêu đề</label>
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.title}
                     onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="Tiêu đề banner"
@@ -567,7 +567,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Tiêu đề phụ</label>
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.subtitle}
                     onChange={(e) => setForm((prev) => ({ ...prev, subtitle: e.target.value }))}
                     placeholder="Subtitle"
@@ -576,7 +576,7 @@ export function BannerList() {
                 <div>
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Vị trí *</label>
                   <select
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a]"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d]"
                     value={form.position}
                     onChange={(e) => setForm((prev) => ({ ...prev, position: e.target.value as 'MAIN' | 'RIGHT_TOP' | 'RIGHT_BOTTOM' }))}
                   >
@@ -590,7 +590,7 @@ export function BannerList() {
                   <input
                     type="number"
                     min={0}
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.sortOrder}
                     onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: parseInt(e.target.value, 10) || 0 }))}
                   />
@@ -610,7 +610,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Nút (chữ)</label>
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.buttonText}
                     onChange={(e) => setForm((prev) => ({ ...prev, buttonText: e.target.value }))}
                     placeholder="Xem ngay"
@@ -620,7 +620,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Link nút</label>
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.buttonLink}
                     onChange={(e) => setForm((prev) => ({ ...prev, buttonLink: e.target.value }))}
                     placeholder="/products"
@@ -630,7 +630,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Từ ngày</label>
                   <input
                     type="datetime-local"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.startDate}
                     onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
                   />
@@ -639,7 +639,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Đến ngày</label>
                   <input
                     type="datetime-local"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.endDate}
                     onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
                   />
@@ -648,7 +648,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Màu nền</label>
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.backgroundColor}
                     onChange={(e) => setForm((prev) => ({ ...prev, backgroundColor: e.target.value }))}
                     placeholder="#FFFFFF"
@@ -658,7 +658,7 @@ export function BannerList() {
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Màu chữ</label>
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.textColor}
                     onChange={(e) => setForm((prev) => ({ ...prev, textColor: e.target.value }))}
                     placeholder="#000000"
@@ -667,7 +667,7 @@ export function BannerList() {
                 <div className="col-span-2">
                   <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">Mô tả</label>
                   <textarea
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2 text-[0.9rem] outline-none focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     rows={2}
                     value={form.description}
                     onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
@@ -677,7 +677,7 @@ export function BannerList() {
               </div>
 
               {formError && (
-                <div className="rounded-lg border border-[#f5c2c2] bg-[#fdf2f2] px-3.5 py-2.5 text-[0.83rem] text-[#b03030]">
+                <div className="rounded-[10px] border border-[#f8aba6] bg-[#fdf2f2] px-3.5 py-2.5 text-[0.83rem] text-[#b03030]">
                   ⚠ {formError}
                 </div>
               )}
@@ -686,7 +686,7 @@ export function BannerList() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-lg border border-[#c9bfad] bg-white px-4.5 py-2.5 text-[0.88rem] font-medium text-[#5c5347] hover:bg-[#faf9f7]"
+                  className="rounded-[10px] border border-[#c9bfad] bg-white px-4.5 py-2.5 text-[0.88rem] font-medium text-[#5c5347] hover:bg-[#faf9f7]"
                 >
                   Hủy
                 </button>
@@ -694,7 +694,7 @@ export function BannerList() {
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving || isUploading}
-                  className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.88rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 hover:not-disabled:-translate-y-px hover:not-disabled:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 rounded-[10px] bg-linear-to-br from-[#ee4d2d] to-[#d73211] px-5 py-2.5 text-[0.88rem] font-semibold text-white shadow-md shadow-[#ee4d2d]/30 hover:not-disabled:-translate-y-px hover:not-disabled:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {editingBanner ? 'Cập nhật' : 'Tạo banner'}

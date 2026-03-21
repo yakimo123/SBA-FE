@@ -66,9 +66,9 @@ const TABS = [
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 const SELECT_CLS =
-  "w-full p-[10px_36px_10px_14px] border border-[#c9bfad] rounded-[9px] text-[0.9rem] text-[#1a1612] bg-white outline-none cursor-pointer transition-all appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239c9085%22 stroke-width=%222.5%22%3E%3Cpath d=%22m6 9 6 6 6-6%22/%3E%3C/svg%3E')] bg-no-repeat bg-[right_12px_center] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12";
+  "w-full p-[10px_36px_10px_14px] border border-[#c9bfad] rounded-[9px] text-[0.9rem] text-[#1a1612] bg-white outline-none cursor-pointer transition-all appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239c9085%22 stroke-width=%222.5%22%3E%3Cpath d=%22m6 9 6 6 6-6%22/%3E%3C/svg%3E')] bg-no-repeat bg-[right_12px_center] focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12";
 const INPUT_CLS =
-  'w-full p-[10px_14px] border border-[#c9bfad] rounded-[9px] text-[0.9rem] text-[#1a1612] bg-white outline-none transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12';
+  'w-full p-[10px_14px] border border-[#c9bfad] rounded-[9px] text-[0.9rem] text-[#1a1612] bg-white outline-none transition-all placeholder:text-[#9c9085] focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12';
 const LABEL_CLS =
   'block text-[0.8rem] font-semibold text-[#5c5347] mb-[7px] tracking-[0.01em]';
 
@@ -332,7 +332,7 @@ export function ProductForm() {
     return (
       <div className="min-h-screen bg-[#f5f3ef] p-8 font-sans text-[#1a1612]">
         <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="w-10 h-10 rounded-full border-[3px] border-[#e8e3da] border-t-[#c9521a] animate-spin" />
+          <div className="w-10 h-10 rounded-full border-[3px] border-[#e8e3da] border-t-[#ee4d2d] animate-spin" />
           <p className="text-sm text-[#9c9085]">Loading product…</p>
         </div>
       </div>
@@ -347,7 +347,7 @@ export function ProductForm() {
           <button
             type="button"
             onClick={() => navigate('/admin/products')}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#5c5347] transition-all hover:bg-[#f2efe9]"
+            className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#e8e3da] bg-white text-[#5c5347] transition-all hover:bg-[#f2efe9]"
           >
             <X size={17} />
           </button>
@@ -364,7 +364,7 @@ export function ProductForm() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#c9521a] text-white text-[0.85rem] font-semibold shadow-[0_3px_10px_rgba(201,82,26,0.3)] transition-all hover:bg-[#b04518] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-[#ee4d2d] text-white text-[0.85rem] font-semibold shadow-[0_3px_10px_rgba(238,77,45,0.3)] transition-all hover:bg-[#b04518] disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isSaving ? (
             <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
@@ -377,13 +377,13 @@ export function ProductForm() {
 
       {/* ── Alerts ── */}
       {error && (
-        <div className="mb-4 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mb-4 flex items-center gap-3 rounded-[10px] border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <X size={15} className="shrink-0" />
           {error}
         </div>
       )}
       {success && (
-        <div className="mb-4 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mb-4 flex items-center gap-3 rounded-[10px] border border-green-200 bg-green-50 p-3 text-sm text-green-700">
           ✓ {success}
         </div>
       )}
@@ -397,7 +397,7 @@ export function ProductForm() {
             onClick={() => setActiveTab(tid)}
             className={`flex items-center gap-2 px-5 py-3 text-[0.82rem] font-semibold transition-all -mb-px border-b-2 ${
               activeTab === tid
-                ? 'border-[#c9521a] text-[#c9521a]'
+                ? 'border-[#ee4d2d] text-[#ee4d2d]'
                 : 'border-transparent text-[#9c9085] hover:text-[#5c5347]'
             }`}
           >
@@ -417,7 +417,7 @@ export function ProductForm() {
               {/* Product name */}
               <div>
                 <label className={LABEL_CLS}>
-                  Product Name <span className="text-[#c9521a] ml-0.5">*</span>
+                  Product Name <span className="text-[#ee4d2d] ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
@@ -504,7 +504,7 @@ export function ProductForm() {
                 <div>
                   <label className={LABEL_CLS}>
                     Original Price (₫){' '}
-                    <span className="text-[#c9521a] ml-0.5">*</span>
+                    <span className="text-[#ee4d2d] ml-0.5">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-0 top-0 bottom-0 w-9 flex items-center justify-center bg-[#f2efe9] border-r border-[#e8e3da] rounded-l-[9px] text-[#9c9085] text-[0.85rem] pointer-events-none">
@@ -549,7 +549,7 @@ export function ProductForm() {
                     <span className="absolute left-0 top-0 bottom-0 w-9 flex items-center justify-center text-[#9c9085] text-[0.85rem] pointer-events-none">
                       ₫
                     </span>
-                    <div className="pl-10 pr-3 py-[10px] border border-[#e8e3da] rounded-[9px] bg-[#faf9f7] text-[0.9rem] font-mono font-semibold text-[#c9521a]">
+                    <div className="pl-10 pr-3 py-[10px] border border-[#e8e3da] rounded-[9px] bg-[#faf9f7] text-[0.9rem] font-mono font-semibold text-[#ee4d2d]">
                       {finalPrice > 0
                         ? finalPrice.toLocaleString('vi-VN')
                         : '—'}
@@ -595,7 +595,7 @@ export function ProductForm() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-[8px] bg-[#f2efe9] text-[#5c5347] text-[0.82rem] font-semibold cursor-pointer transition-all hover:bg-[#e8e3da] hover:text-[#1a1612] ${isUploading ? 'opacity-60 pointer-events-none' : ''}`}
                 >
                   {isUploading ? (
-                    <span className="w-4 h-4 rounded-full border-2 border-[#9c9085]/40 border-t-[#c9521a] animate-spin" />
+                    <span className="w-4 h-4 rounded-full border-2 border-[#9c9085]/40 border-t-[#ee4d2d] animate-spin" />
                   ) : (
                     <ImageIcon size={16} />
                   )}
@@ -646,7 +646,7 @@ export function ProductForm() {
                         <X size={14} />
                       </button>
                       {idx === 0 && (
-                        <span className="absolute bottom-2 left-2 rounded-md bg-[#c9521a]/90 px-2 py-0.5 text-[0.65rem] text-white font-bold tracking-wide uppercase shadow-sm">
+                        <span className="absolute bottom-2 left-2 rounded-[10px] bg-[#ee4d2d]/90 px-2 py-0.5 text-[0.65rem] text-white font-bold tracking-wide uppercase shadow-sm">
                           Main Image
                         </span>
                       )}
@@ -691,10 +691,10 @@ export function ProductForm() {
                 {productAttrs.map((pa) => (
                   <div
                     key={pa.productAttributeId}
-                    className="flex items-center justify-between p-[11px_16px] bg-[#faf9f7] border border-[#e8e3da] rounded-[10px] hover:bg-[#fdf1eb] transition-all"
+                    className="flex items-center justify-between p-[11px_16px] bg-[#faf9f7] border border-[#e8e3da] rounded-[10px] hover:bg-[#fff1f0] transition-all"
                   >
                     <span>
-                      <span className="font-semibold text-[#4a3f8f] text-[0.85rem]">
+                      <span className="font-semibold text-[#ee4d2d] text-[0.85rem]">
                         {pa.attributeName ?? `Attr #${pa.attributeId}`}
                       </span>
                       <span className="text-[#9c9085] mx-2 text-[0.8rem]">
@@ -706,7 +706,7 @@ export function ProductForm() {
                     </span>
                     <button
                       type="button"
-                      className="flex h-7 w-7 items-center justify-center rounded-[7px] border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:bg-[#fdf2f2] hover:border-[#f5c2c2]"
+                      className="flex h-7 w-7 items-center justify-center rounded-[7px] border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:bg-[#fdf2f2] hover:border-[#f8aba6]"
                       onClick={() => handleDeleteAttr(pa.productAttributeId)}
                     >
                       <Trash2 size={13} />
@@ -753,7 +753,7 @@ export function ProductForm() {
                   <button
                     type="button"
                     onClick={handleAddAttr}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-[10px] rounded-[9px] bg-[#4a3f8f] text-white text-[0.85rem] font-semibold transition-all hover:bg-[#3b3279]"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-[10px] rounded-[9px] bg-[#ee4d2d] text-white text-[0.85rem] font-semibold transition-all hover:bg-[#dc2626]"
                   >
                     <Plus size={15} /> Add
                   </button>

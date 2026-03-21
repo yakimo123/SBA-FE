@@ -23,11 +23,11 @@ const STATUS_LABEL: Record<BulkOrderStatus, string> = {
 
 const STATUS_STYLE: Record<BulkOrderStatus, string> = {
   PENDING_REVIEW: 'bg-amber-50 text-amber-700 border-amber-300',
-  CONFIRMED: 'bg-blue-50 text-blue-700 border-blue-300',
+  CONFIRMED: 'bg-red-50 text-[#d73211] -[#fca5a5]',
   AWAITING_PAYMENT: 'bg-orange-50 text-orange-700 border-orange-300',
   PAID: 'bg-emerald-50 text-emerald-700 border-emerald-300',
-  PROCESSING: 'bg-indigo-50 text-indigo-700 border-indigo-300',
-  SHIPPED: 'bg-purple-50 text-purple-700 border-purple-300',
+  PROCESSING: 'bg-red-50 text-[#d73211] -[#fca5a5]',
+  SHIPPED: '-[#fff1f0] -[#d73211] -[#fca5a5]',
   COMPLETED: 'bg-green-50 text-green-700 border-green-300',
   CANCELLED: 'bg-slate-100 text-slate-600 border-slate-300',
   REJECTED: 'bg-red-50 text-red-700 border-red-300',
@@ -54,7 +54,7 @@ export function CompanyDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="font-['Fira_Code'] text-3xl font-bold text-blue-900">
+        <h1 className="font-['Fira_Code'] text-3xl font-bold -[#7f1d1d]">
           Tổng quan
         </h1>
         <p className="mt-1 font-['Fira_Sans'] text-gray-500">
@@ -65,18 +65,18 @@ export function CompanyDashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         {/* Tổng đơn */}
-        <div className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-red-100 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-['Fira_Sans'] text-sm text-gray-500">
                 Tổng đơn hàng
               </p>
-              <p className="mt-1 font-['Fira_Code'] text-3xl font-bold text-blue-900">
+              <p className="mt-1 font-['Fira_Code'] text-3xl font-bold -[#7f1d1d]">
                 {totalOrders}
               </p>
             </div>
-            <div className="rounded-lg bg-blue-100 p-3">
-              <ClipboardList className="h-6 w-6 text-blue-600" />
+            <div className="rounded-lg bg-red-100 p-3">
+              <ClipboardList className="h-6 w-6 text-[#ee4d2d]" />
             </div>
           </div>
         </div>
@@ -122,9 +122,9 @@ export function CompanyDashboard() {
           onClick={() => navigate('/company/orders/new')}
           className="inline-flex items-center gap-2 rounded-lg border px-5 py-2.5 font-['Fira_Sans'] text-sm font-semibold shadow-sm transition-colors"
           style={{
-            borderColor: '#bfdbfe',
+            borderColor: '#fca5a5',
             backgroundColor: '#ffffff',
-            color: '#1d4ed8',
+            color: '#d73211',
           }}
         >
           <PlusCircle className="h-4 w-4" />
@@ -134,9 +134,9 @@ export function CompanyDashboard() {
           onClick={() => navigate('/company/orders')}
           className="inline-flex items-center gap-2 rounded-lg border px-5 py-2.5 font-['Fira_Sans'] text-sm font-semibold transition-colors"
           style={{
-            borderColor: '#93c5fd',
-            backgroundColor: '#eff6ff',
-            color: '#1d4ed8',
+            borderColor: '#fca5a5',
+            backgroundColor: '#fff1f0',
+            color: '#d73211',
           }}
         >
           <ClipboardList className="h-4 w-4" />
@@ -146,13 +146,13 @@ export function CompanyDashboard() {
 
       {/* Recent Orders */}
       <div>
-        <h2 className="mb-4 font-['Fira_Code'] text-xl font-semibold text-blue-900">
+        <h2 className="mb-4 font-['Fira_Code'] text-xl font-semibold -[#7f1d1d]">
           Đơn hàng gần đây
         </h2>
-        <div className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-red-100 bg-white shadow-sm">
           <table className="w-full text-sm font-['Fira_Sans']">
             <thead>
-              <tr className="border-b border-blue-50 bg-blue-50/60 text-left text-xs font-semibold uppercase tracking-wide text-blue-700">
+              <tr className="border-b border-red-50 bg-red-50/60 text-left text-xs font-semibold uppercase tracking-wide text-[#d73211]">
                 <th className="px-6 py-3">Mã đơn</th>
                 <th className="px-6 py-3">Ngày tạo</th>
                 <th className="px-6 py-3">Sản phẩm</th>
@@ -165,9 +165,9 @@ export function CompanyDashboard() {
               {orders.slice(0, 5).map((order) => (
                 <tr
                   key={order.bulkOrderId}
-                  className="border-b border-gray-50 hover:bg-blue-50/40 transition-colors"
+                  className="border-b border-gray-50 hover:bg-red-50/40 transition-colors"
                 >
-                  <td className="px-6 py-4 font-mono font-medium text-blue-700">
+                  <td className="px-6 py-4 font-mono font-medium text-[#d73211]">
                     {order.bulkOrderId}
                   </td>
                   <td className="px-6 py-4 text-gray-600">
@@ -193,7 +193,7 @@ export function CompanyDashboard() {
                       onClick={() =>
                         navigate(`/company/orders/${order.bulkOrderId}`)
                       }
-                      className="text-xs font-medium text-blue-600 hover:underline"
+                      className="text-xs font-medium text-[#ee4d2d] hover:underline"
                     >
                       Xem chi tiết
                     </button>

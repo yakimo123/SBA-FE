@@ -159,19 +159,19 @@ export function TrademarkList() {
       {/* ── Header ── */}
       <div className="mb-7 flex items-end justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#c9521a] to-[#e07040] text-white shadow-lg shadow-[#c9521a]/35">
+          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#ee4d2d] to-[#d73211] text-white shadow-lg shadow-[#ee4d2d]/35">
             <Award size={24} />
           </div>
           <div>
             <h1 className="font-serif text-3xl tracking-tight text-[#1a1612]">
               Trademarks
               {totalElements > 0 && (
-                <span className="ml-2 inline-flex items-center rounded-full bg-[#eeecf8] px-2 py-0.5 font-mono text-[0.7rem] font-medium tracking-wide text-[#4a3f8f]">
+                <span className="ml-2 inline-flex items-center rounded-full bg-[#fff1f0] px-2 py-0.5 font-mono text-[0.7rem] font-medium tracking-wide text-[#ee4d2d]">
                   {totalElements}
                 </span>
               )}
             </h1>
-            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#c9521a] to-transparent ml-px" />
+            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#ee4d2d] to-transparent ml-px" />
             <p className="mt-1.5 text-sm text-[#9c9085]">
               Manage brands and trademarks
             </p>
@@ -180,7 +180,7 @@ export function TrademarkList() {
         <button
           type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.9rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-[#c9521a]/38 active:translate-y-0"
+          className="flex items-center gap-2 rounded-[10px] bg-linear-to-br from-[#ee4d2d] to-[#d73211] px-5 py-2.5 text-[0.9rem] font-semibold text-white shadow-md shadow-[#ee4d2d]/30 transition-all hover:-translate-y-px hover:shadow-lg hover:shadow-[#ee4d2d]/38 active:translate-y-0"
         >
           <Plus size={17} /> Add Trademark
         </button>
@@ -188,7 +188,7 @@ export function TrademarkList() {
 
       {/* ── Error ── */}
       {error && (
-        <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-[#f5c2c2] border-l-3 border-l-[#b03030] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b03030]">
+        <div className="mb-5 flex items-center gap-2.5 rounded-[10px] border border-[#f8aba6] border-l-3 border-l-[#b03030] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b03030]">
           ⚠ {error}
         </div>
       )}
@@ -199,7 +199,7 @@ export function TrademarkList() {
           <div className="relative flex items-center">
             <Search className="absolute left-2.5 h-3.5 w-3.5 text-[#9c9085]" />
             <input
-              className="w-[220px] rounded-lg border border-[#e8e3da] bg-white py-1.5 pl-8 pr-3 text-[0.85rem] text-[#1a1612] outline-hidden transition-all focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+              className="w-[220px] rounded-[10px] border border-[#e8e3da] bg-white py-1.5 pl-8 pr-3 text-[0.85rem] text-[#1a1612] outline-hidden transition-all focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
               placeholder="Search brands or countries…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -212,7 +212,7 @@ export function TrademarkList() {
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-4 py-20">
-            <Loader2 className="h-9 w-9 animate-spin text-[#c9521a]" />
+            <Loader2 className="h-9 w-9 animate-spin text-[#ee4d2d]" />
             <p className="text-sm text-[#9c9085]">Loading trademarks…</p>
           </div>
         ) : filtered.length === 0 ? (
@@ -247,16 +247,16 @@ export function TrademarkList() {
               {filtered.map((b) => (
                 <tr
                   key={b.brandId}
-                  className="group border-b border-[#e8e3da] last:border-b-0 hover:bg-[#fdf1eb]/50"
+                  className="group border-b border-[#e8e3da] last:border-b-0 hover:bg-[#fff1f0]/50"
                 >
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#f4c4a8] bg-linear-to-br from-[#fdf1eb] to-[#f4c4a8] font-serif text-[0.95rem] font-normal tracking-tight text-[#c9521a]">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-[#fca5a5] bg-linear-to-br from-[#fff1f0] to-[#fca5a5] font-serif text-[0.95rem] font-normal tracking-tight text-[#ee4d2d]">
                         {b.logoUrl ? (
                           <img
                             src={b.logoUrl}
                             alt=""
-                            className="h-full w-full rounded-lg object-cover"
+                            className="h-full w-full rounded-[10px] object-cover"
                           />
                         ) : (
                           getInitials(b.brandName)
@@ -285,7 +285,7 @@ export function TrademarkList() {
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="inline-block rounded-md border border-[#e8e3da] bg-[#faf9f7] px-2 py-0.5 font-mono text-[0.75rem] text-[#9c9085]">
+                    <span className="inline-block rounded-[10px] border border-[#e8e3da] bg-[#faf9f7] px-2 py-0.5 font-mono text-[0.75rem] text-[#9c9085]">
                       #{b.brandId}
                     </span>
                   </td>
@@ -293,7 +293,7 @@ export function TrademarkList() {
                     <div className="flex gap-1.5 align-center">
                       <button
                         type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#4a3f8f] transition-all hover:border-[#4a3f8f] hover:bg-[#eeecf8]"
+                        className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#e8e3da] bg-white text-[#ee4d2d] transition-all hover:border-[#ee4d2d] hover:bg-[#fff1f0]"
                         title="Edit"
                         onClick={() => openEdit(b)}
                       >
@@ -301,7 +301,7 @@ export function TrademarkList() {
                       </button>
                       <button
                         type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:border-[#f5c2c2] hover:bg-[#fdf2f2]"
+                        className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#e8e3da] bg-white text-[#b03030] transition-all hover:border-[#f8aba6] hover:bg-[#fdf2f2]"
                         title="Delete"
                         onClick={() => handleDelete(b)}
                       >
@@ -323,7 +323,7 @@ export function TrademarkList() {
             type="button"
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
-            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-[10px] border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#ee4d2d] hover:not-disabled:bg-[#fff1f0] hover:not-disabled:text-[#ee4d2d] disabled:opacity-35 disabled:cursor-not-allowed"
           >
             <ChevronLeft size={15} /> Previous
           </button>
@@ -334,7 +334,7 @@ export function TrademarkList() {
             type="button"
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
-            className="flex items-center gap-1 rounded-lg border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#c9521a] hover:not-disabled:bg-[#fdf1eb] hover:not-disabled:text-[#c9521a] disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-[10px] border border-[#e8e3da] bg-white px-3.5 py-1.5 text-[0.85rem] font-medium text-[#5c5347] transition-all hover:not-disabled:border-[#ee4d2d] hover:not-disabled:bg-[#fff1f0] hover:not-disabled:text-[#ee4d2d] disabled:opacity-35 disabled:cursor-not-allowed"
           >
             Next <ChevronRight size={15} />
           </button>
@@ -357,7 +357,7 @@ export function TrademarkList() {
               </h2>
               <button
                 type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8e3da] text-[1.1rem] text-[#9c9085] transition-all hover:bg-[#faf9f7] hover:text-[#1a1612]"
+                className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#e8e3da] text-[1.1rem] text-[#9c9085] transition-all hover:bg-[#faf9f7] hover:text-[#1a1612]"
                 onClick={() => setIsModalOpen(false)}
               >
                 <X size={18} />
@@ -390,7 +390,7 @@ export function TrademarkList() {
                         </button>
                       </>
                     ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-br from-[#fdf1eb] to-[#f4c4a8] text-[#c9521a]">
+                      <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-br from-[#fff1f0] to-[#fca5a5] text-[#ee4d2d]">
                         <span className="font-serif text-2xl">
                           {form.brandName ? (
                             getInitials(form.brandName)
@@ -403,7 +403,7 @@ export function TrademarkList() {
                   </div>
 
                   <div className="flex flex-1 flex-col justify-center">
-                    <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-[#c9bfad] bg-[#faf9f7] px-4 py-3 text-[0.8rem] font-medium text-[#c9521a] transition-all hover:border-[#c9521a]/50 hover:bg-[#fdf1eb]">
+                    <label className="inline-flex cursor-pointer items-center justify-center rounded-[10px] border border-dashed border-[#c9bfad] bg-[#faf9f7] px-4 py-3 text-[0.8rem] font-medium text-[#ee4d2d] transition-all hover:border-[#ee4d2d]/50 hover:bg-[#fff1f0]">
                       {isUploading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -432,11 +432,11 @@ export function TrademarkList() {
 
               <div className="mb-4">
                 <label className="mb-2 block text-[0.8rem] font-semibold text-[#5c5347]">
-                  Brand Name <span className="text-[#c9521a]">*</span>
+                  Brand Name <span className="text-[#ee4d2d]">*</span>
                 </label>
                 <input
                   type="text"
-                  className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                  className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                   autoFocus
                   value={form.brandName}
                   onChange={(e) =>
@@ -455,7 +455,7 @@ export function TrademarkList() {
                   <Globe className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9c9085]" />
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-[#c9bfad] bg-white py-2.5 pl-9 pr-3.5 text-[0.9rem] text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                    className="w-full rounded-[10px] border border-[#c9bfad] bg-white py-2.5 pl-9 pr-3.5 text-[0.9rem] text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                     value={form.country}
                     onChange={(e) =>
                       setForm({ ...form, country: e.target.value })
@@ -470,7 +470,7 @@ export function TrademarkList() {
                   Description
                 </label>
                 <textarea
-                  className="w-full rounded-lg border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] leading-relaxed text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#c9521a] focus:ring-3 focus:ring-[#c9521a]/12"
+                  className="w-full rounded-[10px] border border-[#c9bfad] bg-white px-3.5 py-2.5 text-[0.9rem] leading-relaxed text-[#1a1612] outline-hidden transition-all placeholder:text-[#9c9085] focus:border-[#ee4d2d] focus:ring-3 focus:ring-[#ee4d2d]/12"
                   rows={2}
                   value={form.description}
                   onChange={(e) =>
@@ -481,7 +481,7 @@ export function TrademarkList() {
               </div>
 
               {formError && (
-                <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#f5c2c2] bg-[#fdf2f2] px-3.5 py-2.5 text-[0.83rem] text-[#b03030]">
+                <div className="mt-3 flex items-center gap-2 rounded-[10px] border border-[#f8aba6] bg-[#fdf2f2] px-3.5 py-2.5 text-[0.83rem] text-[#b03030]">
                   ⚠ {formError}
                 </div>
               )}
@@ -490,7 +490,7 @@ export function TrademarkList() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-lg border border-[#c9bfad] bg-white px-4.5 py-2.5 text-[0.88rem] font-medium text-[#5c5347] transition-all hover:border-[#9c9085] hover:bg-[#faf9f7]"
+                  className="rounded-[10px] border border-[#c9bfad] bg-white px-4.5 py-2.5 text-[0.88rem] font-medium text-[#5c5347] transition-all hover:border-[#9c9085] hover:bg-[#faf9f7]"
                 >
                   Cancel
                 </button>
@@ -498,7 +498,7 @@ export function TrademarkList() {
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving || isUploading}
-                  className="flex items-center gap-2 rounded-lg bg-linear-to-br from-[#c9521a] to-[#e07040] px-5 py-2.5 text-[0.88rem] font-semibold text-white shadow-md shadow-[#c9521a]/30 transition-all hover:not-disabled:-translate-y-px hover:not-disabled:shadow-lg hover:not-disabled:shadow-[#c9521a]/38 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 rounded-[10px] bg-linear-to-br from-[#ee4d2d] to-[#d73211] px-5 py-2.5 text-[0.88rem] font-semibold text-white shadow-md shadow-[#ee4d2d]/30 transition-all hover:not-disabled:-translate-y-px hover:not-disabled:shadow-lg hover:not-disabled:shadow-[#ee4d2d]/38 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {editingBrand ? 'Save Changes' : 'Create'}

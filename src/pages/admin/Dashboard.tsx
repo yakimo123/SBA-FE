@@ -27,20 +27,19 @@ import {
 import { useDashboard } from '../../hooks/useDashboard';
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .db-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --success: #2d7a4f;
     --success-soft: #edf7f2;
     --warning: #905a10;
@@ -50,7 +49,7 @@ const css = `
     --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -61,16 +60,15 @@ const css = `
     display: flex; align-items: flex-end;
     justify-content: space-between; gap: 16px; margin-bottom: 28px;
   }
-  .db-header-left { display: flex; align-items: center; gap: 16px; }
   .db-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(255,106,0,0.35); flex-shrink: 0;
   }
   .db-icon-badge svg { color: white; width: 24px; height: 24px; }
   .db-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-family: 'Outfit', sans-serif; font-size: 2rem;
     font-weight: 400; color: var(--ink); line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
@@ -84,7 +82,7 @@ const css = `
     display: flex; align-items: center; gap: 8px;
     padding: 9px 18px; border: 1px solid var(--border);
     border-radius: var(--radius); background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
     font-weight: 500; color: var(--ink-2); cursor: pointer;
     transition: all 0.15s;
   }
@@ -93,14 +91,14 @@ const css = `
   .db-error {
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; padding: 80px 20px; gap: 16px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
+    background: var(--danger-soft); border: 1px solid #f8aba6;
     border-left: 3px solid var(--danger); border-radius: var(--radius);
     color: var(--danger); text-align: center;
   }
   .db-error-btn {
     padding: 9px 20px; border: none; border-radius: var(--radius);
     background: var(--danger); color: white;
-    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem;
     font-weight: 600; cursor: pointer;
   }
   .db-error-btn:hover { opacity: 0.9; }
@@ -139,7 +137,7 @@ const css = `
   .db-kpi-icon.violet { background: var(--violet-soft); color: var(--violet); }
   .db-kpi-icon.orange { background: var(--accent-soft); color: var(--accent); }
   .db-kpi-value {
-    font-family: 'DM Mono', monospace; font-size: 1.5rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.5rem;
     font-weight: 600; color: var(--ink); margin-bottom: 6px;
   }
   .db-kpi-trend {
@@ -169,7 +167,7 @@ const css = `
     padding: 24px; overflow: hidden;
   }
   .db-chart-title {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem;
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-3); margin: 0 0 20px;
   }
@@ -184,14 +182,14 @@ const css = `
     background: var(--surface-2);
   }
   .db-table-title {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem;
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-3); margin: 0;
   }
   .db-table { width: 100%; border-collapse: collapse; }
   .db-table th {
     padding: 12px 24px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); background: var(--surface-2);
   }
@@ -202,10 +200,10 @@ const css = `
   .db-table tbody tr:last-child td { border-bottom: none; }
   .db-table tbody tr:hover td { background: var(--accent-soft); }
   .db-id-text {
-    font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.8rem;
     color: var(--violet); font-weight: 500;
   }
-  .db-price { font-family: 'DM Mono', monospace; font-size: 0.88rem; font-weight: 500; }
+  .db-price { font-family: 'Outfit', sans-serif; font-size: 0.88rem; font-weight: 500; }
   .db-status {
     display: inline-flex; padding: 3px 10px; border-radius: 20px;
     font-size: 0.73rem; font-weight: 600;
@@ -223,7 +221,7 @@ const css = `
     box-shadow: var(--shadow-sm);
   }
   .db-bulk-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.25rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.25rem;
     margin: 0 0 20px; color: var(--ink);
   }
   .db-bulk-stats {
@@ -235,13 +233,13 @@ const css = `
     display: flex; flex-direction: column; gap: 4px;
   }
   .db-bulk-stat-label { font-size: 0.82rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-  .db-bulk-stat-value { font-family: 'DM Mono', monospace; font-size: 1.5rem; font-weight: 600; }
+  .db-bulk-stat-value { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 600; }
   .db-bulk-footer {
     padding-top: 16px; border-top: 1px solid var(--border);
     display: flex; justify-content: space-between; align-items: center;
   }
   .db-bulk-footer-text { font-size: 0.88rem; color: var(--ink-2); }
-  .db-bulk-footer-value { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--ink); }
+  .db-bulk-footer-value { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); }
 `;
 
 export function Dashboard() {
@@ -305,8 +303,8 @@ export function Dashboard() {
   };
 
   const chartColors = {
-    accent: '#c9521a',
-    violet: '#4a3f8f',
+    accent: '#ef4444',
+    violet: '#dc2626',
     success: '#2d7a4f',
     blue: '#1a6fa8',
     warning: '#905a10',
@@ -352,7 +350,7 @@ export function Dashboard() {
                 {bulkOrderStats.pendingReview} đơn
               </span>
             </div>
-            <div className="db-bulk-stat-item" style={{ background: '#eff6ff' }}>
+            <div className="db-bulk-stat-item" style={{ background: '#fff1f0' }}>
               <span className="db-bulk-stat-label" style={{ color: '#1a6fa8' }}>
                 <span className="w-2 h-2 rounded-full bg-[#1a6fa8]" />
                 Chờ thanh toán
@@ -486,11 +484,11 @@ export function Dashboard() {
                 <XAxis
                   dataKey="day"
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <YAxis
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                   tickFormatter={(v) => `₫${(v / 1000000).toFixed(1)}M`}
                 />
                 <Tooltip
@@ -504,7 +502,7 @@ export function Dashboard() {
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
                 <Line
@@ -550,7 +548,7 @@ export function Dashboard() {
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
               </PieChart>
@@ -573,21 +571,21 @@ export function Dashboard() {
                 <XAxis
                   type="number"
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <YAxis
                   dataKey="product"
                   type="category"
                   width={120}
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
                 <Bar
@@ -631,18 +629,18 @@ export function Dashboard() {
                 <XAxis
                   dataKey="month"
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <YAxis
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
                 <Area

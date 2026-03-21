@@ -22,7 +22,7 @@ export function CompanyLayout() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#ee4d2d] border-t-transparent" />
           <p className="text-sm text-slate-400">Đang tải...</p>
         </div>
       </div>
@@ -45,7 +45,7 @@ export function CompanyLayout() {
           <div className="flex h-14 items-center justify-between px-6">
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-sm text-slate-500">
-              <Building2 className="h-4 w-4 text-blue-500" />
+              <Building2 className="h-4 w-4 text-[#ee4d2d]" />
               <span>B2B Portal</span>
               {currentLabel && (
                 <>
@@ -61,7 +61,7 @@ export function CompanyLayout() {
                 <Bell className="h-4.5 w-4.5 h-[18px] w-[18px]" />
               </button>
               <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ee4d2d] text-xs font-bold text-white">
                   {(user?.fullName || user?.name || 'C')[0].toUpperCase()}
                 </div>
                 <span className="text-xs font-medium text-slate-700 max-w-[120px] truncate">
