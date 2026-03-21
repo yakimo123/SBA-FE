@@ -28,7 +28,17 @@ const bulkOrderService = {
         sort: params.sort,
       },
     });
-    return res.data.data;
+    const data = res.data.data;
+    if (data.page) {
+      return {
+        ...data,
+        totalPages: data.page.totalPages,
+        totalElements: data.page.totalElements,
+        size: data.page.size,
+        number: data.page.number,
+      };
+    }
+    return data;
   },
 
   /** Tạo bulk order mới */
