@@ -98,7 +98,18 @@ export const productService = {
       `${BASE}/company/search`,
       { params: query }
     );
-    return res.data.data;
+    const data = res.data.data;
+    // Flatten nested page object if it exists
+    if (data.page) {
+      return {
+        ...data,
+        totalPages: data.page.totalPages,
+        totalElements: data.page.totalElements,
+        size: data.page.size,
+        number: data.page.number,
+      };
+    }
+    return data;
   },
 
   async getCompanyProductById(id: number): Promise<CompanyProduct> {
