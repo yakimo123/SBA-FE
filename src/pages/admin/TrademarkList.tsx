@@ -155,7 +155,7 @@ export function TrademarkList() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f3ef] p-8 font-sans text-[#1a1612]">
+    <div className="min-h-screen bg-[#f3f4f6] p-8 font-sans text-[#1a1612]">
       {/* ── Header ── */}
       <div className="mb-7 flex items-end justify-between gap-4">
         <div className="flex items-center gap-4">

@@ -19,7 +19,7 @@ const css = `
 
   .col-root {
     font-family: 'Inter', sans-serif;
-    background: #f5f3ef;
+    background: #f3f4f6;
     min-height: 100vh;
     color: #1a1612;
     padding: 32px;

@@ -3,6 +3,8 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
+  Download,
+  Loader2,
   Package,
   Search,
 } from 'lucide-react';
@@ -17,10 +19,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BranchResponse, branchService } from '@/services/branchService';
+import { reportService } from '@/services/reportService';
 import {
   WarehouseInventoryItem,
   warehouseService,
 } from '@/services/warehouseService';
+import { downloadExcelFileFromBase64 } from '@/utils/exportUtils';
 
 export function StockInventoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +32,7 @@ export function StockInventoryPage() {
   const [inventory, setInventory] = useState<WarehouseInventoryItem[]>([]);
   const [branches, setBranches] = useState<BranchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -41,6 +46,19 @@ export function StockInventoryPage() {
       console.error(err);
     }
   }, []);
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const base64Data = await reportService.exportInventoryReport();
+      downloadExcelFileFromBase64(base64Data, 'BaoCaoTonKho.xlsx');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error?.response?.data?.message || 'Lỗi xuất báo cáo tồn kho');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const fetchInventory = useCallback(async () => {
     setIsLoading(true);
@@ -83,11 +101,21 @@ export function StockInventoryPage() {
     <div className="min-h-screen bg-slate-50 pb-10">
       <div className="space-y-5">
         {/* Page header */}
-        <div>
-          <h1 className="text-xl font-semibold text-slate-800">Tồn kho</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Theo dõi và quản lý mức tồn kho theo chi nhánh.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-800">Tồn kho</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Theo dõi và quản lý mức tồn kho theo chi nhánh.
+            </p>
+          </div>
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Xuất báo cáo
+          </button>
         </div>
 
         {/* Stat cards */}

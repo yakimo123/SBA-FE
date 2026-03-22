@@ -15,7 +15,7 @@ import { BulkOrder, BulkOrderStatus } from '../../types';
 const css = `
   .bol-root {
     padding: 32px;
-    background: #f8f9fa;
+    background: #f3f4f6;
     min-height: 100vh;
   }
   .bol-header {
@@ -121,7 +121,7 @@ const css = `
     border-collapse: collapse;
   }
   .bol-table th {
-    background: #fdfaf6;
+    background: #f9fafb;
     padding: 14px 20px;
     text-align: left;
     font-size: 0.75rem;
@@ -138,7 +138,7 @@ const css = `
     color: #374151;
   }
   .bol-table tr:hover td {
-    background: #fdfaf6;
+    background: #f9fafb;
   }
 
   .bol-id {
@@ -187,7 +187,7 @@ const css = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fdfaf6;
+    background: #f9fafb;
   }
   .bol-page-btn {
     width: 32px;

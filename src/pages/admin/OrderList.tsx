@@ -9,7 +9,12 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { OrderResponse, orderService, OrderStatus } from '../../services/orderService';
+import {
+  OrderListParams,
+  OrderResponse,
+  orderService,
+  OrderStatus,
+} from '../../services/orderService';
 
 const PAGE_SIZE = 20;
 
@@ -226,20 +231,47 @@ const css = `
   .ol-page-info {
     font-family: 'Outfit', sans-serif; font-size: 0.78rem; color: var(--ink-3); padding: 0 8px;
   }
+
+  .ol-tabs {
+    display: flex; gap: 8px; margin: 0 0 24px; padding: 4px;
+    background: rgba(0,0,0,0.03); border-radius: 12px;
+    width: fit-content; overflow-x: auto;
+  }
+  .ol-tab {
+    padding: 8px 16px; font-size: 0.85rem; font-weight: 500;
+    color: var(--ink-3); cursor: pointer; border-radius: 8px;
+    transition: all 0.2s ease; white-space: nowrap;
+  }
+  .ol-tab:hover { color: var(--ink); background: rgba(0,0,0,0.03); }
+  .ol-tab.active {
+    background: white; color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
 `;
 
 const statusConfig = (status: OrderStatus) => {
   const map: Record<OrderStatus, { label: string; className: string }> = {
-    PENDING:    { label: 'Pending',    className: 'ol-status-pending'    },
-    CONFIRMED:  { label: 'Confirmed',  className: 'ol-status-confirmed'  },
-    PROCESSING: { label: 'Processing', className: 'ol-status-processing'  },
-    SHIPPED:    { label: 'Shipped',    className: 'ol-status-shipped'    },
-    DELIVERED:  { label: 'Delivered',  className: 'ol-status-delivered'  },
-    CANCELLED:  { label: 'Cancelled',  className: 'ol-status-cancelled'  },
-    REFUNDED:   { label: 'Refunded',   className: 'ol-status-refunded'   },
+    PENDING: { label: 'Pending', className: 'ol-status-pending' },
+    CONFIRMED: { label: 'Confirmed', className: 'ol-status-confirmed' },
+    PROCESSING: { label: 'Processing', className: 'ol-status-processing' },
+    SHIPPED: { label: 'Shipped', className: 'ol-status-shipped' },
+    DELIVERED: { label: 'Delivered', className: 'ol-status-delivered' },
+    CANCELLED: { label: 'Cancelled', className: 'ol-status-cancelled' },
+    REFUNDED: { label: 'Refunded', className: 'ol-status-refunded' },
   };
   return map[status] ?? { label: status, className: 'ol-status-pending' };
 };
+
+const STATUS_FILTERS: (OrderStatus | 'ALL')[] = [
+  'ALL',
+  'PENDING',
+  'CONFIRMED',
+  'PROCESSING',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELLED',
+  'REFUNDED',
+];
 
 export function OrderList() {
   const navigate = useNavigate();
@@ -248,13 +280,23 @@ export function OrderList() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [status, setStatus] = useState<OrderStatus | 'ALL'>('ALL');
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-
   useEffect(() => {
     setLoading(true);
+    setError(null);
+    const params: OrderListParams = {
+      page,
+      size: PAGE_SIZE,
+      sort: 'orderDate,desc',
+    };
+    if (status !== 'ALL') {
+      params.status = status;
+    }
+
     orderService
-      .getOrders({ page, size: PAGE_SIZE, sort: 'orderDate,desc' })
+      .getOrders(params)
       .then((data) => {
         setOrders(data.content ?? []);
         setTotalPages(data.totalPages ?? 1);
@@ -262,7 +304,7 @@ export function OrderList() {
       })
       .catch(() => setError('Failed to load orders'))
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [page, status]);
 
   const filtered = orders.filter(
     (o) =>
@@ -293,6 +335,21 @@ export function OrderList() {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="ol-tabs">
+        {STATUS_FILTERS.map((f) => (
+          <div
+            key={f}
+            className={`ol-tab ${status === f ? 'active' : ''}`}
+            onClick={() => {
+              setStatus(f);
+              setPage(0);
+            }}
+          >
+            {f.charAt(0) + f.slice(1).toLowerCase()}
+          </div>
+        ))}
       </div>
 
       {error && <div className="ol-error">⚠ {error}</div>}
@@ -370,7 +427,9 @@ export function OrderList() {
                           type="button"
                           className="ol-btn-view"
                           title="View"
-                          onClick={() => navigate(`/admin/orders/${order.orderId}`)}
+                          onClick={() =>
+                            navigate(`/admin/orders/${order.orderId}`)
+                          }
                         >
                           <Eye size={14} />
                         </button>

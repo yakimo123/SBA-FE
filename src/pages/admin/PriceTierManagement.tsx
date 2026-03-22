@@ -17,7 +17,7 @@ import { BulkPriceTier } from '../../types';
 import { Product } from '../../types/product';
 
 const css = `
-  .ptm-root { padding: 32px; background: #fdfaf6; min-height: 100vh; }
+  .ptm-root { padding: 32px; background: #f3f4f6; min-height: 100vh; }
   .ptm-card { background: white; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
   .ptm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
   .ptm-title-block { display: flex; align-items: center; gap: 16px; }

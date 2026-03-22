@@ -151,11 +151,11 @@ export function CategoryList() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f3ef] p-8 font-sans text-[#1a1612]">
+    <div className="min-h-screen bg-[#f3f4f6] p-8 font-sans text-[#1a1612]">
       {/* ── Header ── */}
       <div className="mb-7 flex items-end justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#ee4d2d] to-[#d73211] text-white shadow-lg shadow-[#ee4d2d]/35">
+          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#ee4d2d] to-[#d73211] text-white shadow-lg shadow-[#ee4d2d]/35">
             <FolderOpen size={24} />
           </div>
           <div>
@@ -167,7 +167,7 @@ export function CategoryList() {
                 </span>
               )}
             </h1>
-            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#ee4d2d] to-transparent ml-[1px]" />
+            <div className="mt-1 h-0.5 w-8 rounded-full bg-linear-to-r from-[#ee4d2d] to-transparent ml-px" />
             <p className="mt-1.5 text-sm text-[#9c9085]">
               Manage product categories
             </p>
@@ -244,7 +244,7 @@ export function CategoryList() {
                 >
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[10px] bg-[#fff1f0] text-[#ee4d2d] overflow-hidden">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#fff1f0] text-[#ee4d2d] overflow-hidden">
                         {cat.imageUrl ? (
                           <img
                             src={cat.imageUrl}

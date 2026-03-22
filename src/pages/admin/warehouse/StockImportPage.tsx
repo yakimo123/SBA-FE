@@ -1,8 +1,6 @@
 import {
-  ArrowLeft,
   Calendar,
   CheckCircle,
-  ChevronRight,
   FileText,
   Loader2,
   Package,
@@ -13,7 +11,6 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -215,19 +212,7 @@ export function StockImportPage() {
       {/* Top bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/admin/warehouse/inventory')}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Kho hàng
-            </button>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-            <span className="text-sm font-medium text-slate-800">
-              Nhập kho mới
-            </span>
-          </div>
+          <div className="flex items-center gap-3"></div>
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => navigate('/admin/warehouse/inventory')}
@@ -386,7 +371,7 @@ export function StockImportPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {importLines.map((line, idx) => (
+                  {importLines.map((line) => (
                     <tr
                       key={line.id}
                       className="hover:bg-slate-50/50 transition-colors"
