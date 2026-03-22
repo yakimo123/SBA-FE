@@ -44,6 +44,7 @@ import { LoginPage } from '../pages/Login';
 import { OrderDetailPage } from '../pages/OrderDetail';
 import { ProductDetailPage } from '../pages/ProductDetail';
 import { ProductListPage } from '../pages/ProductList';
+import { WarrantyPage } from '../pages/WarrantyPage';
 import { RegisterPage } from '../pages/Register';
 import { SearchResultsPage } from '../pages/SearchResultsPage';
 import { UnauthorizedPage } from '../pages/Unauthorized';
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
           { path: 'account', element: <AccountPage /> },
           { path: 'orders/:id', element: <OrderDetailPage /> },
           { path: 'register-business', element: <BusinessRegistrationPage /> },
+          { path: 'warranty', element: <WarrantyPage /> },
         ],
       },
     ],
