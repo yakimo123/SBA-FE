@@ -1,4 +1,4 @@
-import { Check, Gift, Heart, LogOut, MapPin, ShoppingBag, Star, User } from 'lucide-react';
+import { Check, Gift, Heart, LogOut, MapPin, Shield, ShoppingBag, Star, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { type OrderItemResponse, OrderResponse, orderService } from '../services/orderService';
 import { reviewService } from '../services/reviewService';
 import { VoucherResponse,voucherService } from '../services/voucherService';
+import { customerWarrantyService, type CustomerWarrantyResponse } from '../services/customerWarrantyService';
 import { AddressPage } from './Address';
 
 interface ReviewDialogState {
@@ -52,6 +53,8 @@ export function AccountPage() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [voucherList, setVoucherList] = useState<VoucherResponse[]>([]);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
+  const [warranties, setWarranties] = useState<CustomerWarrantyResponse[]>([]);
+  const [loadingWarranties, setLoadingWarranties] = useState(false);
 
   // Review dialog state
   const [reviewDialog, setReviewDialog] = useState<ReviewDialogState>({
@@ -102,11 +105,24 @@ export function AccountPage() {
     }
   }, [user?.userId]);
 
+  const fetchWarranties = useCallback(async () => {
+    setLoadingWarranties(true);
+    try {
+      const data = await customerWarrantyService.getMyWarranties();
+      setWarranties(data);
+    } catch (err) {
+      console.error('Error fetching warranties:', err);
+    } finally {
+      setLoadingWarranties(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchOrders();
     fetchVouchers();
     fetchUserReviews();
-  }, [fetchOrders, fetchVouchers, fetchUserReviews]);
+    fetchWarranties();
+  }, [fetchOrders, fetchVouchers, fetchUserReviews, fetchWarranties]);
 
   const isOrderFullyReviewed = (order: OrderResponse) => {
     const items = order.orderItems || [];
@@ -348,6 +364,15 @@ export function AccountPage() {
                 >
                   <Gift className="w-5 h-5" />
                   <span>Ưu đãi của tôi</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('warranty')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                    activeTab === 'warranty' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Bảo hành của tôi</span>
                 </button>
                 <Separator className="my-2" />
                 <button 
@@ -612,6 +637,129 @@ export function AccountPage() {
               {/* Address Section */}
               {activeTab === 'address' && (
                 <AddressPage />
+              )}
+
+              {/* Warranty Section */}
+              {activeTab === 'warranty' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Bảo hành của tôi</h2>
+                    <Badge className="bg-blue-100 text-blue-700">
+                      {warranties.filter(w => w.status === 'ACTIVE' && !w.isExpired).length} đang bảo hành
+                    </Badge>
+                  </div>
+
+                  {loadingWarranties ? (
+                    <div className="flex items-center justify-center py-16">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+                    </div>
+                  ) : warranties.length === 0 ? (
+                    <Card className="p-6 text-center">
+                      <Shield className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-600">Bạn chưa có thông tin bảo hành nào</p>
+                      <Button onClick={() => navigate('/products')} className="mt-4 bg-red-600 hover:bg-red-700">
+                        Mua sắm ngay
+                      </Button>
+                    </Card>
+                  ) : (
+                    warranties.map((warranty) => (
+                      <Card key={warranty.id} className="p-4">
+                        <div className="flex gap-4">
+                          <img
+                            src={warranty.productImage}
+                            alt={warranty.productName}
+                            className="w-20 h-20 object-cover rounded-lg shrink-0 bg-gray-100"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h3 className="font-bold text-gray-900 line-clamp-2">{warranty.productName}</h3>
+                              <Badge className={
+                                warranty.status === 'ACTIVE' && !warranty.isExpired
+                                  ? 'bg-green-100 text-green-700 shrink-0'
+                                  : warranty.status === 'EXPIRED' || warranty.isExpired
+                                  ? 'bg-red-100 text-red-700 shrink-0'
+                                  : warranty.status === 'CLAIMED'
+                                  ? 'bg-yellow-100 text-yellow-700 shrink-0'
+                                  : 'bg-gray-100 text-gray-700 shrink-0'
+                              }>
+                                {warranty.status === 'ACTIVE' && !warranty.isExpired
+                                  ? 'Còn bảo hành'
+                                  : warranty.status === 'EXPIRED' || warranty.isExpired
+                                  ? 'Hết hạn'
+                                  : warranty.status === 'CLAIMED'
+                                  ? 'Đang xử lý'
+                                  : 'Vô hiệu'}
+                              </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-gray-600 mb-3">
+                              <span>
+                                Loại đơn:{' '}
+                                <span className="font-medium text-gray-900">
+                                  {warranty.orderType === 'NORMAL'
+                                    ? `Đơn lẻ #${warranty.orderId}`
+                                    : `Đơn B2B #${warranty.bulkOrderId}`}
+                                </span>
+                              </span>
+                              {warranty.quantity > 1 && (
+                                <span>
+                                  Số lượng: <span className="font-medium text-gray-900">{warranty.quantity}</span>
+                                </span>
+                              )}
+                              <span>
+                                Bắt đầu:{' '}
+                                <span className="font-medium text-gray-900">
+                                  {new Date(warranty.startDate).toLocaleDateString('vi-VN')}
+                                </span>
+                              </span>
+                              <span>
+                                Kết thúc:{' '}
+                                <span className="font-medium text-gray-900">
+                                  {new Date(warranty.endDate).toLocaleDateString('vi-VN')}
+                                </span>
+                              </span>
+                              <span>
+                                Thời hạn:{' '}
+                                <span className="font-medium text-gray-900">{warranty.warrantyMonths} tháng</span>
+                              </span>
+                            </div>
+
+                            {warranty.status === 'ACTIVE' && !warranty.isExpired ? (
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-green-500 h-2 rounded-full transition-all"
+                                    style={{
+                                      width: `${Math.min(100, Math.max(0, (warranty.daysRemaining / (warranty.warrantyMonths * 30)) * 100))}%`,
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-sm font-medium text-green-600 shrink-0">
+                                  Còn {warranty.daysRemaining} ngày
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-sm font-medium text-red-500">Đã hết hạn bảo hành</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/product/${warranty.productId}`)}
+                          >
+                            Xem sản phẩm
+                          </Button>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
               )}
             </div>
           </div>
