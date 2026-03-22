@@ -15,14 +15,14 @@ import { BulkOrder, BulkOrderStatus } from '../../types';
 const css = `
   .bol-root {
     padding: 32px;
-    background: #f8f9fa;
+    background: #f3f4f6;
     min-height: 100vh;
   }
   .bol-header {
     margin-bottom: 32px;
   }
   .bol-title {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 2.5rem;
     color: #1a1a1a;
     margin: 0;
@@ -121,7 +121,7 @@ const css = `
     border-collapse: collapse;
   }
   .bol-table th {
-    background: #fdfaf6;
+    background: #f9fafb;
     padding: 14px 20px;
     text-align: left;
     font-size: 0.75rem;
@@ -138,11 +138,11 @@ const css = `
     color: #374151;
   }
   .bol-table tr:hover td {
-    background: #fdfaf6;
+    background: #f9fafb;
   }
 
   .bol-id {
-    font-family: 'DM Mono', monospace;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.8rem;
     color: #6b7280;
     background: #f3f4f6;
@@ -159,7 +159,7 @@ const css = `
     color: #9ca3af;
   }
   .bol-price {
-    font-family: 'DM Mono', monospace;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     color: #1a1a1a;
   }
@@ -174,7 +174,7 @@ const css = `
   }
   .bol-status-pending_review { background: #fef3c7; color: #92400e; }
   .bol-status-confirmed { background: #dcfce7; color: #166534; }
-  .bol-status-awaiting_payment { background: #dbeafe; color: #1e40af; }
+  .bol-status-awaiting_payment { background: #fef2f2; color: #d73211; }
   .bol-status-paid { background: #dcfce7; color: #166534; }
   .bol-status-processing { background: #f3e8ff; color: #6b21a8; }
   .bol-status-shipped { background: #ecfeff; color: #0891b2; }
@@ -187,7 +187,7 @@ const css = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fdfaf6;
+    background: #f9fafb;
   }
   .bol-page-btn {
     width: 32px;

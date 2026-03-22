@@ -58,7 +58,7 @@ type SearchResults = {
 };
 
 const HIGHLIGHT_CLASS =
-  'bg-[#ede9fe] text-[#7c3aed] rounded-[3px] px-[2px] font-semibold';
+  'bg-[#dc2626]/10 text-[#dc2626] rounded-[3px] px-[2px] font-semibold';
 
 function highlightText(text: string, keyword: string) {
   if (!keyword) return text;
@@ -185,22 +185,21 @@ export function AdminLayout() {
       <Sidebar />
 
       {/* Main Content */}
-      <SidebarInset className="bg-purple-50">
+      <SidebarInset className="bg-[#f8f9fa]">
         {/* Header */}
         <header
-          className="sticky top-0 z-30 shadow-sm"
-          style={{ backgroundColor: '#59168B' }}
+          className="sticky top-0 z-30 shadow-sm border-b border-gray-100 bg-white"
         >
           <div className="flex h-16 items-center justify-between px-8">
             <div className="flex items-center gap-4 mx-4">
               {/* Search */}
               <div className="flex-1 max-w-3xl" ref={searchContainerRef}>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search anything..."
-                    className="w-full rounded-lg border border-white/30 bg-white/10 py-2 pl-10 pr-4 font-['Fira_Sans'] text-sm text-white placeholder-white/60 outline-none transition-all focus:border-white/60 focus:ring-2 focus:ring-white/20"
+                    className="w-full rounded-[12px] border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 font-['Inter'] text-sm text-gray-800 placeholder-gray-400 outline-none transition-all focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/20 focus:bg-white"
                     value={query}
                     onChange={(e) => {
                       const next = e.target.value;
@@ -216,11 +215,11 @@ export function AdminLayout() {
                     }}
                   />
                   {open && query.trim() && (
-                    <div className="absolute left-0 right-0 mt-2 max-h-[420px] overflow-y-auto rounded-[12px] border border-[rgba(124,58,237,0.2)] bg-white py-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)]">
-                      <div className="px-4 pt-[10px] pb-[6px] border-b border-[#f3f4f6] flex items-center justify-between text-[12px] font-['Fira_Sans'] text-[#6b7280]">
+                    <div className="absolute left-0 right-0 mt-2 max-h-[420px] overflow-y-auto rounded-[12px] border border-[#dc2626]/20 bg-white py-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)]">
+                      <div className="px-4 pt-[10px] pb-[6px] border-b border-[#f3f4f6] flex items-center justify-between text-[12px] font-['Inter'] text-[#6b7280]">
                         <span>Kết quả tìm kiếm cho "{query.trim()}"</span>
                         {loading && (
-                          <span className="italic text-[#7c3aed]/70">Đang tìm...</span>
+                          <span className="italic text-[#dc2626]/70">Đang tìm...</span>
                         )}
                       </div>
 
@@ -235,7 +234,7 @@ export function AdminLayout() {
                       )}
 
                       {!loading && !hasAnyResult && (
-                        <div className="px-4 py-10 text-center font-['Fira_Sans']">
+                        <div className="px-4 py-10 text-center font-['Inter']">
                           <div className="text-[18px]">🔍</div>
                           <div className="mt-2 text-[12px] font-semibold text-[#1a1a2e]">
                             Không tìm thấy kết quả
@@ -247,11 +246,11 @@ export function AdminLayout() {
                       )}
 
                       {!loading && hasAnyResult && (
-                        <div className="divide-y divide-[#f3f4f6] font-['Fira_Sans']">
+                        <div className="divide-y divide-[#f3f4f6] font-['Inter']">
                           {(results.products ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>📦 Sản phẩm</span>
                               </div>
                               {(results.products ?? []).map((p) => (
@@ -262,7 +261,7 @@ export function AdminLayout() {
                                     navigate(`/admin/products/${p.productId}/edit`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(p.productName, query.trim())}
@@ -289,8 +288,8 @@ export function AdminLayout() {
 
                           {(results.orders ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>🛒 Đơn hàng</span>
                               </div>
                               {(results.orders ?? []).map((o) => (
@@ -301,7 +300,7 @@ export function AdminLayout() {
                                     navigate(`/admin/orders/${o.orderId}`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(`Đơn #${o.orderId}`, query.trim())}
@@ -323,8 +322,8 @@ export function AdminLayout() {
 
                           {(results.customers ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>👤 Khách hàng</span>
                               </div>
                               {(results.customers ?? []).map((c) => (
@@ -335,7 +334,7 @@ export function AdminLayout() {
                                     navigate(`/admin/customers/${c.userId}`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(c.fullName, query.trim())}
@@ -352,8 +351,8 @@ export function AdminLayout() {
 
                           {(results.reviews ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>💬 Đánh giá</span>
                               </div>
                               {(results.reviews ?? []).map((r) => (
@@ -364,7 +363,7 @@ export function AdminLayout() {
                                     navigate(`/admin/customers/feedback`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(r.userFullName || 'Review', query.trim())}
@@ -386,8 +385,8 @@ export function AdminLayout() {
 
                           {(results.categories ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>🏷️ Danh mục</span>
                               </div>
                               {(results.categories ?? []).map((c) => (
@@ -398,7 +397,7 @@ export function AdminLayout() {
                                     navigate(`/admin/products/categories`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(c.categoryName, query.trim())}
@@ -410,8 +409,8 @@ export function AdminLayout() {
 
                           {(results.brands ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>🎯 Thương hiệu</span>
                               </div>
                               {(results.brands ?? []).map((b) => (
@@ -422,7 +421,7 @@ export function AdminLayout() {
                                     navigate(`/admin/products/trademarks`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(b.brandName, query.trim())}
@@ -434,8 +433,8 @@ export function AdminLayout() {
 
                           {(results.suppliers ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>🏭 Nhà cung cấp</span>
                               </div>
                               {(results.suppliers ?? []).map((s) => (
@@ -446,7 +445,7 @@ export function AdminLayout() {
                                     navigate(`/admin/products/suppliers`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(s.supplierName, query.trim())}
@@ -463,8 +462,8 @@ export function AdminLayout() {
 
                           {(results.vouchers ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>🎟️ Voucher</span>
                               </div>
                               {(results.vouchers ?? []).map((v) => (
@@ -475,7 +474,7 @@ export function AdminLayout() {
                                     navigate(`/admin/orders/vouchers`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(v.voucherCode, query.trim())}
@@ -492,8 +491,8 @@ export function AdminLayout() {
 
                           {(results.storeBranches ?? []).length > 0 && (
                             <div className="py-2">
-                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c3aed]/70 flex items-center gap-1">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7c3aed]/40" />
+                              <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#dc2626]/70 flex items-center gap-1">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#dc2626]/40" />
                                 <span>🏪 Chi nhánh</span>
                               </div>
                               {(results.storeBranches ?? []).map((b) => (
@@ -504,7 +503,7 @@ export function AdminLayout() {
                                     navigate(`/admin/settings/stores`);
                                     setOpen(false);
                                   }}
-                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#f5f3ff] rounded-[8px]"
+                                  className="w-full px-4 py-2 text-left transition duration-150 hover:bg-[#dc2626]/5 rounded-[8px]"
                                 >
                                   <div className="text-[13px] font-semibold text-[#1a1a2e]">
                                     {highlightText(b.branchName, query.trim())}
@@ -530,7 +529,7 @@ export function AdminLayout() {
             <div className="flex items-center gap-4">
               {/* User Email */}
               {isAuthenticated && user?.email && (
-                <span className="hidden md:inline-block max-w-[200px] truncate text-sm font-['Fira_Sans'] text-white/90">
+                <span className="hidden md:inline-block max-w-[200px] truncate text-sm font-['Inter'] text-gray-700">
                   User: {user.email}
                 </span>
               )}
@@ -538,17 +537,17 @@ export function AdminLayout() {
               {/* Notifications */}
               <button
                 type="button"
-                className="relative rounded-lg p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="relative rounded-[10px] p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-orange-500"></span>
+                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[#dc2626]"></span>
               </button>
 
               {/* Trang chủ */}
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-1.5 text-sm font-['Fira_Sans'] font-medium text-white transition-colors hover:bg-white/10"
+                className="flex items-center gap-1.5 rounded-[10px] border border-gray-200 px-3 py-1.5 text-sm font-['Inter'] font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
                 <Home className="h-4 w-4" />
                 Trang chủ
@@ -559,7 +558,7 @@ export function AdminLayout() {
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-['Fira_Sans'] font-medium text-[#59168B] transition-colors hover:bg-white/90"
+                  className="flex items-center gap-1.5 rounded-[10px] bg-gradient-to-r from-[#ee4d2d] to-[#d73211] px-3 py-1.5 text-sm font-['Inter'] font-medium text-white transition-opacity hover:opacity-90 shadow-sm"
                 >
                   <LogIn className="h-4 w-4" />
                   Login

@@ -20,22 +20,22 @@ import { Brand, Category, Product, ProductStatus } from '../../types/product';
 const PAGE_SIZE = 10;
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .pl-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --border-strong: #c9bfad;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --accent-mid: #f4c4a8;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --accent-mid: #fca5a5;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --success: #2d7a4f;
     --success-soft: #edf7f2;
     --warning: #b06010;
@@ -47,7 +47,7 @@ const css = `
     --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -66,14 +66,14 @@ const css = `
   .pl-icon-badge {
     width: 52px; height: 52px;
     border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35);
+    box-shadow: 0 4px 14px rgba(238,77,45,0.35);
     flex-shrink: 0;
   }
   .pl-icon-badge svg { color: white; width: 24px; height: 24px; }
   .pl-title {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 2rem; font-weight: 400;
     color: var(--ink); line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
@@ -81,7 +81,7 @@ const css = `
   .pl-count-pill {
     display: inline-flex; align-items: center;
     background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.7rem;
     font-weight: 500; padding: 2px 8px; border-radius: 20px;
     margin-left: 8px; letter-spacing: 0.02em;
   }
@@ -94,13 +94,13 @@ const css = `
   .pl-add-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
     color: white; border: none; border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
-    cursor: pointer; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
+    font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(238,77,45,0.3);
     transition: all 0.2s ease; white-space: nowrap;
   }
-  .pl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,82,26,0.38); }
+  .pl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(238,77,45,0.38); }
   .pl-add-btn:active { transform: translateY(0); }
 
   /* ── Filter card ── */
@@ -118,7 +118,7 @@ const css = `
   }
   .pl-filters-header svg { color: var(--ink-3); width: 15px; height: 15px; }
   .pl-filters-label {
-    font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.72rem;
     text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3);
   }
   .pl-filters-grid {
@@ -140,15 +140,15 @@ const css = `
   .pl-search {
     padding: 8px 12px 8px 32px; border: 1px solid var(--border-strong);
     border-radius: 9px; background: var(--surface-2);
-    font-family: 'DM Sans', sans-serif; font-size: 0.875rem;
+    font-family: 'Inter', sans-serif; font-size: 0.875rem;
     color: var(--ink); outline: none; width: 100%; box-sizing: border-box;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .pl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); background: var(--surface); }
+  .pl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(238,77,45,0.12); background: var(--surface); }
   .pl-select {
     width: 100%; padding: 8px 12px;
     border: 1px solid var(--border-strong); border-radius: 9px;
-    background: var(--surface-2); font-family: 'DM Sans', sans-serif;
+    background: var(--surface-2); font-family: 'Inter', sans-serif;
     font-size: 0.875rem; color: var(--ink); outline: none;
     transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer;
     appearance: none;
@@ -156,12 +156,12 @@ const css = `
     background-repeat: no-repeat; background-position: right 10px center;
     padding-right: 30px;
   }
-  .pl-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); background-color: var(--surface); }
+  .pl-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(238,77,45,0.12); background-color: var(--surface); }
 
   /* ── Error ── */
   .pl-error {
     display: flex; align-items: center; gap: 10px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
+    background: var(--danger-soft); border: 1px solid #f8aba6;
     border-left: 3px solid var(--danger); color: var(--danger);
     border-radius: var(--radius); padding: 12px 16px;
     font-size: 0.875rem; margin-bottom: 20px;
@@ -196,7 +196,7 @@ const css = `
   .pl-table thead tr { border-bottom: 1px solid var(--border); }
   .pl-table th {
     padding: 11px 16px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); background: var(--surface-2); white-space: nowrap;
   }
@@ -226,13 +226,13 @@ const css = `
     font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 5px;
   }
   .pl-price {
-    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.82rem;
     font-weight: 500; color: var(--ink); white-space: nowrap;
   }
 
-  .pl-stock-ok { font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 600; color: var(--success); }
-  .pl-stock-low { font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 600; color: var(--warning); }
-  .pl-stock-out { font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 600; color: var(--danger); }
+  .pl-stock-ok { font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--success); }
+  .pl-stock-low { font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--warning); }
+  .pl-stock-out { font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--danger); }
 
   .pl-status-available {
     display: inline-flex; align-items: center; gap: 5px;
@@ -278,7 +278,7 @@ const css = `
     border: 1px solid var(--border); background: var(--surface);
     color: var(--danger); cursor: pointer; transition: all 0.15s;
   }
-  .pl-btn-delete:hover { background: var(--danger-soft); border-color: #f5c2c2; }
+  .pl-btn-delete:hover { background: var(--danger-soft); border-color: #f8aba6; }
 
   /* ── Empty state ── */
   .pl-empty {
@@ -300,14 +300,14 @@ const css = `
   .pl-page-btn {
     display: flex; align-items: center; gap: 4px;
     padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--surface); font-family: 'DM Sans', sans-serif;
+    background: var(--surface); font-family: 'Inter', sans-serif;
     font-size: 0.85rem; font-weight: 500; color: var(--ink-2);
     cursor: pointer; transition: all 0.15s;
   }
   .pl-page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
   .pl-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .pl-page-info {
-    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.78rem;
     color: var(--ink-3); padding: 0 8px;
   }
 `;

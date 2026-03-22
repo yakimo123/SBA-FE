@@ -27,27 +27,27 @@ export interface DataTableProps<T> {
 }
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+  
 
   .dt-wrap {
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --accent-mid: #f4c4a8;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --accent-mid: #fca5a5;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
     box-shadow: var(--shadow-sm);
     overflow: hidden;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 
   /* ── Table ── */
@@ -58,7 +58,7 @@ const css = `
   .dt-thead { background: var(--surface-2); }
   .dt-th {
     padding: 11px 18px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); border-bottom: 1px solid var(--border);
     white-space: nowrap;
@@ -68,7 +68,7 @@ const css = `
   .dt-sort-btn {
     display: inline-flex; align-items: center; gap: 5px;
     background: none; border: none; cursor: pointer; padding: 0;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); transition: color 0.15s;
   }
@@ -115,7 +115,7 @@ const css = `
     background: var(--surface-2);
   }
   .dt-results {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--ink-3);
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem; color: var(--ink-3);
   }
   .dt-results strong { color: var(--ink-2); font-weight: 500; }
   .dt-page-controls { display: flex; align-items: center; gap: 6px; }
@@ -131,7 +131,7 @@ const css = `
   .dt-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .dt-page-btn svg { width: 14px; height: 14px; }
   .dt-page-info {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--ink-3);
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem; color: var(--ink-3);
     padding: 0 4px; user-select: none;
   }
 
@@ -139,7 +139,7 @@ const css = `
   .dt-sel-pill {
     display: inline-flex; align-items: center;
     background: var(--accent-soft); border: 1px solid var(--accent-mid);
-    color: var(--accent); font-family: 'DM Mono', monospace;
+    color: var(--accent); font-family: 'Outfit', sans-serif;
     font-size: 0.72rem; font-weight: 500;
     padding: 2px 8px; border-radius: 20px; margin-left: 10px;
   }

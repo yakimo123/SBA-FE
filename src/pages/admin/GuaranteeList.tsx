@@ -162,7 +162,7 @@ export function GuaranteeList() {
   const isActive = (endDate: string) => new Date(endDate) > new Date();
 
   const columns: Column<WarrantyDTO>[] = [
-    { header: 'Policy Name', accessor: 'productName', render: (g) => <div className="font-medium text-purple-900 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-purple-500"/> {g.productName}</div> },
+    { header: 'Policy Name', accessor: 'productName', render: (g) => <div className="font-medium text-red-900 flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-red-500"/> {g.productName}</div> },
     { header: 'Duration', accessor: 'warrantyPeriodMonths', render: (g) => <span>{g.warrantyPeriodMonths} Months</span> },
     { header: 'Start Date', accessor: 'startDate', render: (g) => <span className="text-sm">{g.startDate ? new Date(g.startDate).toLocaleDateString() : '—'}</span> },
     { header: 'End Date', accessor: 'endDate', render: (g) => <span className="text-sm">{g.endDate ? new Date(g.endDate).toLocaleDateString() : '—'}</span> },
@@ -185,8 +185,8 @@ export function GuaranteeList() {
       sortable: false,
       render: (g) => (
         <div className="flex gap-2">
-          <button type="button" onClick={() => openEdit(g)} className="rounded-lg p-1.5 text-purple-600 hover:bg-purple-50" title="Edit"><Edit className="h-4 w-4" /></button>
-          <button type="button" onClick={() => handleDelete(g)} className="rounded-lg p-1.5 text-red-600 hover:bg-red-50" title="Delete"><Trash2 className="h-4 w-4" /></button>
+          <button type="button" onClick={() => openEdit(g)} className="rounded-[10px] p-1.5 text-[#ee4d2d] hover:bg-red-50" title="Edit"><Edit className="h-4 w-4" /></button>
+          <button type="button" onClick={() => handleDelete(g)} className="rounded-[10px] p-1.5 text-[#ee4d2d] hover:bg-red-50" title="Delete"><Trash2 className="h-4 w-4" /></button>
         </div>
       ),
     },
@@ -196,8 +196,8 @@ export function GuaranteeList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-['Fira_Code'] text-3xl font-bold text-purple-900">Guarantee Policies</h1>
-          <p className="mt-1 font-['Fira_Sans'] text-gray-600">
+          <h1 className="font-['Outfit'] text-3xl font-bold text-red-900">Guarantee Policies</h1>
+          <p className="mt-1 font-['Inter'] text-gray-600">
             Manage warranty and guarantee terms
             {totalElements > 0 && (
               <span className="ml-2 text-sm text-gray-400">({totalElements} total)</span>
@@ -207,7 +207,7 @@ export function GuaranteeList() {
         <button
           type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 font-['Fira_Sans'] font-semibold text-white shadow-md hover:bg-orange-600"
+          className="flex items-center gap-2 rounded-[10px] bg-[#ee4d2d] px-4 py-2 font-['Inter'] font-semibold text-white shadow-md hover:bg-[#ee4d2d]"
         >
           <Plus className="h-5 w-5" /> Add Policy
         </button>
@@ -231,44 +231,44 @@ export function GuaranteeList() {
               }
             }}
             placeholder="Search products by name..."
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+            className="w-full rounded-[10px] border border-gray-300 py-2 pl-10 pr-4 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
           />
         </div>
         {showDropdown && productResults.length > 0 && (
-          <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+          <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-[10px] border border-gray-200 bg-white shadow-lg">
             {productResults.map((p) => (
               <li
                 key={p.productId}
                 onClick={() => selectProduct(p)}
-                className="cursor-pointer px-4 py-2 text-sm hover:bg-purple-50"
+                className="cursor-pointer px-4 py-2 text-sm hover:bg-red-50"
               >
-                <span className="font-medium text-purple-900">{p.productName}</span>
+                <span className="font-medium text-red-900">{p.productName}</span>
                 {p.categoryName && <span className="ml-2 text-xs text-gray-500">({p.categoryName})</span>}
               </li>
             ))}
           </ul>
         )}
         {showDropdown && productResults.length === 0 && productKeyword.trim() && (
-          <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-lg">
+          <div className="absolute z-10 mt-1 w-full rounded-[10px] border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-lg">
             No products found
           </div>
         )}
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {!selectedProduct ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-16 text-gray-500">
+        <div className="flex flex-col items-center justify-center rounded-[10px] border-2 border-dashed border-gray-300 py-16 text-gray-500">
           <ShieldCheck className="mb-3 h-10 w-10 text-gray-300" />
-          <p className="font-['Fira_Sans'] text-sm">Select a product above to view its warranty policies</p>
+          <p className="font-['Inter'] text-sm">Select a product above to view its warranty policies</p>
         </div>
       ) : isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#ee4d2d] border-t-transparent" />
         </div>
       ) : (
         <DataTable columns={columns} data={warranties} keyField="warrantyId" pageSize={PAGE_SIZE} />
@@ -280,18 +280,18 @@ export function GuaranteeList() {
             type="button"
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            className="rounded-[10px] border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
             Previous
           </button>
-          <span className="font-['Fira_Sans'] text-sm text-gray-600">
+          <span className="font-['Inter'] text-sm text-gray-600">
             Page {page + 1} of {totalPages}
           </span>
           <button
             type="button"
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            className="rounded-[10px] border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
             Next
           </button>
@@ -306,7 +306,7 @@ export function GuaranteeList() {
               type="text"
               value={editingWarranty ? editingWarranty.productName : (selectedProduct?.productName ?? '')}
               disabled
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-500"
+              className="w-full rounded-[10px] border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-500"
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -320,7 +320,7 @@ export function GuaranteeList() {
                 value={form.warrantyPeriodMonths}
                 onChange={(e) => setForm({ ...form, warrantyPeriodMonths: e.target.value })}
                 placeholder="e.g. 24"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+                className="w-full rounded-[10px] border border-gray-300 px-4 py-2 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
               />
             </div>
             <div>
@@ -331,7 +331,7 @@ export function GuaranteeList() {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+                className="w-full rounded-[10px] border border-gray-300 px-4 py-2 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
               />
             </div>
           </div>
@@ -342,17 +342,17 @@ export function GuaranteeList() {
               onChange={(e) => setForm({ ...form, warrantyTerms: e.target.value })}
               placeholder="Covers manufacturing defects..."
               rows={3}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20"
+              className="w-full rounded-[10px] border border-gray-300 px-4 py-2 text-sm outline-none focus:border-[#ee4d2d] focus:ring-2 focus:ring-red-600/20"
             />
           </div>
           {formError && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</p>
+            <p className="rounded-[10px] bg-red-50 px-3 py-2 text-sm text-[#ee4d2d]">{formError}</p>
           )}
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -360,7 +360,7 @@ export function GuaranteeList() {
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-[10px] bg-[#ee4d2d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ee4d2d] disabled:opacity-50"
             >
               {isSaving && (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

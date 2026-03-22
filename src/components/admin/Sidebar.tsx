@@ -139,20 +139,20 @@ export function Sidebar() {
       collapsible="icon"
       style={
         {
-          '--sidebar': '#59168B',
-          '--sidebar-foreground': '#ffffff',
-          '--sidebar-border': 'transparent',
-          '--sidebar-accent': 'rgba(255, 255, 255, 0.15)',
-          '--sidebar-accent-foreground': '#ffffff',
-          '--sidebar-ring': '#f97316',
+          '--sidebar': '#ffffff',
+          '--sidebar-foreground': '#1f2937',
+          '--sidebar-border': '#f3f4f6',
+          '--sidebar-accent': '#fff1f0',
+          '--sidebar-accent-foreground': '#dc2626',
+          '--sidebar-ring': '#dc2626',
         } as React.CSSProperties
       }
-      className="border-none text-white min-h-screen"
+      className="border-r border-gray-100 text-gray-800 min-h-screen shadow-sm"
     >
-      <SidebarHeader className="h-16 border-b border-white/20 px-6 justify-center">
+      <SidebarHeader className="h-16 border-b border-gray-100 px-6 justify-center">
         <div className="flex items-center gap-2">
-          <LayoutDashboard className="h-6 w-6 text-orange-400" />
-          <span className="font-['Fira_Code'] text-lg font-semibold text-white">
+          <LayoutDashboard className="h-6 w-6 text-[#dc2626]" />
+          <span className="font-['Outfit'] text-lg font-semibold text-gray-900">
             Admin Panel
           </span>
         </div>
@@ -163,14 +163,14 @@ export function Sidebar() {
           {navigation.map((item, idx) => (
             <SidebarMenuItem key={item.title}>
               {idx > 0 && idx < navigation.length && (
-                <div className="h-px bg-white/10 mx-4 my-2" />
+                <div className="h-px bg-gray-100 mx-4 my-2" />
               )}
 
               {!item.children ? (
                 <SidebarMenuButton
                   asChild
                   isActive={location.pathname === item.href}
-                  className="hover:bg-white/10 data-[active=true]:bg-orange-500 data-[active=true]:text-white text-white font-['Fira_Sans'] font-medium"
+                  className="hover:bg-[#dc2626]/5 data-[active=true]:bg-[#dc2626]/10 data-[active=true]:text-[#dc2626] data-[active=true]:border-l-4 data-[active=true]:border-[#dc2626] text-gray-700 font-['Inter'] font-medium transition-colors"
                 >
                   <NavLink to={item.href}>
                     <item.icon size={16} />
@@ -180,7 +180,7 @@ export function Sidebar() {
               ) : (
                 <Collapsible defaultOpen={isGroupActive(item)}>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="hover:bg-white/10 font-['Fira_Sans'] font-medium text-white/80 hover:text-white">
+                    <SidebarMenuButton className="hover:bg-[#dc2626]/5 font-['Inter'] font-medium text-gray-700 hover:text-[#dc2626] transition-colors rounded-[8px]">
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
                       <ChevronRight className="h-4 w-4 ml-auto opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-90" />
@@ -193,7 +193,7 @@ export function Sidebar() {
                           <SidebarMenuSubButton
                             asChild
                             isActive={location.pathname === subItem.href}
-                            className="hover:bg-white/10 data-[active=true]:text-orange-400 text-white/70"
+                            className="hover:bg-[#dc2626]/5 data-[active=true]:text-[#dc2626] data-[active=true]:bg-[#dc2626]/5 data-[active=true]:font-semibold text-gray-600 transition-colors rounded-[8px]"
                           >
                             <NavLink to={subItem.href}>
                               <subItem.icon size={13} />
@@ -211,16 +211,16 @@ export function Sidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/20 p-4">
+      <SidebarFooter className="border-t border-gray-100 p-4 bg-gray-50/50">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-            <Users className="h-4 w-4 text-white" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dc2626]/10">
+            <Users className="h-4 w-4 text-[#dc2626]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-['Fira_Sans'] text-sm font-medium text-white">
+            <p className="font-['Inter'] text-sm font-medium text-gray-900">
               {user?.fullName || 'Admin'}
             </p>
-            <p className="font-['Fira_Sans'] text-xs text-white/70 truncate">
+            <p className="font-['Inter'] text-xs text-gray-500 truncate">
               {user?.email || 'admin@example.com'}
             </p>
           </div>

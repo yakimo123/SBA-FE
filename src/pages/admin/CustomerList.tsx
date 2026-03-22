@@ -1,41 +1,23 @@
-import { Eye, Lock, Mail, Search, Unlock, Users } from 'lucide-react';
-import { useState } from 'react';
+import { Eye, Search, Trash2, Users, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  orders: number;
-  totalSpent: number;
-  status: 'Active' | 'Blocked';
-  joinDate: string;
-}
-
-const mockCustomers: Customer[] = [
-  { id: '1', name: 'Nguyen Van A', email: 'vana@example.com', phone: '0901234567', orders: 15, totalSpent: 25000000, status: 'Active', joinDate: '2023-01-15' },
-  { id: '2', name: 'Tran Thi B', email: 'thib@example.com', phone: '0909876543', orders: 3, totalSpent: 1200000, status: 'Active', joinDate: '2023-06-20' },
-  { id: '3', name: 'Le Van C', email: 'vanc@example.com', phone: '0912345678', orders: 0, totalSpent: 0, status: 'Blocked', joinDate: '2023-12-01' },
-];
+import userService, { UserResponse } from '../../services/userService';
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-
   .cul-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --border-strong: #c9bfad;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --accent-mid: #f4c4a8;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --accent-mid: #fca5a5;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --success: #2d7a4f;
     --success-soft: #edf7f2;
     --danger: #b03030;
@@ -44,7 +26,7 @@ const css = `
     --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -58,20 +40,20 @@ const css = `
   .cul-header-left { display: flex; align-items: center; gap: 16px; }
   .cul-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(238,77,45,0.35); flex-shrink: 0;
   }
   .cul-icon-badge svg { color: white; width: 24px; height: 24px; }
   .cul-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-family: 'Outfit', sans-serif; font-size: 2rem;
     font-weight: 400; color: var(--ink); line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
   .cul-count-pill {
     display: inline-flex; align-items: center;
     background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.7rem;
     font-weight: 500; padding: 2px 8px; border-radius: 20px;
     margin-left: 8px; letter-spacing: 0.02em;
   }
@@ -99,18 +81,18 @@ const css = `
   .cul-search {
     padding: 7px 12px 7px 32px; border: 1px solid var(--border);
     border-radius: 8px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
     color: var(--ink); outline: none; width: 220px;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .cul-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .cul-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(238,77,45,0.12); }
   .cul-table-meta { font-size: 0.8rem; color: var(--ink-3); }
 
   .cul-table { width: 100%; border-collapse: collapse; }
   .cul-table thead tr { border-bottom: 1px solid var(--border); }
   .cul-table th {
     padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); background: var(--surface-2);
   }
@@ -127,14 +109,14 @@ const css = `
     background: linear-gradient(135deg, var(--accent-soft) 0%, var(--accent-mid) 100%);
     border: 1px solid var(--accent-mid);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.85rem; color: var(--accent); flex-shrink: 0;
     font-weight: 400; letter-spacing: -0.5px;
   }
   .cul-name-text { font-weight: 600; color: var(--ink); font-size: 0.88rem; }
   .cul-contact-text { font-size: 0.82rem; color: var(--ink-2); line-height: 1.4; }
   .cul-price {
-    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.82rem;
     font-weight: 500; color: var(--ink); white-space: nowrap;
   }
 
@@ -163,12 +145,8 @@ const css = `
   }
   .cul-btn-view { color: var(--ink-3); }
   .cul-btn-view:hover { background: var(--surface-2); border-color: var(--ink-3); color: var(--ink); }
-  .cul-btn-mail { color: var(--ink-3); }
-  .cul-btn-mail:hover { background: var(--surface-2); border-color: var(--ink-3); color: var(--ink); }
   .cul-btn-block { color: var(--danger); }
-  .cul-btn-block:hover { background: var(--danger-soft); border-color: #f5c2c2; }
-  .cul-btn-unblock { color: var(--success); }
-  .cul-btn-unblock:hover { background: var(--success-soft); border-color: var(--success); }
+  .cul-btn-block:hover { background: var(--danger-soft); border-color: #fca5a5; }
 
   .cul-empty {
     display: flex; flex-direction: column; align-items: center;
@@ -182,19 +160,50 @@ const css = `
   .cul-empty-text { font-size: 0.9rem; color: var(--ink-3); margin: 0; }
 `;
 
-const getInitials = (name: string) =>
-  name.trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+const getInitials = (name?: string) => {
+  if (!name) return 'U';
+  return name.trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+};
 
 export function CustomerList() {
   const navigate = useNavigate();
-  const [customers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<UserResponse[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await userService.getUsers({ size: 100 });
+      setCustomers(res.content || []);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Are you sure you want to delete this customer? This cannot be undone.')) {
+      try {
+        await userService.deleteUser(id);
+        fetchUsers();
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+        alert('Failed to delete user. They might have related data.');
+      }
+    }
+  };
 
   const filtered = customers.filter(
     (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone.includes(search)
+      c.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()) ||
+      c.phoneNumber?.includes(search)
   );
 
   return (
@@ -209,7 +218,7 @@ export function CustomerList() {
           <div>
             <h1 className="cul-title">
               Customers
-              {customers.length > 0 && (
+              {!loading && customers.length > 0 && (
                 <span className="cul-count-pill">{customers.length}</span>
               )}
             </h1>
@@ -233,11 +242,16 @@ export function CustomerList() {
             />
           </div>
           <span className="cul-table-meta">
-            {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+            {loading ? 'Loading...' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
           </span>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="cul-empty">
+            <Loader2 className="animate-spin" size={32} color="var(--accent)" />
+            <p className="cul-empty-text">Loading customers...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="cul-empty">
             <div className="cul-empty-icon">
               <Users size={22} />
@@ -250,8 +264,8 @@ export function CustomerList() {
               <tr>
                 <th>Name</th>
                 <th>Contact</th>
-                <th>Orders</th>
-                <th>Total Spent</th>
+                <th>Role</th>
+                <th>Points</th>
                 <th>Join Date</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -259,40 +273,40 @@ export function CustomerList() {
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <tr key={c.id}>
+                <tr key={c.userId}>
                   <td>
                     <div className="cul-customer-cell">
-                      <div className="cul-avatar">{getInitials(c.name)}</div>
-                      <span className="cul-name-text">{c.name}</span>
+                      <div className="cul-avatar">{getInitials(c.fullName)}</div>
+                      <span className="cul-name-text">{c.fullName || 'No Name'}</span>
                     </div>
                   </td>
                   <td>
                     <div className="cul-contact-text">
                       <div>{c.email}</div>
                       <div style={{ color: 'var(--ink-3)', fontSize: '0.78rem' }}>
-                        {c.phone}
+                        {c.phoneNumber || 'N/A'}
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span className="cul-price">{c.orders}</span>
+                    <span className="cul-price">{c.role}</span>
                   </td>
                   <td>
                     <span className="cul-price">
-                      ₫{c.totalSpent.toLocaleString('vi-VN')}
+                      {c.rewardPoint?.toLocaleString('vi-VN')}
                     </span>
                   </td>
-                  <td>{c.joinDate}</td>
+                  <td>{new Date(c.registrationDate).toLocaleDateString('vi-VN')}</td>
                   <td>
                     <span
                       className={
-                        c.status === 'Active'
+                        c.isActive && c.status === 'ACTIVE'
                           ? 'cul-status-active'
                           : 'cul-status-blocked'
                       }
                     >
                       <span className="cul-status-dot" />
-                      {c.status}
+                      {c.isActive ? 'Active' : 'Blocked'}
                     </span>
                   </td>
                   <td>
@@ -301,34 +315,18 @@ export function CustomerList() {
                         type="button"
                         className="cul-btn cul-btn-view"
                         title="View Profile"
-                        onClick={() => navigate(`/admin/customers/${c.id}`)}
+                        onClick={() => navigate(`/admin/customers/${c.userId}`)}
                       >
                         <Eye size={14} />
                       </button>
                       <button
                         type="button"
-                        className="cul-btn cul-btn-mail"
-                        title="Send Email"
+                        className="cul-btn cul-btn-block"
+                        title="Delete User"
+                        onClick={() => handleDelete(c.userId)}
                       >
-                        <Mail size={14} />
+                        <Trash2 size={14} />
                       </button>
-                      {c.status === 'Active' ? (
-                        <button
-                          type="button"
-                          className="cul-btn cul-btn-block"
-                          title="Block User"
-                        >
-                          <Lock size={14} />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="cul-btn cul-btn-unblock"
-                          title="Unblock User"
-                        >
-                          <Unlock size={14} />
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>

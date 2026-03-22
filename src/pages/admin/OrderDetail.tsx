@@ -39,27 +39,27 @@ const TIMELINE_STEPS: OrderStatus[] = [
 ];
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .od-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
     --success: #2d7a4f;
     --warning: #905a10;
     --danger: #b03030;
-    --violet: #4a3f8f;
+    --violet: #ee4d2d;
     --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
     --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -80,16 +80,16 @@ const css = `
   .od-back-btn:hover { background: var(--surface-2); border-color: var(--ink-3); color: var(--ink); }
   .od-header-left { display: flex; align-items: center; gap: 16px; }
   .od-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.5rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.5rem;
     font-weight: 400; color: var(--ink); margin: 0 0 4px;
   }
-  .od-id { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--ink-2); }
+  .od-id { font-family: 'Outfit', sans-serif; font-size: 0.9rem; color: var(--ink-2); }
   .od-status {
     display: inline-flex; padding: 4px 12px; border-radius: 20px;
     font-size: 0.75rem; font-weight: 600; margin-left: 12px;
   }
   .od-status-pending { background: #fef6eb; color: var(--warning); }
-  .od-status-confirmed, .od-status-processing { background: #eeecf8; color: var(--violet); }
+  .od-status-confirmed, .od-status-processing { background: #fff1f0; color: var(--violet); }
   .od-status-shipped { background: #e8f4fd; color: #1a6fa8; }
   .od-status-delivered { background: #edf7f2; color: var(--success); }
   .od-status-cancelled, .od-status-refunded { background: #fdf2f2; color: var(--danger); }
@@ -97,7 +97,7 @@ const css = `
   .od-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 9px 18px; border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem;
     font-weight: 500; cursor: pointer; transition: all 0.15s;
   }
   .od-btn-outline {
@@ -106,8 +106,8 @@ const css = `
   }
   .od-btn-outline:hover { background: var(--surface-2); }
   .od-btn-primary {
-    border: none; background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
-    color: white; box-shadow: 0 4px 14px rgba(201,82,26,0.3);
+    border: none; background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
+    color: white; box-shadow: 0 4px 14px rgba(238,77,45,0.3);
   }
   .od-btn-primary:hover { transform: translateY(-1px); }
 
@@ -124,7 +124,7 @@ const css = `
     background: var(--surface-2);
   }
   .od-card-title {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem;
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-3); margin: 0;
   }
@@ -161,19 +161,19 @@ const css = `
     margin: 20px; padding: 24px;
   }
   .od-modal-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.2rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.2rem;
     margin: 0 0 16px;
   }
   .od-select {
     width: 100%; padding: 10px 14px;
     border: 1px solid var(--border); border-radius: 9px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    font-family: 'Inter', sans-serif; font-size: 0.9rem;
     margin-bottom: 20px; cursor: pointer;
   }
   .od-select:focus { outline: none; border-color: var(--accent); }
   .od-textarea {
     width: 100%; padding: 12px; border: 1px solid var(--border);
-    border-radius: 9px; font-family: 'DM Sans', sans-serif;
+    border-radius: 9px; font-family: 'Inter', sans-serif;
     font-size: 0.9rem; margin-bottom: 20px; resize: vertical;
     min-height: 80px;
   }
@@ -193,7 +193,7 @@ const css = `
 
   .od-item-table { width: 100%; border-collapse: collapse; }
   .od-item-table th {
-    text-align: left; padding: 12px 16px; font-family: 'DM Mono', monospace;
+    text-align: left; padding: 12px 16px; font-family: 'Outfit', sans-serif;
     font-size: 0.7rem; color: var(--ink-3); text-transform: uppercase;
     border-bottom: 1px solid var(--border); background: var(--surface-2);
   }

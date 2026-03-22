@@ -645,16 +645,16 @@ export function HomePage() {
                 onClick={() => navigate(`/products?brandId=${brand.brandId}`)}
                 className="group"
               >
-                <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 border-none bg-white h-full flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform group-hover:bg-indigo-100">
+                <Card className="p-6 text-center hover:shadow-xl transition-all duration-300 border-none bg-white h-full flex flex-col items-center justify-center">
+                  <div className="w-full h-20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     {brand.logoUrl ? (
                       <img
                         src={brand.logoUrl}
                         alt={brand.brandName}
-                        className="w-10 h-10 object-contain transition-all opacity-100 group-hover:scale-110"
+                        className="max-w-[140px] max-h-full object-contain filter drop-shadow-sm transition-all"
                       />
                     ) : (
-                      <div className="text-xl font-black italic text-indigo-300 group-hover:text-indigo-600 transition-colors">
+                      <div className="text-2xl font-black italic text-gray-300 group-hover:text-indigo-600 transition-colors">
                         {brand.brandName.substring(0, 2).toUpperCase()}
                       </div>
                     )}

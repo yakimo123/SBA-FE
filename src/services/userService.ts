@@ -14,6 +14,15 @@ export interface UserResponse {
   rewardPoint: number;
 }
 
+export interface UserDashboardResponse {
+  recentOrders: any[];
+  recentReviews: any[];
+  totalOrders: number;
+  totalSpent: number;
+  userInfo: UserResponse;
+  wishlist: any[];
+}
+
 export const userService = {
   /**
    * Get paginated list of users
@@ -56,6 +65,23 @@ export const userService = {
     const response = await api.put<ApiResponse<UserResponse>>(
       `/api/v1/users/${id}`,
       data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Delete user by ID
+   */
+  async deleteUser(id: string | number): Promise<void> {
+    await api.delete(`/api/v1/users/${id}`);
+  },
+
+  /**
+   * Get user dashboard data (orders, reviews, wishlist) by ID
+   */
+  async getUserDashboard(id: string | number): Promise<UserDashboardResponse> {
+    const response = await api.get<ApiResponse<UserDashboardResponse>>(
+      `/api/v1/users/${id}/dashboard`
     );
     return response.data.data;
   },

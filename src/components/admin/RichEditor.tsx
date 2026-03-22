@@ -54,8 +54,8 @@ const ToolbarButton = ({
       e.preventDefault(); // Prevent loss of focus
       onClick();
     }}
-    className={`flex h-8 w-8 items-center justify-center rounded-md text-[#5c5347] transition-all hover:bg-[#f2efe9] ${
-      active ? 'bg-[#c9521a]/10 text-[#c9521a]' : ''
+    className={`flex h-8 w-8 items-center justify-center rounded-[10px] text-[#5c5347] transition-all hover:bg-[#f2efe9] ${
+      active ? 'bg-[#ee4d2d]/10 text-[#ee4d2d]' : ''
     }`}
   >
     {children}
@@ -130,7 +130,7 @@ export default function RichEditor({
   if (!editor) return null;
 
   return (
-    <div className="overflow-hidden rounded-[10px] border border-[#c9bfad] bg-white focus-within:border-[#c9521a] focus-within:ring-3 focus-within:ring-[#c9521a]/12 transition-all">
+    <div className="overflow-hidden rounded-[10px] border border-[#c9bfad] bg-white focus-within:border-[#ee4d2d] focus-within:ring-3 focus-within:ring-[#ee4d2d]/12 transition-all">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 border-b border-[#e8e3da] bg-[#faf9f7] p-1.5">
         {/* History */}
@@ -274,7 +274,7 @@ export default function RichEditor({
           type="button"
           title="Add Image"
           onClick={() => fileInputRef.current?.click()}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-[#5c5347] transition-all hover:bg-[#f2efe9]"
+          className="flex h-8 w-8 items-center justify-center rounded-[10px] text-[#5c5347] transition-all hover:bg-[#f2efe9]"
         >
           <ImageIcon size={15} />
         </button>
@@ -301,7 +301,7 @@ export default function RichEditor({
         .ProseMirror ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin-bottom: 0.5rem; }
         .ProseMirror li { margin-bottom: 0.2rem; }
         .ProseMirror blockquote { border-left: 3px solid #e8e3da; padding-left: 1rem; color: #5c5347; font-style: italic; }
-        .ProseMirror a { color: #c9521a; text-decoration: underline; cursor: pointer; }
+        .ProseMirror a { color: #ee4d2d; text-decoration: underline; cursor: pointer; }
         .ProseMirror img { max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0; }
         .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);

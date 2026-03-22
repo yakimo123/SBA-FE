@@ -50,7 +50,7 @@ type PublicSearchResults = {
   }>;
 };
 
-const HIGHLIGHT_CLASS = 'bg-[#ede9fe] text-[#7c3aed] rounded-[3px] px-[2px]';
+const HIGHLIGHT_CLASS = 'bg-[#ede9fe] text-[#ee4d2d] rounded-[3px] px-[2px]';
 
 function highlightText(text: string, keyword: string) {
   if (!keyword) return text;

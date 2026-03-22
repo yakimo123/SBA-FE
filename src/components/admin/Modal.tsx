@@ -39,12 +39,12 @@ export function Modal({
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="font-['Fira_Code'] text-xl font-bold text-purple-900">
+          <h2 className="font-['Outfit'] text-xl font-bold text-red-900">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            className="rounded-[10px] p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
           >
             <X className="h-5 w-5" />
           </button>

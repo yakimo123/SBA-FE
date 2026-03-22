@@ -47,9 +47,9 @@ import { ProductListPage } from '../pages/ProductList';
 import { RegisterPage } from '../pages/Register';
 import { SearchResultsPage } from '../pages/SearchResultsPage';
 import { UnauthorizedPage } from '../pages/Unauthorized';
+import VerifyEmailPage from '../pages/VerifyEmail';
 import { VNPayReturnPage } from '../pages/VNPayReturn';
 import { WishlistPage } from '../pages/Wishlist';
-import VerifyEmailPage from '../pages/VerifyEmail';
 
 export const router = createBrowserRouter([
   // ── Public / Customer routes ──────────────────────────────────────────────

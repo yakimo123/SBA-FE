@@ -68,7 +68,7 @@ export function CompanySidebar() {
         '--sidebar-border': 'transparent',
         '--sidebar-accent': 'rgba(37,99,235,0.08)',
         '--sidebar-accent-foreground': '#0f172a',
-        '--sidebar-ring': '#2563eb',
+        '--sidebar-ring': '#ee4d2d',
         background:
           'radial-gradient(120% 80% at 10% 10%, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0) 55%), linear-gradient(170deg, #f8fbff 0%, #eef4ff 45%, #e5eefc 100%)',
       } as React.CSSProperties}
@@ -77,7 +77,7 @@ export function CompanySidebar() {
       {/* Logo */}
       <SidebarHeader className="h-20 border-b border-slate-200/80 px-4 py-3">
         <div className="flex h-full items-center gap-3 rounded-lg px-1">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm ring-1 ring-blue-200/70">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ee4d2d] text-white shadow-sm ring-1 -[#fca5a5]/70">
             <Building2 className="h-5 w-5" />
           </div>
           <div className="min-w-0">
@@ -96,7 +96,7 @@ export function CompanySidebar() {
                 <SidebarMenuButton
                   asChild
                   isActive={location.pathname === item.href}
-                  className="h-11 rounded-xl border border-transparent px-3 text-slate-600 transition-all duration-200 hover:border-slate-200 hover:bg-white/80 hover:text-slate-900 data-[active=true]:border-blue-200 data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:shadow-sm"
+                  className="h-11 rounded-xl border border-transparent px-3 text-slate-600 transition-all duration-200 hover:border-slate-200 hover:bg-white/80 hover:text-slate-900 data-[active=true]:border-[#fca5a5] data-[active=true]:bg-[#ee4d2d] data-[active=true]:text-white data-[active=true]:shadow-sm"
                 >
                   <NavLink to={item.href} className="flex items-center gap-2.5">
                     <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -119,7 +119,7 @@ export function CompanySidebar() {
                           <SidebarMenuSubButton
                             asChild
                             isActive={location.pathname === sub.href}
-                            className="h-9 rounded-lg px-2.5 text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700"
+                            className="h-9 rounded-lg px-2.5 text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-red-50 data-[active=true]:text-[#d73211]"
                           >
                             <NavLink to={sub.href} className="flex items-center gap-2">
                               <sub.icon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -140,7 +140,7 @@ export function CompanySidebar() {
       {/* Footer */}
       <SidebarFooter className="border-t border-slate-200/70 p-3">
         <div className="mb-2 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white/80 px-2.5 py-2.5 shadow-sm">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#ee4d2d] text-sm font-bold text-white">
             {(user?.fullName || user?.name || 'C')[0].toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">

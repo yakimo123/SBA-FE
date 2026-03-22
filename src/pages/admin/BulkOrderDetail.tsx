@@ -129,8 +129,8 @@ export default function BulkOrderDetail() {
     },
     CONFIRMED: { bg: '#f0fdf4', textColor: '#166534', label: 'Confirmed' },
     AWAITING_PAYMENT: {
-      bg: '#eff6ff',
-      textColor: '#1e40af',
+      bg: '#fff1f0',
+      textColor: '#d73211',
       label: 'Awaiting Payment',
     },
     PAID: { bg: '#f0fdf4', textColor: '#166534', label: 'Paid' },
@@ -494,7 +494,7 @@ export default function BulkOrderDetail() {
                         <span
                           style={{
                             fontSize: '0.75rem',
-                            color: '#4f46e5',
+                            color: '#ee4d2d',
                             display: 'flex',
                             alignItems: 'center',
                             gap: 4,
@@ -610,7 +610,7 @@ export default function BulkOrderDetail() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       fontSize: '0.875rem',
-                      color: '#4f46e5',
+                      color: '#ee4d2d',
                     }}
                   >
                     <span>Customization (Approved)</span>
@@ -748,8 +748,8 @@ export default function BulkOrderDetail() {
             <div
               style={{
                 padding: '10px 14px',
-                background: '#eff6ff',
-                border: '1px solid #bfdbfe',
+                background: '#fff1f0',
+                border: '1px solid #fca5a5',
                 borderRadius: 10,
                 marginBottom: 16,
               }}
@@ -762,12 +762,12 @@ export default function BulkOrderDetail() {
                   marginBottom: 6,
                 }}
               >
-                <MapPin size={13} color="#2563eb" />
+                <MapPin size={13} color="#ee4d2d" />
                 <span
                   style={{
                     fontSize: '0.65rem',
                     fontWeight: 700,
-                    color: '#1d4ed8',
+                    color: '#ee4d2d',
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                   }}
@@ -1234,7 +1234,7 @@ export default function BulkOrderDetail() {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
             <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-red-50 to-white">
-              <div className="flex items-center gap-3 text-red-600 mb-2">
+              <div className="flex items-center gap-3 text-[#ee4d2d] mb-2">
                 <XCircle className="h-6 w-6" />
                 <h2 className="text-xl font-bold">Từ chối đơn hàng</h2>
               </div>
@@ -1266,7 +1266,7 @@ export default function BulkOrderDetail() {
                 Hủy bỏ
               </button>
               <button
-                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-200 py-2.5 text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 rounded-xl bg-gradient-to-r from-[#ee4d2d] to-[#d73211] hover:opacity-90 text-white shadow-lg shadow-red-200 py-2.5 text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 onClick={async () => {
                   if (!rejectReason.trim()) return;
                   await handleUpdateStatus('REJECTED', rejectReason);

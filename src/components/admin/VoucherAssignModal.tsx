@@ -123,12 +123,12 @@ export function VoucherAssignModal({
       render: (u) => {
         const roleColors: Record<string, string> = {
           ADMIN: 'bg-red-100 text-red-700',
-          CUSTOMER: 'bg-blue-100 text-blue-700',
-          COMPANY: 'bg-indigo-100 text-indigo-700',
+          CUSTOMER: 'bg-[#fff1f0] text-[#ee4d2d]',
+          COMPANY: 'bg-[#fff1f0] text-[#ee4d2d]',
         };
         return (
           <span
-            className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
+            className={`px-2 py-1 rounded-[10px] text-xs font-bold uppercase ${
               roleColors[u.role] ?? 'bg-gray-100 text-gray-700'
             }`}
           >
@@ -174,9 +174,9 @@ export function VoucherAssignModal({
               className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
                 roleFilter === role
                   ? role === 'COMPANY'
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow'
+                    ? 'bg-[#ee4d2d] text-white border-[#ee4d2d] shadow'
                     : role === 'CUSTOMER'
-                      ? 'bg-blue-600 text-white border-blue-600 shadow'
+                      ? 'bg-[#ee4d2d] text-white border-[#ee4d2d] shadow'
                       : 'bg-gray-700 text-white border-gray-700 shadow'
                   : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
               }`}
@@ -198,18 +198,18 @@ export function VoucherAssignModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
-              className="pl-12 h-14 text-lg border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+              className="pl-12 h-14 text-lg border-red-100 focus:border-red-300 focus:ring-red-200"
             />
           </div>
           <Button
             type="submit"
-            className="h-14 px-8 text-lg bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-100"
+            className="h-14 px-8 text-lg bg-gradient-to-r from-[#ee4d2d] to-[#d73211] hover:opacity-90 shadow-lg shadow-red-100"
           >
             Tìm kiếm
           </Button>
         </form>
 
-        <div className="max-h-[500px] overflow-auto rounded-xl border border-purple-100 shadow-inner bg-gray-50/30">
+        <div className="max-h-[500px] overflow-auto rounded-xl border border-red-100 shadow-inner bg-gray-50/30">
           <DataTable
             columns={columns}
             data={users}
@@ -225,7 +225,7 @@ export function VoucherAssignModal({
             <span className="text-base text-gray-500">
               Người dùng được chọn
             </span>
-            <span className="text-2xl font-black text-purple-600">
+            <span className="text-2xl font-black text-[#ee4d2d]">
               {selectedUsers.length} / {users.length}
             </span>
           </div>
@@ -240,7 +240,7 @@ export function VoucherAssignModal({
             <Button
               onClick={handleAssign}
               disabled={isAssigning || selectedUsers.length === 0}
-              className="h-14 bg-orange-500 hover:bg-orange-600 px-10 text-lg font-bold shadow-lg shadow-orange-100 transition-all active:scale-95"
+              className="h-14 bg-[#ee4d2d] hover:bg-[#ee4d2d] px-10 text-lg font-bold shadow-lg shadow-orange-100 transition-all active:scale-95"
             >
               <UserPlus className="mr-2 h-6 w-6" />
               {isAssigning ? 'Đang cấp phát...' : 'Hoàn tất Cấp phát'}

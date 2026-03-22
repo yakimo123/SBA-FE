@@ -1,9 +1,7 @@
 import {
   ArrowDownLeft,
-  ArrowLeft,
   Calendar,
   CheckCircle,
-  ChevronRight,
   FileText,
   Loader2,
   MinusCircle,
@@ -209,8 +207,9 @@ export function StockExportPage() {
         })),
       });
       setShowSuccess(true);
-    } catch (err: any) {
-      alert(err?.response?.data?.message || 'Xuất kho thất bại');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error?.response?.data?.message || 'Xuất kho thất bại');
     } finally {
       setIsSubmitting(false);
     }
@@ -220,8 +219,8 @@ export function StockExportPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-10 max-w-sm w-full text-center shadow-sm">
-          <div className="w-14 h-14 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-5">
-            <CheckCircle className="w-7 h-7 text-orange-500" />
+          <div className="w-14 h-14 bg-[#fff1f0] rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle className="w-7 h-7 text-[#ee4d2d]" />
           </div>
           <h2 className="text-xl font-semibold text-slate-800 mb-2">
             Xuất kho thành công
@@ -232,13 +231,13 @@ export function StockExportPage() {
           <div className="flex flex-col gap-3">
             <button
               onClick={() => navigate('/admin/inventory')}
-              className="w-full h-10 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+              className="w-full h-10 bg-slate-900 text-white text-sm font-medium rounded-[10px] hover:bg-slate-800 transition-colors"
             >
               Xem tồn kho
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="w-full h-10 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+              className="w-full h-10 border border-slate-200 text-slate-600 text-sm font-medium rounded-[10px] hover:bg-slate-50 transition-colors"
             >
               Xuất kho mới
             </button>
@@ -253,30 +252,18 @@ export function StockExportPage() {
       {/* Top bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/admin/warehouse/inventory')}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Kho hàng
-            </button>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-            <span className="text-sm font-medium text-slate-800">
-              Xuất kho mới
-            </span>
-          </div>
+          <div className="flex items-center gap-3"></div>
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => navigate('/admin/warehouse/inventory')}
-              className="h-9 px-4 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              className="h-9 px-4 text-sm font-medium text-slate-600 border border-slate-200 rounded-[10px] hover:bg-slate-50 transition-colors"
             >
               Huỷ
             </button>
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || hasStockError}
-              className="h-9 px-5 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="h-9 px-5 text-sm font-medium text-white bg-[#ee4d2d] rounded-[10px] hover:bg-[#ee4d2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -309,7 +296,7 @@ export function StockExportPage() {
                     Chi nhánh xuất hàng *
                   </Label>
                   <Select value={branchId} onValueChange={setBranchId}>
-                    <SelectTrigger className="h-9 text-sm border-slate-200 rounded-lg">
+                    <SelectTrigger className="h-9 text-sm border-slate-200 rounded-[10px]">
                       <SelectValue placeholder="Chọn chi nhánh" />
                     </SelectTrigger>
                     <SelectContent>
@@ -344,7 +331,7 @@ export function StockExportPage() {
                       type="date"
                       value={exportDate}
                       onChange={(e) => setExportDate(e.target.value)}
-                      className="pl-9 h-9 text-sm border-slate-200 rounded-lg"
+                      className="pl-9 h-9 text-sm border-slate-200 rounded-[10px]"
                     />
                   </div>
                 </div>
@@ -357,7 +344,7 @@ export function StockExportPage() {
                     placeholder="Vd: Bán hàng, Điều chuyển nội bộ..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="text-sm border-slate-200 rounded-lg min-h-[100px] resize-none"
+                    className="text-sm border-slate-200 rounded-[10px] min-h-[100px] resize-none"
                   />
                 </div>
               </div>
@@ -385,7 +372,7 @@ export function StockExportPage() {
                   </span>
                 </div>
                 {hasStockError && (
-                  <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 text-xs text-[#ee4d2d] bg-red-50 border border-red-100 rounded-[10px] px-3 py-2">
                     <ArrowDownLeft className="w-3.5 h-3.5 shrink-0" />
                     Một số sản phẩm vượt quá tồn kho
                   </div>
@@ -394,7 +381,7 @@ export function StockExportPage() {
                   <span className="text-sm font-medium text-slate-700">
                     Tổng giá trị
                   </span>
-                  <span className="text-sm font-semibold text-orange-600">
+                  <span className="text-sm font-semibold text-[#ee4d2d]">
                     {subtotal.toLocaleString('vi-VN')}đ
                   </span>
                 </div>
@@ -411,7 +398,7 @@ export function StockExportPage() {
               </h3>
               <button
                 onClick={addLine}
-                className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 px-3 h-7 border border-orange-200 rounded-md hover:bg-orange-50 transition-colors"
+                className="flex items-center gap-1.5 text-xs font-medium text-[#ee4d2d] hover:text-[#ee4d2d] px-3 h-7 border border-orange-200 rounded-[10px] hover:bg-[#fff1f0] transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Thêm dòng
@@ -473,13 +460,13 @@ export function StockExportPage() {
                                   setActiveSearch(line.id);
                                 }}
                                 onFocus={() => setActiveSearch(line.id)}
-                                className="pl-9 h-9 text-sm border-slate-200 rounded-lg"
+                                className="pl-9 h-9 text-sm border-slate-200 rounded-[10px]"
                               />
                             </div>
 
                             {line.productId && (
                               <div className="mt-1">
-                                <span className="inline-flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                                <span className="inline-flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-[10px]">
                                   <CheckCircle className="w-3 h-3" />
                                   ID: {line.productId}
                                 </span>
@@ -489,7 +476,7 @@ export function StockExportPage() {
                             {/* Dropdown */}
                             {activeSearch === line.id &&
                               searchResults[line.id]?.length > 0 && (
-                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-[10px] shadow-lg overflow-hidden">
                                   <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 text-xs text-slate-400 font-medium">
                                     {searchResults[line.id].length} kết quả
                                   </div>
@@ -500,10 +487,10 @@ export function StockExportPage() {
                                         onClick={() =>
                                           selectProduct(line.id, product)
                                         }
-                                        className="w-full px-3 py-2.5 text-left hover:bg-orange-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-none"
+                                        className="w-full px-3 py-2.5 text-left hover:bg-[#fff1f0] transition-colors flex items-center justify-between border-b border-slate-50 last:border-none"
                                       >
                                         <div className="flex items-center gap-2.5">
-                                          <div className="w-7 h-7 bg-slate-100 rounded-md flex items-center justify-center shrink-0">
+                                          <div className="w-7 h-7 bg-slate-100 rounded-[10px] flex items-center justify-center shrink-0">
                                             <Package className="w-3.5 h-3.5 text-slate-400" />
                                           </div>
                                           <div>
@@ -529,7 +516,7 @@ export function StockExportPage() {
 
                             {searchLoading[line.id] &&
                               activeSearch === line.id && (
-                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg p-4 text-center shadow-lg">
+                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-[10px] p-4 text-center shadow-lg">
                                   <Loader2 className="w-4 h-4 animate-spin mx-auto text-slate-400" />
                                 </div>
                               )}
@@ -540,9 +527,9 @@ export function StockExportPage() {
                         <td className="px-4 py-3 text-center">
                           {line.productId ? (
                             <span
-                              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${
+                              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-[10px] ${
                                 line.availableStock === 0
-                                  ? 'bg-red-50 text-red-600'
+                                  ? 'bg-red-50 text-[#ee4d2d]'
                                   : isLowStock
                                     ? 'bg-amber-50 text-amber-600'
                                     : 'bg-slate-100 text-slate-600'
@@ -569,7 +556,7 @@ export function StockExportPage() {
                                   Math.max(1, line.quantity - 1)
                                 )
                               }
-                              className="w-7 h-7 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex items-center justify-center text-sm"
+                              className="w-7 h-7 rounded-[10px] border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex items-center justify-center text-sm"
                             >
                               −
                             </button>
@@ -584,9 +571,9 @@ export function StockExportPage() {
                                   parseInt(e.target.value) || 1
                                 )
                               }
-                              className={`w-12 h-7 text-center text-sm rounded-md tabular-nums px-1 ${
+                              className={`w-12 h-7 text-center text-sm rounded-[10px] tabular-nums px-1 ${
                                 isOverStock
-                                  ? 'border-red-300 bg-red-50 text-red-600 focus:ring-red-300'
+                                  ? 'border-red-300 bg-red-50 text-[#ee4d2d] focus:ring-red-300'
                                   : 'border-slate-200'
                               }`}
                             />
@@ -598,7 +585,7 @@ export function StockExportPage() {
                                   line.quantity + 1
                                 )
                               }
-                              className="w-7 h-7 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex items-center justify-center text-sm"
+                              className="w-7 h-7 rounded-[10px] border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex items-center justify-center text-sm"
                             >
                               +
                             </button>
@@ -623,7 +610,7 @@ export function StockExportPage() {
                               )
                             }
                             placeholder="0"
-                            className="h-9 text-sm text-right border-slate-200 rounded-lg tabular-nums"
+                            className="h-9 text-sm text-right border-slate-200 rounded-[10px] tabular-nums"
                           />
                         </td>
 
@@ -642,7 +629,7 @@ export function StockExportPage() {
                           <button
                             onClick={() => removeLine(line.id)}
                             disabled={exportLines.length === 1}
-                            className="w-8 h-8 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                            className="w-8 h-8 rounded-[10px] text-slate-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

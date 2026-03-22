@@ -16,20 +16,20 @@ import reviewService, {
 } from '@/services/reviewService';
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .rvl-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --success: #2d7a4f;
     --success-soft: #edf7f2;
     --warning: #905a10;
@@ -39,7 +39,7 @@ const css = `
     --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -53,20 +53,20 @@ const css = `
   .rvl-header-left { display: flex; align-items: center; gap: 16px; }
   .rvl-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #d73211 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(238,77,45,0.35); flex-shrink: 0;
   }
   .rvl-icon-badge svg { color: white; width: 24px; height: 24px; }
   .rvl-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-family: 'Outfit', sans-serif; font-size: 2rem;
     font-weight: 400; color: var(--ink); line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
   .rvl-count-pill {
     display: inline-flex; align-items: center;
     background: var(--violet-soft); color: var(--violet);
-    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.7rem;
     font-weight: 500; padding: 2px 8px; border-radius: 20px;
     margin-left: 8px; letter-spacing: 0.02em;
   }
@@ -94,18 +94,18 @@ const css = `
   .rvl-search {
     padding: 7px 12px 7px 32px; border: 1px solid var(--border);
     border-radius: 8px; background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
     color: var(--ink); outline: none; width: 260px;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .rvl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .rvl-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(238,77,45,0.12); }
   .rvl-table-meta { font-size: 0.8rem; color: var(--ink-3); }
 
   .rvl-table { width: 100%; border-collapse: collapse; }
   .rvl-table thead tr { border-bottom: 1px solid var(--border); }
   .rvl-table th {
     padding: 11px 20px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); background: var(--surface-2);
   }
@@ -149,7 +149,7 @@ const css = `
   .rvl-btn-reply { color: var(--violet); }
   .rvl-btn-reply:hover { background: var(--violet-soft); border-color: var(--violet); }
   .rvl-btn-delete { color: var(--danger); }
-  .rvl-btn-delete:hover { background: var(--danger-soft); border-color: #f5c2c2; }
+  .rvl-btn-delete:hover { background: var(--danger-soft); border-color: #f8aba6; }
 
   .rvl-empty {
     display: flex; flex-direction: column; align-items: center;
@@ -195,7 +195,7 @@ const css = `
     padding: 20px 24px; border-bottom: 1px solid var(--border);
   }
   .rvl-modal-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.2rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.2rem;
     font-weight: 400; margin: 0;
   }
   .rvl-modal-close {
@@ -231,10 +231,10 @@ const css = `
 
   .rvl-textarea {
     width: 100%; min-height: 100px; border: 1px solid var(--border);
-    border-radius: 8px; padding: 12px; font-family: 'DM Sans', sans-serif;
+    border-radius: 8px; padding: 12px; font-family: 'Inter', sans-serif;
     font-size: 0.85rem; resize: vertical; outline: none; color: var(--ink);
   }
-  .rvl-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,82,26,0.12); }
+  .rvl-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(238,77,45,0.12); }
 
   .rvl-review-info { margin-bottom: 16px; padding: 12px; background: var(--surface-2); border-radius: 8px; }
   .rvl-review-info-row { display: flex; gap: 8px; font-size: 0.83rem; margin-bottom: 4px; }
@@ -600,8 +600,8 @@ export function ReviewList() {
                         key={i}
                         size={12}
                         style={{
-                          fill: i < replyTarget.rating ? '#c9521a' : 'none',
-                          color: i < replyTarget.rating ? '#c9521a' : '#ccc',
+                          fill: i < replyTarget.rating ? '#ee4d2d' : 'none',
+                          color: i < replyTarget.rating ? '#ee4d2d' : '#ccc',
                         }}
                       />
                     ))}

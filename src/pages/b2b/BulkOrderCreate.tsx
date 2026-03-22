@@ -13,7 +13,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { VoucherSelector } from '../../components/common/VoucherSelector';
@@ -22,7 +22,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useBulkOrders } from '../../contexts/BulkOrderContext';
 import bulkOrderService from '../../services/bulkOrderService';
 import productService from '../../services/productService';
-import { VoucherResponse } from '../../services/voucherService';
+import { VoucherResponse, voucherService } from '../../services/voucherService';
 import { CompanyProduct } from '../../types/product';
 
 // ─── Local cart types (not submitted to API, used only during order building) ─
@@ -61,6 +61,7 @@ export function BulkOrderCreate() {
   // ── Voucher ──────────────────────────────────────────────────────────────
   const [voucherInput, setVoucherInput] = useState('');
   const [voucherCode, setVoucherCode] = useState('');
+  const [selectedVoucher, setSelectedVoucher] = useState<VoucherResponse | null>(null);
   const [voucherError, setVoucherError] = useState('');
   const [isVoucherSelectorOpen, setIsVoucherSelectorOpen] = useState(false);
 
@@ -222,7 +223,7 @@ export function BulkOrderCreate() {
   const subtotal = cartItems.reduce((sum, i) => sum + i.subtotal, 0);
 
   // ── Voucher ──────────────────────────────────────────────────────────────
-  const handleApplyVoucher = () => {
+  const handleApplyVoucher = async () => {
     setVoucherError('');
     const code = voucherInput.trim().toUpperCase();
     if (!code) return;
@@ -230,10 +231,39 @@ export function BulkOrderCreate() {
       setVoucherError('Vui lòng thêm sản phẩm trước khi áp voucher');
       return;
     }
-    setVoucherCode(code);
+    if (!user?.userId) return;
+
+    try {
+      // Fetch voucher by code to get details
+      const voucher = await voucherService.getVoucherByCode(code);
+
+      // Client-side validation to avoid strict B2C backend endpoint failures
+      if (!voucher || !voucher.isActive || !voucher.isValid) {
+        throw new Error('Mã giảm giá không tồn tại hoặc đã hết hạn');
+      }
+      if (subtotal < voucher.minOrderValue) {
+        throw new Error(
+          `Đơn hàng chưa đạt mức tối thiểu ${voucher.minOrderValue.toLocaleString(
+            'vi-VN'
+          )}đ`
+        );
+      }
+
+      setSelectedVoucher(voucher);
+      setVoucherCode(voucher.voucherCode);
+    } catch (error: any) {
+      setVoucherError(
+        error.response?.data?.message ||
+          error.message ||
+          'Mã giảm giá không hợp lệ hoặc không đủ điều kiện'
+      );
+      setSelectedVoucher(null);
+      setVoucherCode('');
+    }
   };
 
   const handleSelectVoucher = (voucher: VoucherResponse) => {
+    setSelectedVoucher(voucher);
     setVoucherCode(voucher.voucherCode);
     setVoucherInput(voucher.voucherCode);
     setIsVoucherSelectorOpen(false);
@@ -241,10 +271,27 @@ export function BulkOrderCreate() {
   };
 
   const handleRemoveVoucher = () => {
+    setSelectedVoucher(null);
     setVoucherCode('');
     setVoucherInput('');
     setVoucherError('');
   };
+
+  const discountAmount = useMemo(() => {
+    if (!selectedVoucher) return 0;
+    if (subtotal < selectedVoucher.minOrderValue) return 0;
+
+    if (selectedVoucher.discountType === 'FIXED') {
+      return selectedVoucher.discountValue;
+    } else {
+      const calculated = (subtotal * selectedVoucher.discountValue) / 100;
+      return selectedVoucher.maxDiscount > 0
+        ? Math.min(calculated, selectedVoucher.maxDiscount)
+        : calculated;
+    }
+  }, [subtotal, selectedVoucher]);
+
+  const finalTotal = subtotal - discountAmount;
 
   // ── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = () => {
@@ -344,14 +391,14 @@ export function BulkOrderCreate() {
               </p>
             </div>
             {cartItems.length > 0 && (
-              <div className="hidden sm:flex items-center gap-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 border border-blue-100">
-                <ShoppingCart className="h-5 w-5 text-blue-600" />
+              <div className="hidden sm:flex items-center gap-3 rounded-xl bg-gradient-to-r from-red-50 to-red-50 px-4 py-3 border border-red-100">
+                <ShoppingCart className="h-5 w-5 text-[#ee4d2d]" />
                 <div className="text-sm">
                   <span className="font-semibold text-slate-900">
                     {cartItems.length} sản phẩm
                   </span>
                   <span className="mx-2 text-slate-300">·</span>
-                  <span className="font-bold text-blue-600">
+                  <span className="font-bold text-[#ee4d2d]">
                     {fmt(subtotal)}
                   </span>
                 </div>
@@ -373,7 +420,7 @@ export function BulkOrderCreate() {
                   value={search}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Tìm kiếm sản phẩm theo tên, thương hiệu..."
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-[#ee4d2d] focus:bg-white focus:ring-2 focus:ring-red-100"
                 />
               </div>
             </div>
@@ -383,7 +430,7 @@ export function BulkOrderCreate() {
               {productLoading ? (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm py-16">
                   <div className="flex flex-col items-center gap-3 text-slate-400">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 -[#ee4d2d] border-t-transparent" />
                     <p className="text-sm">Đang tải sản phẩm...</p>
                   </div>
                 </div>
@@ -406,7 +453,7 @@ export function BulkOrderCreate() {
                       key={product.productId}
                       className={`bg-white rounded-xl border shadow-sm transition-all ${
                         inCart
-                          ? 'border-blue-200 ring-2 ring-blue-50'
+                          ? 'border-[#fca5a5] ring-2 ring-red-50'
                           : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                       }`}
                     >
@@ -468,7 +515,7 @@ export function BulkOrderCreate() {
                                         <span className="text-slate-600">
                                           Từ {tier.minQty} SP:
                                         </span>
-                                        <span className="font-bold text-indigo-600">
+                                        <span className="font-bold text-[#ee4d2d]">
                                           {fmt(tier.unitPrice)}
                                         </span>
                                       </div>
@@ -486,7 +533,7 @@ export function BulkOrderCreate() {
                           <div className="flex-shrink-0">
                             {inCart ? (
                               <div className="flex flex-col items-end gap-2">
-                                <div className="inline-flex items-center gap-2 rounded-lg border-2 border-blue-200 bg-blue-50 p-1">
+                                <div className="inline-flex items-center gap-2 rounded-lg border-2 border-[#fca5a5] bg-red-50 p-1">
                                   <button
                                     onClick={() =>
                                       updateQty(
@@ -508,14 +555,14 @@ export function BulkOrderCreate() {
                                         inCart.quantity + 1
                                       )
                                     }
-                                    className="flex h-8 w-8 items-center justify-center rounded-md bg-white hover:bg-blue-50 transition-colors shadow-sm"
+                                    className="flex h-8 w-8 items-center justify-center rounded-md bg-white hover:bg-red-50 transition-colors shadow-sm"
                                   >
                                     <Plus className="h-4 w-4 text-slate-600" />
                                   </button>
                                 </div>
                                 <p className="text-xs text-slate-500">
                                   ={' '}
-                                  <span className="font-semibold text-blue-600">
+                                  <span className="font-semibold text-[#ee4d2d]">
                                     {fmt(inCart.subtotal)}
                                   </span>
                                 </p>
@@ -523,7 +570,7 @@ export function BulkOrderCreate() {
                             ) : (
                               <button
                                 onClick={() => addToCart(product)}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all"
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ee4d2d] to-[#ee4d2d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:from-[#d73211] hover:to-[#d73211] transition-all"
                               >
                                 <Plus className="h-4 w-4" />
                                 Thêm vào giỏ
@@ -555,7 +602,7 @@ export function BulkOrderCreate() {
                       onClick={() => handlePageChange(p)}
                       className={`h-9 w-9 rounded-lg text-sm font-semibold transition ${
                         p === productPage
-                          ? 'bg-indigo-600 text-white shadow-sm'
+                          ? 'bg-[#ee4d2d] text-white shadow-sm'
                           : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -580,10 +627,10 @@ export function BulkOrderCreate() {
               {/* Cart Items Card */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
                 {/* Cart Header */}
-                <div className="flex items-center justify-between bg-gradient-to-br from-indigo-50 via-indigo-100 to-indigo-50 border-b border-slate-200 px-6 py-4">
+                <div className="flex items-center justify-between bg-gradient-to-br from-red-50 via-red-100 to-red-50 border-b border-slate-200 px-6 py-4">
                   <div className="flex items-center gap-2.5">
                     <div className="rounded-lg bg-white p-2 shadow-sm">
-                      <ShoppingCart className="h-5 w-5 text-indigo-700" />
+                      <ShoppingCart className="h-5 w-5 text-[#d73211]" />
                     </div>
                     <span className="font-bold text-slate-900 text-base">
                       Giỏ hàng
@@ -592,7 +639,7 @@ export function BulkOrderCreate() {
                   {cartItems.length > 0 && (
                     <span
                       className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-bold shadow-md"
-                      style={{ backgroundColor: '#4338ca', color: '#ffffff' }}
+                      style={{ backgroundColor: '#ee4d2d', color: '#ffffff' }}
                     >
                       {cartItems.length} SP
                     </span>
@@ -665,7 +712,7 @@ export function BulkOrderCreate() {
                                           key={idx}
                                           className={`flex items-center justify-between px-2 py-1.5 rounded-lg border transition-all ${
                                             isCurrent
-                                              ? 'bg-indigo-600 border-indigo-600 shadow-sm ring-1 ring-indigo-600'
+                                              ? 'bg-[#ee4d2d] border-[#ee4d2d] shadow-sm ring-1 ring-[#ee4d2d]'
                                               : 'bg-white border-slate-200'
                                           }`}
                                         >
@@ -682,7 +729,7 @@ export function BulkOrderCreate() {
                                             className={`text-[11px] font-bold ${
                                               isCurrent
                                                 ? 'text-white'
-                                                : 'text-indigo-600'
+                                                : 'text-[#ee4d2d]'
                                             }`}
                                           >
                                             {fmt(tier.unitPrice)}
@@ -696,7 +743,7 @@ export function BulkOrderCreate() {
                           })()}
 
                           <div className="flex items-center justify-between gap-4">
-                            <div className="inline-flex items-center gap-1 rounded-xl border-2 border-slate-200 bg-white p-1 shadow-sm hover:border-indigo-300 transition-colors">
+                            <div className="inline-flex items-center gap-1 rounded-xl border-2 border-slate-200 bg-white p-1 shadow-sm hover:-[#fca5a5] transition-colors">
                               <button
                                 onClick={() =>
                                   updateQty(item.productId, item.quantity - 1)
@@ -721,7 +768,7 @@ export function BulkOrderCreate() {
                                 onClick={() =>
                                   updateQty(item.productId, item.quantity + 1)
                                 }
-                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-indigo-50 active:scale-95 transition-all duration-150"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-red-50 active:scale-95 transition-all duration-150"
                               >
                                 <Plus className="h-4 w-4 text-slate-600" />
                               </button>
@@ -779,7 +826,7 @@ export function BulkOrderCreate() {
 
                             {/* Add new customization */}
                             {editingCustomizationId === item.productId ? (
-                              <div className="p-3 rounded-lg bg-indigo-50/50 border border-indigo-100 space-y-3">
+                              <div className="p-3 rounded-lg bg-red-50/50 border border-red-100 space-y-3">
                                 <div>
                                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                                     Loại tùy chọn
@@ -789,7 +836,7 @@ export function BulkOrderCreate() {
                                     onChange={(e) =>
                                       setCustomType(e.target.value)
                                     }
-                                    className="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 p-2 outline-none bg-white"
+                                    className="w-full text-sm rounded-lg border-slate-300 focus:-[#ee4d2d] focus:ring-1 focus:-[#ee4d2d] p-2 outline-none bg-white"
                                   >
                                     <option value="LOGO_ENGRAVING">
                                       Khắc Logo/Laser
@@ -820,7 +867,7 @@ export function BulkOrderCreate() {
                                     onChange={(e) =>
                                       setCustomNote(e.target.value)
                                     }
-                                    className="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 p-2 outline-none bg-white"
+                                    className="w-full text-sm rounded-lg border-slate-300 focus:-[#ee4d2d] focus:ring-1 focus:-[#ee4d2d] p-2 outline-none bg-white"
                                   />
                                 </div>
                                 <div className="flex items-center gap-2 pt-1">
@@ -828,7 +875,7 @@ export function BulkOrderCreate() {
                                     onClick={() =>
                                       addCustomization(item.productId)
                                     }
-                                    className="flex-1 bg-indigo-600 text-white rounded-lg py-1.5 text-xs font-semibold hover:bg-indigo-700 transition"
+                                    className="flex-1 bg-[#ee4d2d] text-white rounded-lg py-1.5 text-xs font-semibold hover:bg-[#d73211] transition"
                                   >
                                     Lưu
                                   </button>
@@ -849,7 +896,7 @@ export function BulkOrderCreate() {
                                   setCustomType('LOGO_PRINT');
                                   setCustomNote('');
                                 }}
-                                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition block text-left w-full"
+                                className="text-xs font-semibold text-[#ee4d2d] hover:-[#b03030] transition block text-left w-full"
                               >
                                 + Thêm tùy chọn (in/thêu/phối màu...)
                               </button>
@@ -901,7 +948,7 @@ export function BulkOrderCreate() {
                             {voucherCode}
                           </p>
                           <p className="text-xs text-emerald-600">
-                            Sẽ được áp dụng khi đặt hàng
+                            Đã áp dụng giảm {fmt(discountAmount)}
                           </p>
                         </div>
                       </div>
@@ -930,13 +977,13 @@ export function BulkOrderCreate() {
                         className={`flex-1 rounded-xl border-2 py-3 px-4 text-sm font-medium outline-none transition-all ${
                           voucherError
                             ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-4 focus:ring-red-100'
-                            : 'border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-100'
+                            : 'border-slate-200 bg-slate-50 focus:-[#ee4d2d] focus:bg-white focus:ring-4 focus:ring-red-100'
                         }`}
                       />
                       <button
                         onClick={handleApplyVoucher}
                         className="rounded-xl px-5 text-sm font-bold active:scale-95 shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
-                        style={{ backgroundColor: '#4338ca', color: '#ffffff' }}
+                        style={{ backgroundColor: '#ee4d2d', color: '#ffffff' }}
                       >
                         Áp dụng
                       </button>
@@ -944,7 +991,7 @@ export function BulkOrderCreate() {
 
                     <Button
                       variant="outline"
-                      className="w-full flex items-center justify-center gap-2 border-dashed border-2 py-6 rounded-xl text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all"
+                      className="w-full flex items-center justify-center gap-2 border-dashed border-2 py-6 rounded-xl text-slate-600 hover:text-[#ee4d2d] hover:border-[#fca5a5] hover:bg-red-50/50 transition-all"
                       onClick={() => setIsVoucherSelectorOpen(true)}
                     >
                       <Ticket className="w-5 h-5" />
@@ -966,8 +1013,8 @@ export function BulkOrderCreate() {
               {/* Shipping Address Card */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-6 space-y-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="rounded-lg bg-blue-50 p-2">
-                    <Package className="h-4 w-4 text-blue-600" />
+                  <div className="rounded-lg bg-red-50 p-2">
+                    <Package className="h-4 w-4 text-[#ee4d2d]" />
                   </div>
                   <p className="font-bold text-sm text-slate-900">
                     Địa chỉ giao hàng
@@ -992,7 +1039,7 @@ export function BulkOrderCreate() {
                     className={`w-full rounded-xl border-2 py-3 px-4 text-sm font-medium outline-none transition-all focus:bg-white focus:ring-4 ${
                       fieldErrors.shippingAddress
                         ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-100'
-                        : 'border-slate-200 bg-slate-50 focus:border-indigo-400 focus:ring-indigo-100'
+                        : 'border-slate-200 bg-slate-50 focus:-[#ee4d2d] focus:ring-red-100'
                     }`}
                   />
                   {fieldErrors.shippingAddress && (
@@ -1038,8 +1085,8 @@ export function BulkOrderCreate() {
                           {voucherCode}
                         </span>
                       </div>
-                      <span className="text-xs text-emerald-600 font-medium italic">
-                        (áp dụng khi đặt)
+                      <span className="text-sm font-semibold tabular-nums text-emerald-600">
+                        -{fmt(discountAmount)}
                       </span>
                     </div>
                   )}
@@ -1049,13 +1096,13 @@ export function BulkOrderCreate() {
                       <span className="text-sm font-medium uppercase tracking-wide text-slate-500">
                         Tổng cộng
                       </span>
-                      <span className="text-3xl sm:text-4xl leading-none font-bold tracking-tight tabular-nums text-slate-900">
-                        {fmt(subtotal)}
+                      <span className="text-3xl sm:text-4xl leading-none font-bold tracking-tight tabular-nums text-[#d73211]">
+                        {fmt(finalTotal)}
                       </span>
                     </div>
-                    {voucherCode && (
-                      <p className="text-xs text-emerald-600 text-right mt-1">
-                        * Giảm giá sẽ hiển thị sau khi server xác nhận voucher
+                    {voucherCode && discountAmount > 0 && (
+                      <p className="text-xs text-emerald-600 text-right mt-1.5">
+                        Đã giảm {fmt(discountAmount)} từ tổng đơn hàng
                       </p>
                     )}
                   </div>
@@ -1074,12 +1121,12 @@ export function BulkOrderCreate() {
                   className={`w-full rounded-2xl py-4 text-base font-bold shadow-md transition-all duration-200 ${
                     cartItems.length === 0 || submitting
                       ? 'bg-slate-300 cursor-not-allowed opacity-60 text-white'
-                      : 'text-white hover:bg-indigo-800 hover:shadow-lg active:scale-[0.99]'
+                      : 'text-white hover:-[#b03030] hover:shadow-lg active:scale-[0.99]'
                   }`}
                   style={
                     cartItems.length === 0 || submitting
                       ? undefined
-                      : { backgroundColor: '#4338ca', color: '#ffffff' }
+                      : { backgroundColor: '#ee4d2d', color: '#ffffff' }
                   }
                 >
                   {submitting ? (
@@ -1110,7 +1157,7 @@ export function BulkOrderCreate() {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-200">
-            <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-indigo-50 px-6 py-4">
+            <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-red-50 px-6 py-4">
               <h2 className="text-lg font-bold text-slate-900">
                 Xác nhận đơn hàng
               </h2>
@@ -1152,12 +1199,12 @@ export function BulkOrderCreate() {
                     Voucher{' '}
                     <span className="font-mono font-bold">{voucherCode}</span>
                   </span>
-                  <span className="italic text-xs">(xác nhận bởi server)</span>
+                  <span className="font-medium">-{fmt(discountAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between pt-2 text-lg font-bold border-t border-slate-200">
                 <span className="text-slate-900">Tổng cộng</span>
-                <span className="text-indigo-700">{fmt(subtotal)}</span>
+                <span className="text-[#d73211]">{fmt(finalTotal)}</span>
               </div>
               {shippingAddress && (
                 <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
@@ -1181,7 +1228,7 @@ export function BulkOrderCreate() {
               <button
                 onClick={handleConfirmOrder}
                 className="flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all shadow-md hover:shadow-lg"
-                style={{ backgroundColor: '#4338ca', color: '#ffffff' }}
+                style={{ backgroundColor: '#ee4d2d', color: '#ffffff' }}
               >
                 Xác nhận đặt hàng
               </button>

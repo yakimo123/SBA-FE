@@ -1,12 +1,23 @@
-import { format } from 'date-fns';
 import {
+  endOfMonth,
+  endOfQuarter,
+  format,
+  startOfMonth,
+  startOfQuarter,
+} from 'date-fns';
+import {
+  ArrowRight,
+  ChevronDown,
   DollarSign,
+  Download,
   LayoutDashboard,
+  Loader2,
   Package,
   RefreshCw,
   ShoppingCart,
   Users,
 } from 'lucide-react';
+import { useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -24,23 +35,25 @@ import {
   YAxis,
 } from 'recharts';
 
+import { reportService } from '@/services/reportService';
+import { downloadExcelFileFromBase64 } from '@/utils/exportUtils';
+
 import { useDashboard } from '../../hooks/useDashboard';
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  
 
   .db-root {
-    --bg: #f5f3ef;
+    --bg: #f3f4f6;
     --surface: #ffffff;
-    --surface-2: #faf9f7;
-    --border: #e8e3da;
-    --ink: #1a1612;
-    --ink-2: #5c5347;
-    --ink-3: #9c9085;
-    --accent: #c9521a;
-    --accent-soft: #fdf1eb;
-    --violet: #4a3f8f;
-    --violet-soft: #eeecf8;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --accent: #ee4d2d;
+    --accent-soft: #fef2f2;
+    --violet: #ee4d2d;
+    --violet-soft: #fff1f0;
     --success: #2d7a4f;
     --success-soft: #edf7f2;
     --warning: #905a10;
@@ -50,7 +63,7 @@ const css = `
     --shadow-lg: 0 12px 40px rgba(26,22,18,0.12), 0 4px 12px rgba(26,22,18,0.06);
     --radius: 10px;
     --radius-lg: 16px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     background: var(--bg);
     min-height: 100vh;
     color: var(--ink);
@@ -61,16 +74,15 @@ const css = `
     display: flex; align-items: flex-end;
     justify-content: space-between; gap: 16px; margin-bottom: 28px;
   }
-  .db-header-left { display: flex; align-items: center; gap: 16px; }
   .db-icon-badge {
     width: 52px; height: 52px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #e07040 100%);
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(201,82,26,0.35); flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(255,106,0,0.35); flex-shrink: 0;
   }
   .db-icon-badge svg { color: white; width: 24px; height: 24px; }
   .db-title {
-    font-family: 'DM Serif Display', serif; font-size: 2rem;
+    font-family: 'Outfit', sans-serif; font-size: 2rem;
     font-weight: 400; color: var(--ink); line-height: 1;
     margin: 0 0 4px; letter-spacing: -0.5px;
   }
@@ -84,7 +96,7 @@ const css = `
     display: flex; align-items: center; gap: 8px;
     padding: 9px 18px; border: 1px solid var(--border);
     border-radius: var(--radius); background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
     font-weight: 500; color: var(--ink-2); cursor: pointer;
     transition: all 0.15s;
   }
@@ -93,14 +105,14 @@ const css = `
   .db-error {
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; padding: 80px 20px; gap: 16px;
-    background: var(--danger-soft); border: 1px solid #f5c2c2;
+    background: var(--danger-soft); border: 1px solid #f8aba6;
     border-left: 3px solid var(--danger); border-radius: var(--radius);
     color: var(--danger); text-align: center;
   }
   .db-error-btn {
     padding: 9px 20px; border: none; border-radius: var(--radius);
     background: var(--danger); color: white;
-    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem;
     font-weight: 600; cursor: pointer;
   }
   .db-error-btn:hover { opacity: 0.9; }
@@ -139,7 +151,7 @@ const css = `
   .db-kpi-icon.violet { background: var(--violet-soft); color: var(--violet); }
   .db-kpi-icon.orange { background: var(--accent-soft); color: var(--accent); }
   .db-kpi-value {
-    font-family: 'DM Mono', monospace; font-size: 1.5rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.5rem;
     font-weight: 600; color: var(--ink); margin-bottom: 6px;
   }
   .db-kpi-trend {
@@ -169,7 +181,7 @@ const css = `
     padding: 24px; overflow: hidden;
   }
   .db-chart-title {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem;
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-3); margin: 0 0 20px;
   }
@@ -184,14 +196,14 @@ const css = `
     background: var(--surface-2);
   }
   .db-table-title {
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.75rem;
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-3); margin: 0;
   }
   .db-table { width: 100%; border-collapse: collapse; }
   .db-table th {
     padding: 12px 24px; text-align: left;
-    font-family: 'DM Mono', monospace; font-size: 0.69rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.69rem;
     font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-3); background: var(--surface-2);
   }
@@ -202,10 +214,10 @@ const css = `
   .db-table tbody tr:last-child td { border-bottom: none; }
   .db-table tbody tr:hover td { background: var(--accent-soft); }
   .db-id-text {
-    font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.8rem;
     color: var(--violet); font-weight: 500;
   }
-  .db-price { font-family: 'DM Mono', monospace; font-size: 0.88rem; font-weight: 500; }
+  .db-price { font-family: 'Outfit', sans-serif; font-size: 0.88rem; font-weight: 500; }
   .db-status {
     display: inline-flex; padding: 3px 10px; border-radius: 20px;
     font-size: 0.73rem; font-weight: 600;
@@ -217,13 +229,42 @@ const css = `
   .db-status-pending { background: #fef6eb; color: var(--warning); }
   .db-empty { padding: 48px 24px; text-align: center; color: var(--ink-3); font-size: 0.9rem; }
 
+  .db-quick-date-btn {
+    padding: 7px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+    background: var(--surface-2); font-size: 0.85rem; color: var(--ink-2);
+    cursor: pointer; font-weight: 500; transition: all 0.2s;
+  }
+  .db-quick-date-btn:hover { background: var(--surface); border-color: var(--ink-3); }
+
+  .db-export-primary {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border: none; border-radius: 6px;
+    background: #1967d2; color: white; font-size: 0.85rem;
+    font-weight: 500; cursor: pointer; transition: background 0.2s;
+  }
+  .db-export-primary:hover:not(:disabled) { background: #1557b0; }
+  .db-export-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+  .db-export-dropdown {
+    position: absolute; top: calc(100% + 4px); right: 0;
+    background: white; border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: var(--shadow-sm); z-index: 50;
+    min-width: 180px; overflow: hidden;
+  }
+  .db-export-item {
+    display: block; width: 100%; text-align: left;
+    padding: 10px 16px; border: none; background: none;
+    font-size: 0.85rem; color: var(--ink); cursor: pointer; transition: background 0.1s;
+  }
+  .db-export-item:hover { background: var(--surface-2); color: #1967d2; }
+
   .db-bulk-overview {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius-lg); padding: 24px; margin-bottom: 28px;
     box-shadow: var(--shadow-sm);
   }
   .db-bulk-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.25rem;
+    font-family: 'Outfit', sans-serif; font-size: 1.25rem;
     margin: 0 0 20px; color: var(--ink);
   }
   .db-bulk-stats {
@@ -235,13 +276,13 @@ const css = `
     display: flex; flex-direction: column; gap: 4px;
   }
   .db-bulk-stat-label { font-size: 0.82rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-  .db-bulk-stat-value { font-family: 'DM Mono', monospace; font-size: 1.5rem; font-weight: 600; }
+  .db-bulk-stat-value { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 600; }
   .db-bulk-footer {
     padding-top: 16px; border-top: 1px solid var(--border);
     display: flex; justify-content: space-between; align-items: center;
   }
   .db-bulk-footer-text { font-size: 0.88rem; color: var(--ink-2); }
-  .db-bulk-footer-value { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--ink); }
+  .db-bulk-footer-value { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); }
 `;
 
 export function Dashboard() {
@@ -257,6 +298,62 @@ export function Dashboard() {
     error,
     refreshData,
   } = useDashboard();
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const setThisMonth = () => {
+    const today = new Date();
+    setExportStartDate(format(startOfMonth(today), 'yyyy-MM-dd'));
+    setExportEndDate(format(endOfMonth(today), 'yyyy-MM-dd'));
+  };
+
+  const setThisQuarter = () => {
+    const today = new Date();
+    setExportStartDate(format(startOfQuarter(today), 'yyyy-MM-dd'));
+    setExportEndDate(format(endOfQuarter(today), 'yyyy-MM-dd'));
+  };
+
+  const handleExport = async (
+    type: 'revenue' | 'inventory' | 'top-products'
+  ) => {
+    try {
+      setIsExporting(true);
+      setShowExportMenu(false);
+
+      let base64Data;
+      let filename = '';
+
+      if (type === 'revenue') {
+        base64Data = await reportService.exportRevenueReport(
+          exportStartDate || undefined,
+          exportEndDate || undefined
+        );
+        const dateSuffix =
+          exportStartDate && exportEndDate
+            ? `_${exportStartDate}_${exportEndDate}`
+            : '';
+        filename = `BaoCaoDoanhThu${dateSuffix}.xlsx`;
+      } else if (type === 'inventory') {
+        base64Data = await reportService.exportInventoryReport();
+        filename = `BaoCaoTonKho.xlsx`;
+      } else if (type === 'top-products') {
+        base64Data = await reportService.exportTopProductsReport();
+        filename = `BaoCaoBanChay.xlsx`;
+      }
+
+      if (base64Data) {
+        downloadExcelFileFromBase64(base64Data, filename);
+      }
+    } catch (err) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      alert(errorObj?.response?.data?.message || 'Lỗi xuất báo cáo');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const formattedRevenue =
     kpis?.totalRevenue?.value != null
@@ -305,8 +402,8 @@ export function Dashboard() {
   };
 
   const chartColors = {
-    accent: '#c9521a',
-    violet: '#4a3f8f',
+    accent: '#ef4444',
+    violet: '#dc2626',
     success: '#2d7a4f',
     blue: '#1a6fa8',
     warning: '#905a10',
@@ -330,20 +427,111 @@ export function Dashboard() {
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={refreshData}
-          className="db-refresh-btn"
-        >
-          <RefreshCw size={15} /> Refresh Data
-        </button>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="date"
+              className="db-refresh-btn"
+              style={{
+                padding: '7px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+              }}
+              value={exportStartDate}
+              onChange={(e) => setExportStartDate(e.target.value)}
+              title="Từ ngày"
+            />
+            <ArrowRight size={16} color="var(--ink-3)" />
+            <input
+              type="date"
+              className="db-refresh-btn"
+              style={{
+                padding: '7px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+              }}
+              value={exportEndDate}
+              onChange={(e) => setExportEndDate(e.target.value)}
+              title="Đến ngày"
+            />
+
+            <button
+              type="button"
+              className="db-quick-date-btn"
+              onClick={setThisMonth}
+            >
+              Tháng này
+            </button>
+            <button
+              type="button"
+              className="db-quick-date-btn"
+              onClick={setThisQuarter}
+            >
+              Quý này
+            </button>
+
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                disabled={isExporting}
+                className="db-export-primary"
+              >
+                {isExporting ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : (
+                  <Download size={15} />
+                )}
+                Xuất báo cáo
+                <ChevronDown size={14} />
+              </button>
+
+              {showExportMenu && (
+                <div className="db-export-dropdown">
+                  <button
+                    type="button"
+                    className="db-export-item"
+                    onClick={() => handleExport('revenue')}
+                  >
+                    Báo cáo doanh thu
+                  </button>
+                  <button
+                    type="button"
+                    className="db-export-item"
+                    onClick={() => handleExport('inventory')}
+                  >
+                    Báo cáo tồn kho
+                  </button>
+                  <button
+                    type="button"
+                    className="db-export-item"
+                    onClick={() => handleExport('top-products')}
+                  >
+                    Báo cáo bán chạy
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={refreshData}
+            className="db-refresh-btn"
+          >
+            <RefreshCw size={15} /> Refresh Data
+          </button>
+        </div>
       </div>
 
       {bulkOrderStats && (
         <div className="db-bulk-overview">
           <h2 className="db-bulk-title">Bulk Orders Overview</h2>
           <div className="db-bulk-stats">
-            <div className="db-bulk-stat-item" style={{ background: '#fef6eb' }}>
+            <div
+              className="db-bulk-stat-item"
+              style={{ background: '#fef6eb' }}
+            >
               <span className="db-bulk-stat-label" style={{ color: '#905a10' }}>
                 <span className="w-2 h-2 rounded-full bg-[#905a10]" />
                 Chờ duyệt
@@ -352,7 +540,10 @@ export function Dashboard() {
                 {bulkOrderStats.pendingReview} đơn
               </span>
             </div>
-            <div className="db-bulk-stat-item" style={{ background: '#eff6ff' }}>
+            <div
+              className="db-bulk-stat-item"
+              style={{ background: '#fff1f0' }}
+            >
               <span className="db-bulk-stat-label" style={{ color: '#1a6fa8' }}>
                 <span className="w-2 h-2 rounded-full bg-[#1a6fa8]" />
                 Chờ thanh toán
@@ -361,7 +552,10 @@ export function Dashboard() {
                 {bulkOrderStats.awaitingPayment} đơn
               </span>
             </div>
-            <div className="db-bulk-stat-item" style={{ background: '#ecfdf5' }}>
+            <div
+              className="db-bulk-stat-item"
+              style={{ background: '#ecfdf5' }}
+            >
               <span className="db-bulk-stat-label" style={{ color: '#065f46' }}>
                 <span className="w-2 h-2 rounded-full bg-[#065f46]" />
                 Đang xử lý
@@ -418,9 +612,7 @@ export function Dashboard() {
               <ShoppingCart size={20} />
             </div>
           </div>
-          <div className="db-kpi-value">
-            {kpis?.ordersToday?.value ?? 0}
-          </div>
+          <div className="db-kpi-value">{kpis?.ordersToday?.value ?? 0}</div>
           {kpis?.ordersToday?.change != null && (
             <span
               className={`db-kpi-trend ${
@@ -439,9 +631,7 @@ export function Dashboard() {
               <Package size={20} />
             </div>
           </div>
-          <div className="db-kpi-value">
-            {kpis?.activeProducts?.value ?? 0}
-          </div>
+          <div className="db-kpi-value">{kpis?.activeProducts?.value ?? 0}</div>
           {kpis?.activeProducts?.change != null && (
             <span
               className={`db-kpi-trend ${
@@ -460,9 +650,7 @@ export function Dashboard() {
               <Users size={20} />
             </div>
           </div>
-          <div className="db-kpi-value">
-            {kpis?.totalCustomers?.value ?? 0}
-          </div>
+          <div className="db-kpi-value">{kpis?.totalCustomers?.value ?? 0}</div>
           {kpis?.totalCustomers?.change != null && (
             <span
               className={`db-kpi-trend ${
@@ -486,11 +674,11 @@ export function Dashboard() {
                 <XAxis
                   dataKey="day"
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <YAxis
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                   tickFormatter={(v) => `₫${(v / 1000000).toFixed(1)}M`}
                 />
                 <Tooltip
@@ -504,7 +692,7 @@ export function Dashboard() {
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
                 <Line
@@ -538,19 +726,21 @@ export function Dashboard() {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {orderStatusData.map((entry: { color?: string }, i: number) => (
-                    <Cell
-                      key={`cell-${i}`}
-                      fill={entry.color || chartColors.violet}
-                    />
-                  ))}
+                  {orderStatusData.map(
+                    (entry: { color?: string }, i: number) => (
+                      <Cell
+                        key={`cell-${i}`}
+                        fill={entry.color || chartColors.violet}
+                      />
+                    )
+                  )}
                 </Pie>
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
               </PieChart>
@@ -573,21 +763,21 @@ export function Dashboard() {
                 <XAxis
                   type="number"
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <YAxis
                   dataKey="product"
                   type="category"
                   width={120}
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
                 <Bar
@@ -631,18 +821,18 @@ export function Dashboard() {
                 <XAxis
                   dataKey="month"
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <YAxis
                   stroke="#9c9085"
-                  style={{ fontFamily: 'DM Sans', fontSize: 11 }}
+                  style={{ fontFamily: 'Inter', fontSize: 11 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#faf9f7',
                     border: '1px solid #e8e3da',
                     borderRadius: 8,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   }}
                 />
                 <Area
@@ -704,9 +894,7 @@ export function Dashboard() {
                       </span>
                     </td>
                     <td>
-                      <span
-                        className={statusClass(order.status ?? '')}
-                      >
+                      <span className={statusClass(order.status ?? '')}>
                         {order.status ?? '—'}
                       </span>
                     </td>

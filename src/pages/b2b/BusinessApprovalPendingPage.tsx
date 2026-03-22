@@ -96,13 +96,13 @@ export function BusinessApprovalPendingPage() {
     switch (status) {
       case 'pending':
         return {
-          icon: <Clock className="w-16 h-16 text-blue-600" />,
+          icon: <Clock className="w-16 h-16 text-[#ee4d2d]" />,
           title: 'Đang chờ xét duyệt',
           description:
             'Hồ sơ của bạn đang được kiểm tra bởi đội ngũ của chúng tôi',
-          bgColor: 'bg-blue-50',
-          iconBg: 'bg-blue-100',
-          badgeColor: 'bg-blue-600',
+          bgColor: 'bg-red-50',
+          iconBg: 'bg-red-100',
+          badgeColor: 'bg-[#ee4d2d]',
         };
       case 'approved':
         return {
@@ -136,13 +136,13 @@ export function BusinessApprovalPendingPage() {
         };
       default:
         return {
-          icon: <Clock className="w-16 h-16 text-blue-600" />,
+          icon: <Clock className="w-16 h-16 text-[#ee4d2d]" />,
           title: 'Đang chờ xét duyệt',
           description:
             'Hồ sơ của bạn đang được kiểm tra bởi đội ngũ của chúng tôi',
-          bgColor: 'bg-blue-50',
-          iconBg: 'bg-blue-100',
-          badgeColor: 'bg-blue-600',
+          bgColor: 'bg-red-50',
+          iconBg: 'bg-red-100',
+          badgeColor: 'bg-[#ee4d2d]',
         };
     }
   };
@@ -154,7 +154,7 @@ export function BusinessApprovalPendingPage() {
       <div className="container mx-auto px-4 max-w-3xl">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="w-8 h-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+            <div className="w-8 h-8 rounded-full border-4 border-[#ee4d2d] border-t-transparent animate-spin"></div>
           </div>
         ) : (
           <>
@@ -394,7 +394,7 @@ export function BusinessApprovalPendingPage() {
 
                     <div className="flex gap-4">
                       <div className="flex flex-col items-center">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center animate-pulse">
+                        <div className="w-8 h-8 rounded-full bg-[#ee4d2d] flex items-center justify-center animate-pulse">
                           <Clock className="w-5 h-5 text-white" />
                         </div>
                         <div className="w-0.5 h-12 bg-gray-300"></div>
@@ -403,7 +403,7 @@ export function BusinessApprovalPendingPage() {
                         <p className="font-semibold text-gray-900">
                           Kiểm tra hồ sơ
                         </p>
-                        <p className="text-sm text-blue-600">Đang xử lý...</p>
+                        <p className="text-sm text-[#ee4d2d]">Đang xử lý...</p>
                       </div>
                     </div>
 

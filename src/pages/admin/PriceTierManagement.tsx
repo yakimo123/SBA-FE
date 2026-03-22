@@ -17,7 +17,7 @@ import { BulkPriceTier } from '../../types';
 import { Product } from '../../types/product';
 
 const css = `
-  .ptm-root { padding: 32px; background: #fdfaf6; min-height: 100vh; }
+  .ptm-root { padding: 32px; background: #f3f4f6; min-height: 100vh; }
   .ptm-card { background: white; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
   .ptm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
   .ptm-title-block { display: flex; align-items: center; gap: 16px; }
@@ -32,18 +32,18 @@ const css = `
   .ptm-p-card:hover { border-color: #7c3aed; transform: translateY(-2px); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   .ptm-p-card.active { border-color: #7c3aed; background: #f5f3ff; }
   .ptm-p-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; display: block; color: #1a1a1a; }
-  .ptm-p-sku { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #9ca3af; }
+  .ptm-p-sku { font-family: 'Outfit', sans-serif; font-size: 0.75rem; color: #9ca3af; }
 
   .ptm-table { width: 100%; border-collapse: collapse; }
   .ptm-table th { padding: 14px 24px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
   .ptm-table td { padding: 16px 24px; border-bottom: 1px solid #e5e7eb; color: #374151; }
   
-  .ptm-input { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; width: 100%; font-family: 'DM Mono', monospace; color: #1a1a1a; }
+  .ptm-input { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; width: 100%; font-family: 'Outfit', sans-serif; color: #1a1a1a; }
   .ptm-input:focus { border-color: #7c3aed; outline: none; box-shadow: 0 0 0 2px rgba(124,58,237,0.1); }
 
   .ptm-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(4px); }
   .ptm-modal { background: white; border-radius: 20px; width: 440px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
-  .ptm-modal-title { font-family: 'DM Serif Display', serif; font-size: 1.8rem; margin-bottom: 24px; color: #1a1a1a; }
+  .ptm-modal-title { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 24px; color: #1a1a1a; }
 
   .bod-back-btn { 
     padding: 0;
@@ -167,7 +167,7 @@ export function PriceTierManagement() {
           <h1
             style={{
               fontSize: '2.5rem',
-              fontFamily: 'DM Serif Display',
+              fontFamily: 'Outfit',
               margin: 0,
               color: '#1a1a1a',
             }}
@@ -235,10 +235,10 @@ export function PriceTierManagement() {
           >
             <div
               style={{
-                background: '#eef2ff',
+                background: '#fff1f0',
                 padding: 12,
                 borderRadius: 8,
-                color: '#4f46e5',
+                color: '#ee4d2d',
               }}
             >
               <Package size={24} />
@@ -315,7 +315,7 @@ export function PriceTierManagement() {
                       </td>
                       <td
                         style={{
-                          fontFamily: 'DM Mono',
+                          fontFamily: 'Outfit',
                           fontWeight: 600,
                           color: '#7c3aed',
                         }}
@@ -323,7 +323,7 @@ export function PriceTierManagement() {
                         {new Intl.NumberFormat('vi-VN').format(tier.unitPrice)}đ
                       </td>
                       <td>
-                        <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-md text-xs font-bold">
+                        <span className="bg-[#fff1f0] text-[#ee4d2d] px-2 py-1 rounded-[10px] text-xs font-bold">
                           -{tier.discountPercent}%
                         </span>
                       </td>
