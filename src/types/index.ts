@@ -154,6 +154,7 @@ export interface CompanyResponse {
 export interface CartItemResponse {
   productId: number;
   productName: string;
+  mainImage: string;
   price: number;
   quantity: number;
   subtotal: number;
