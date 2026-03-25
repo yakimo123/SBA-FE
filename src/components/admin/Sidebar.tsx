@@ -2,6 +2,7 @@ import {
   Building,
   ChevronRight,
   FileText,
+  History,
   Image as ImageIcon,
   LayoutDashboard,
   MinusCircle,
@@ -73,6 +74,7 @@ const navigation: NavigationItem[] = [
     icon: Store,
     children: [
       { title: 'Inventory', href: '/admin/inventory', icon: Package },
+      { title: 'Transactions', href: '/admin/inventory/transactions', icon: History },
       { title: 'Stock Import', href: '/admin/inventory/import', icon: Plus },
       {
         title: 'Stock Export',

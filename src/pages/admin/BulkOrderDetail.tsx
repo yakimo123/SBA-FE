@@ -8,6 +8,7 @@ import {
   Mail,
   MapPin,
   Package,
+  PackageCheck,
   Phone,
   Save,
   Truck,
@@ -18,6 +19,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import bulkOrderService from '../../services/bulkOrderService';
+import { warehouseService } from '../../services/warehouseService';
 import { BulkOrder, BulkOrderStatus } from '../../types';
 
 export default function BulkOrderDetail() {
@@ -28,6 +30,7 @@ export default function BulkOrderDetail() {
   const [shippingFee, setShippingFee] = useState<number>(0);
   const [shippingFeeSuccess, setShippingFeeSuccess] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -89,6 +92,50 @@ export default function BulkOrderDetail() {
       await loadOrder();
     } catch (err) {
       console.error('Failed to review customization', err);
+    }
+  };
+
+  const handleExportStock = async () => {
+    if (!id || !order || !order.details || order.details.length === 0) return;
+    if (!window.confirm('Tiến hành xuất kho cho đơn hàng sỉ này?')) return;
+
+    setIsExporting(true);
+    try {
+      // Gom nhóm items theo branchId (mặc định lấy branchId từ detail nếu có, hoặc fallback 1)
+      const itemsByBranch = order.details.reduce(
+        (acc, detail) => {
+          // BulkOrderDetail item now has branchId in BulkOrderDetail interface
+          const bId = detail.branchId || 1; 
+          if (!acc[bId]) acc[bId] = [];
+          acc[bId].push({
+            productId: detail.productId,
+            quantity: detail.quantity,
+          });
+          return acc;
+        },
+        {} as Record<number, Array<{ productId: number; quantity: number }>>
+      );
+
+      // Gọi API song song cho mỗi branch
+      const exportPromises = Object.entries(itemsByBranch).map(
+        ([branchIdStr, items]) => {
+          const branchId = parseInt(branchIdStr, 10);
+          return warehouseService.exportBulkOrderStock(Number(id), {
+            branchId,
+            items,
+          });
+        }
+      );
+
+      await Promise.all(exportPromises);
+
+      alert('Xuất kho đơn hàng sỉ thành công! Trạng thái đã chuyển sang SHIPPED.');
+      await loadOrder();
+    } catch (err) {
+      console.error('Failed to export stock', err);
+      alert('Xuất kho thất bại. Vui lòng kiểm tra lại.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -969,20 +1016,29 @@ export default function BulkOrderDetail() {
                   <DollarSign size={16} /> Move to Payment Phase
                 </button>
               )}
-              {(order.status === 'PAID' || order.status === 'PROCESSING') && (
+              {order.status === 'PAID' && (
                 <button
                   style={{ ...primaryBtn, opacity: isUpdatingStatus ? 0.6 : 1 }}
-                  onClick={() =>
-                    handleUpdateStatus(
-                      order.status === 'PAID' ? 'PROCESSING' : 'SHIPPED'
-                    )
-                  }
+                  onClick={() => handleUpdateStatus('PROCESSING')}
                   disabled={isUpdatingStatus}
                 >
-                  <Truck size={16} />{' '}
-                  {order.status === 'PAID'
-                    ? 'Start Processing'
-                    : 'Mark as Shipped'}
+                  <Truck size={16} /> Start Processing
+                </button>
+              )}
+              {order.status === 'PROCESSING' && (
+                <button
+                  style={{
+                    ...primaryBtn,
+                    background:
+                      'linear-gradient(135deg, #166534 0%, #14532d 100%)',
+                    opacity: isExporting ? 0.7 : 1,
+                    cursor: isExporting ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={handleExportStock}
+                  disabled={isExporting}
+                >
+                  <PackageCheck size={16} />
+                  {isExporting ? 'Đang xuất kho...' : 'Xác nhận Xuất Kho & Đi Hàng'}
                 </button>
               )}
               {order.status === 'SHIPPED' && (

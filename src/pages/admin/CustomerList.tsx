@@ -1,6 +1,7 @@
-import { Eye, Search, Trash2, Users, Loader2 } from 'lucide-react';
+import { Eye, Loader2,Search, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import userService, { UserResponse } from '../../services/userService';
 
 const css = `

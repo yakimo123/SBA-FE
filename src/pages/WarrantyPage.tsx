@@ -1,10 +1,11 @@
 import { Shield } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { customerWarrantyService, type CustomerWarrantyResponse } from '../services/customerWarrantyService';
+import { type CustomerWarrantyResponse,customerWarrantyService } from '../services/customerWarrantyService';
 
 export function WarrantyPage() {
   const navigate = useNavigate();

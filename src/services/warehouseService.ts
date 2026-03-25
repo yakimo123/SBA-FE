@@ -48,9 +48,74 @@ export interface InventoryParams {
   size?: number;
 }
 
+export interface StockTransactionItem {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+}
+
+export interface StockTransaction {
+  id: number;
+  type: 'IMPORT' | 'EXPORT' | 'RESERVED' | 'RELEASED';
+  branchId: number;
+  branchName: string;
+  orderId: number | null;
+  bulkOrderId: number | null;
+  note: string;
+  createdDate: string;
+  items: StockTransactionItem[];
+}
+
+export interface StockTransactionParams {
+  branchId?: number;
+  type?: 'IMPORT' | 'EXPORT' | 'RESERVED' | 'RELEASED';
+  orderId?: number;
+  bulkOrderId?: number;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
 const BASE = '/api/v1/warehouse';
+const TXN_BASE = '/api/v1/stock-transactions';
 
 export const warehouseService = {
+  async getStockTransactions(
+    params: StockTransactionParams = {}
+  ): Promise<PageResponse<StockTransaction>> {
+    const res = await api.get<ApiResponse<PageResponse<StockTransaction>>>(TXN_BASE, {
+      params: {
+        page: params.page ?? 0,
+        size: params.size ?? 20,
+        sort: params.sort ?? 'createdDate,desc',
+        branchId: params.branchId,
+        type: params.type,
+        orderId: params.orderId,
+        bulkOrderId: params.bulkOrderId,
+      },
+    });
+    return res.data.data;
+  },
+
+  async exportOrderStock(
+    orderId: number,
+    data: { branchId: number; items: { productId: number; quantity: number }[] }
+  ): Promise<void> {
+    await api.post<ApiResponse<void>>(`${BASE}/orders/${orderId}/export`, data);
+  },
+
+  async exportBulkOrderStock(
+    bulkOrderId: number,
+    data: { branchId: number; items: { productId: number; quantity: number }[] }
+  ): Promise<void> {
+    await api.post<ApiResponse<void>>(
+      `${BASE}/bulk-orders/${bulkOrderId}/export`,
+      data
+    );
+  },
+
   async getInventory(
     params: InventoryParams = {}
   ): Promise<PageResponse<WarehouseInventoryItem>> {

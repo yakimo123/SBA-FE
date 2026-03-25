@@ -1,7 +1,8 @@
-import { Mail, ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink,Mail } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Card } from "../components/ui/card";
+
 import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
 
 const VerifyEmailPage = () => {
   return (

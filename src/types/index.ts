@@ -223,6 +223,7 @@ export interface BulkOrderDetail {
   customizationFee?: number; // Old field, keeping for compatibility
   customizationFeeConfirmed?: number;
   customizationFeePending?: number;
+  branchId?: number;
   lineTotal: number;
   productImage?: string;
   basePrice?: number;
