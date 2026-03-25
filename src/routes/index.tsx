@@ -36,6 +36,7 @@ import { BusinessRegistrationPage } from '../pages/b2b/BusinessRegistrationPage'
 import { CompanyAccount } from '../pages/b2b/CompanyAccount';
 import { CompanyDashboard } from '../pages/b2b/Dashboard';
 import { MyOrders } from '../pages/b2b/MyOrders';
+import { BulkPaymentResult } from '../pages/b2b/BulkPaymentResult';
 import { OrderDetail as CompanyOrderDetail } from '../pages/b2b/OrderDetail';
 import { CartPage } from '../pages/Cart';
 import { CheckoutPage } from '../pages/Checkout';
@@ -150,6 +151,7 @@ export const router = createBrowserRouter([
           { index: true, element: <CompanyDashboard /> },
           { path: 'orders', element: <MyOrders /> },
           { path: 'orders/new', element: <BulkOrderCreate /> },
+          { path: 'orders/payment-result', element: <BulkPaymentResult /> },
           { path: 'orders/:id', element: <CompanyOrderDetail /> },
           { path: 'account', element: <CompanyAccount /> },
         ],
