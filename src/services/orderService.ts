@@ -28,6 +28,7 @@ export interface OrderItemResponse {
     unitPrice: number;
     subtotal: number;
     branchName?: string;
+    branchId?: number;
 }
 
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';

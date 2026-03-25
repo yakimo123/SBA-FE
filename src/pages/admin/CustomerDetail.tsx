@@ -2,15 +2,15 @@ import {
   ArrowLeft,
   Calendar,
   Heart,
+  Loader2,
   Mail,
   MapPin,
   Phone,
   ShoppingBag,
-  Star,
-  Loader2
-} from 'lucide-react';
+  Star} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+
 import userService, { UserDashboardResponse } from '../../services/userService';
 
 const css = `

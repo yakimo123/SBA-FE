@@ -5,6 +5,7 @@ import {
   Clock,
   CreditCard,
   MapPin,
+  PackageCheck,
   Printer,
   Truck,
   User,
@@ -18,6 +19,7 @@ import {
   orderService,
   OrderStatus,
 } from '../../services/orderService';
+import { warehouseService } from '../../services/warehouseService';
 
 const ALL_STATUSES: OrderStatus[] = [
   'PENDING',
@@ -246,6 +248,7 @@ export function OrderDetail() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>('PENDING');
   const [updating, setUpdating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showError, setShowError] = useState(false);
 
@@ -286,6 +289,53 @@ export function OrderDetail() {
       alert('Cập nhật trạng thái thất bại');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleExportStock = async () => {
+    if (!order || !order.orderItems || order.orderItems.length === 0) return;
+    if (!window.confirm('Tiến hành xuất kho và giao hàng?')) return;
+
+    setExporting(true);
+    try {
+      // Gom nhóm items theo branchId
+      const itemsByBranch = order.orderItems.reduce(
+        (acc, item) => {
+          const bId = item.branchId || 1; // Fallback
+          if (!acc[bId]) acc[bId] = [];
+          acc[bId].push({
+            productId: item.productId,
+            quantity: item.quantity,
+          });
+          return acc;
+        },
+        {} as Record<number, Array<{ productId: number; quantity: number }>>
+      );
+
+      // Gọi API song song cho mỗi branch
+      const exportPromises = Object.entries(itemsByBranch).map(
+        ([branchIdStr, items]) => {
+          const branchId = parseInt(branchIdStr, 10);
+          return warehouseService.exportOrderStock(order.orderId, {
+            branchId,
+            items,
+          });
+        }
+      );
+
+      await Promise.all(exportPromises);
+
+      alert('Xuất kho và chuyển trạng thái thành công!');
+
+      // Refresh order
+      const data = await orderService.getOrderById(order.orderId);
+      setOrder(data);
+      setSelectedStatus(data.orderStatus);
+    } catch (err) {
+      console.error(err);
+      alert('Xuất kho thất bại. Vui lòng thử lại.');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -355,6 +405,27 @@ export function OrderDetail() {
           <button type="button" className="od-btn od-btn-outline">
             <Printer size={16} /> Print Invoice
           </button>
+
+          {(order.orderStatus === 'PROCESSING' ||
+            order.orderStatus === 'CONFIRMED') && (
+            <button
+              type="button"
+              onClick={handleExportStock}
+              disabled={exporting}
+              className="od-btn od-btn-primary"
+              style={{
+                background:
+                  'linear-gradient(135deg, var(--success) 0%, #1e5c3b 100%)',
+                boxShadow: '0 4px 14px rgba(45, 122, 79, 0.3)',
+                opacity: exporting ? 0.7 : 1,
+                cursor: exporting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <PackageCheck size={16} />{' '}
+              {exporting ? 'Đang xuất kho...' : 'Xác nhận Xuất Kho & Đi Hàng'}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setShowStatusModal(true)}

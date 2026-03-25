@@ -30,13 +30,14 @@ import { VoucherList } from '../pages/admin/VoucherList';
 import { StockExportPage } from '../pages/admin/warehouse/StockExportPage';
 import { StockImportPage } from '../pages/admin/warehouse/StockImportPage';
 import { StockInventoryPage } from '../pages/admin/warehouse/StockInventoryPage';
+import { StockTransactionPage } from '../pages/admin/warehouse/StockTransactionPage';
 import { BulkOrderCreate } from '../pages/b2b/BulkOrderCreate';
+import { BulkPaymentResult } from '../pages/b2b/BulkPaymentResult';
 import { BusinessApprovalPendingPage } from '../pages/b2b/BusinessApprovalPendingPage';
 import { BusinessRegistrationPage } from '../pages/b2b/BusinessRegistrationPage';
 import { CompanyAccount } from '../pages/b2b/CompanyAccount';
 import { CompanyDashboard } from '../pages/b2b/Dashboard';
 import { MyOrders } from '../pages/b2b/MyOrders';
-import { BulkPaymentResult } from '../pages/b2b/BulkPaymentResult';
 import { OrderDetail as CompanyOrderDetail } from '../pages/b2b/OrderDetail';
 import { CartPage } from '../pages/Cart';
 import { CheckoutPage } from '../pages/Checkout';
@@ -45,12 +46,12 @@ import { LoginPage } from '../pages/Login';
 import { OrderDetailPage } from '../pages/OrderDetail';
 import { ProductDetailPage } from '../pages/ProductDetail';
 import { ProductListPage } from '../pages/ProductList';
-import { WarrantyPage } from '../pages/WarrantyPage';
 import { RegisterPage } from '../pages/Register';
 import { SearchResultsPage } from '../pages/SearchResultsPage';
 import { UnauthorizedPage } from '../pages/Unauthorized';
 import VerifyEmailPage from '../pages/VerifyEmail';
 import { VNPayReturnPage } from '../pages/VNPayReturn';
+import { WarrantyPage } from '../pages/WarrantyPage';
 import { WishlistPage } from '../pages/Wishlist';
 
 export const router = createBrowserRouter([
@@ -135,6 +136,7 @@ export const router = createBrowserRouter([
           { path: 'inventory', element: <StockInventoryPage /> },
           { path: 'inventory/import', element: <StockImportPage /> },
           { path: 'inventory/export', element: <StockExportPage /> },
+          { path: 'inventory/transactions', element: <StockTransactionPage /> },
         ],
       },
     ],
