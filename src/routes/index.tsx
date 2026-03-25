@@ -22,6 +22,7 @@ import { OrderList } from '../pages/admin/OrderList';
 import { PriceTierManagement } from '../pages/admin/PriceTierManagement';
 import { ProductForm } from '../pages/admin/ProductForm';
 import { ProductList } from '../pages/admin/ProductList';
+import ReportPage from '../pages/admin/ReportPage';
 import { ReviewList } from '../pages/admin/ReviewList';
 import { StoreBranchList } from '../pages/admin/StoreBranchList';
 import { SupplierList } from '../pages/admin/SupplierList';
@@ -98,6 +99,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Dashboard /> },
           { path: 'dashboard', element: <Dashboard /> },
+          { path: 'reports', element: <ReportPage /> },
 
           // Products
           { path: 'products', element: <ProductList /> },
