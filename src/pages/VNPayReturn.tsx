@@ -25,9 +25,30 @@ export function VNPayReturnPage() {
         params[key] = value;
       });
 
+      // Detect bulk order from vnp_OrderInfo
+      const orderInfo = params['vnp_OrderInfo'] || '';
+      const isBulkOrder = orderInfo.toUpperCase().includes('BULK');
+
       try {
         const result = await vnpayService.processReturn(params);
         setTransaction(result);
+
+        if (isBulkOrder) {
+          // Redirect to bulk payment result page
+          const bulkParams = new URLSearchParams({
+            status: result.status === 'SUCCESS' ? 'success' : 'failed',
+            orderId: String(result.orderId),
+            amount: String(result.amount),
+            ...(result.responseCode && result.status !== 'SUCCESS'
+              ? { responseCode: result.responseCode }
+              : {}),
+          });
+          navigate(`/company/orders/payment-result?${bulkParams.toString()}`, {
+            replace: true,
+          });
+          return;
+        }
+
         if (result.status === 'SUCCESS') {
           navigate('/checkout', {
             replace: true,
@@ -43,6 +64,20 @@ export function VNPayReturnPage() {
       } catch {
         // Fallback: read responseCode directly from URL to show UI even if API fails
         const responseCode = params['vnp_ResponseCode'];
+
+        if (isBulkOrder) {
+          const bulkParams = new URLSearchParams({
+            status: responseCode === '00' ? 'success' : 'failed',
+            ...(responseCode && responseCode !== '00'
+              ? { responseCode }
+              : {}),
+          });
+          navigate(`/company/orders/payment-result?${bulkParams.toString()}`, {
+            replace: true,
+          });
+          return;
+        }
+
         if (responseCode === '00') {
           navigate('/checkout', {
             replace: true,
