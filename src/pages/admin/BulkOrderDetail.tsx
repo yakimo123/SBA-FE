@@ -482,50 +482,50 @@ export default function BulkOrderDetail() {
                   </div>
                   {((detail.customizationFeeConfirmed ?? 0) > 0 ||
                     (detail.customizationFeePending ?? 0) > 0) && (
-                    <div
-                      style={{
-                        marginTop: 4,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 2,
-                      }}
-                    >
-                      {(detail.customizationFeeConfirmed ?? 0) > 0 && (
-                        <span
-                          style={{
-                            fontSize: '0.75rem',
-                            color: '#ee4d2d',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          <CheckCircle size={10} /> Confirmed cust: +
-                          {new Intl.NumberFormat('vi-VN').format(
-                            detail.customizationFeeConfirmed!
-                          )}
-                          đ
-                        </span>
-                      )}
-                      {(detail.customizationFeePending ?? 0) > 0 && (
-                        <span
-                          style={{
-                            fontSize: '0.75rem',
-                            color: '#d97706',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          <Clock size={10} /> Pending cust: +
-                          {new Intl.NumberFormat('vi-VN').format(
-                            detail.customizationFeePending!
-                          )}
-                          đ
-                        </span>
-                      )}
-                    </div>
-                  )}
+                      <div
+                        style={{
+                          marginTop: 4,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2,
+                        }}
+                      >
+                        {(detail.customizationFeeConfirmed ?? 0) > 0 && (
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              color: '#ee4d2d',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            <CheckCircle size={10} /> Confirmed cust: +
+                            {new Intl.NumberFormat('vi-VN').format(
+                              detail.customizationFeeConfirmed!
+                            )}
+                            đ
+                          </span>
+                        )}
+                        {(detail.customizationFeePending ?? 0) > 0 && (
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              color: '#d97706',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            <Clock size={10} /> Pending cust: +
+                            {new Intl.NumberFormat('vi-VN').format(
+                              detail.customizationFeePending!
+                            )}
+                            đ
+                          </span>
+                        )}
+                      </div>
+                    )}
                   <div
                     style={{
                       marginTop: 6,
@@ -562,12 +562,12 @@ export default function BulkOrderDetail() {
               },
               ...(order.tierDiscountTotal && order.tierDiscountTotal < 0
                 ? [
-                    {
-                      label: 'Volume Savings',
-                      value: order.tierDiscountTotal,
-                      color: '#166534',
-                    },
-                  ]
+                  {
+                    label: 'Volume Savings',
+                    value: order.tierDiscountTotal,
+                    color: '#166534',
+                  },
+                ]
                 : []),
               {
                 label: 'Subtotal (After Tiers)',
@@ -593,58 +593,58 @@ export default function BulkOrderDetail() {
 
             {(order.customizationFeeConfirmed ||
               order.customizationFeePending) && (
-              <div
-                style={{
-                  padding: '8px 12px',
-                  background: '#f5f3ff',
-                  borderRadius: 8,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 6,
-                  borderLeft: '3px solid #7c3aed',
-                }}
-              >
-                {order.customizationFeeConfirmed ? (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: '0.875rem',
-                      color: '#ee4d2d',
-                    }}
-                  >
-                    <span>Customization (Approved)</span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
-                      +
-                      {new Intl.NumberFormat('vi-VN').format(
-                        order.customizationFeeConfirmed
-                      )}
-                      đ
-                    </span>
-                  </div>
-                ) : null}
-                {order.customizationFeePending ? (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: '0.875rem',
-                      color: '#d97706',
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    <span>Customization (Pending)</span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
-                      +
-                      {new Intl.NumberFormat('vi-VN').format(
-                        order.customizationFeePending
-                      )}
-                      đ
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-            )}
+                <div
+                  style={{
+                    padding: '8px 12px',
+                    background: '#f5f3ff',
+                    borderRadius: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    borderLeft: '3px solid #7c3aed',
+                  }}
+                >
+                  {order.customizationFeeConfirmed ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '0.875rem',
+                        color: '#ee4d2d',
+                      }}
+                    >
+                      <span>Customization (Approved)</span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                        +
+                        {new Intl.NumberFormat('vi-VN').format(
+                          order.customizationFeeConfirmed
+                        )}
+                        đ
+                      </span>
+                    </div>
+                  ) : null}
+                  {order.customizationFeePending ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '0.875rem',
+                        color: '#d97706',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      <span>Customization (Pending)</span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                        +
+                        {new Intl.NumberFormat('vi-VN').format(
+                          order.customizationFeePending
+                        )}
+                        đ
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
             <div
               style={{
@@ -732,7 +732,7 @@ export default function BulkOrderDetail() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {infoRow(<Users size={14} />, 'Full Name', order.userFullName)}
+              {infoRow(<Users size={14} />, 'Full Name', order.companyName)}
               {infoRow(<Mail size={14} />, 'Email', order.userEmail)}
               {infoRow(<Phone size={14} />, 'Phone', order.userPhone)}
             </div>
