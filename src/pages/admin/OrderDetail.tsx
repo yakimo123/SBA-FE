@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   ArrowLeft,
   CheckCircle,
   Clock,
@@ -8,7 +9,6 @@ import {
   Truck,
   User,
   XCircle,
-  AlertCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -225,7 +225,12 @@ const statusClass = (status: OrderStatus) => {
   return map[status] ?? 'od-status-pending';
 };
 
-const timelineDotClass = (s: OrderStatus, orderStatus: OrderStatus, isDone: boolean, isCurrent: boolean) => {
+const timelineDotClass = (
+  s: OrderStatus,
+  orderStatus: OrderStatus,
+  isDone: boolean,
+  isCurrent: boolean
+) => {
   if (s === 'CANCELLED' && orderStatus === 'CANCELLED') return 'cancelled';
   if (isCurrent) return 'current';
   if (isDone) return 'done';
@@ -259,7 +264,7 @@ export function OrderDetail() {
 
   const handleUpdateStatus = async () => {
     if (!order) return;
-    
+
     if (selectedStatus === 'CANCELLED' && !cancelReason.trim()) {
       setShowError(true);
       return;
@@ -383,9 +388,9 @@ export function OrderDetail() {
               <>
                 <textarea
                   className="od-textarea"
-                  style={{ 
+                  style={{
                     marginBottom: 8,
-                    borderColor: showError ? 'var(--danger)' : 'var(--border)'
+                    borderColor: showError ? 'var(--danger)' : 'var(--border)',
                   }}
                   placeholder="Nhập lý do hủy đơn hàng..."
                   value={cancelReason}
@@ -396,15 +401,17 @@ export function OrderDetail() {
                   required
                 />
                 {showError && (
-                  <p style={{ 
-                    color: 'var(--danger)', 
-                    fontSize: '0.75rem', 
-                    marginBottom: 16, 
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4
-                  }}>
+                  <p
+                    style={{
+                      color: 'var(--danger)',
+                      fontSize: '0.75rem',
+                      marginBottom: 16,
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
                     <AlertCircle size={14} /> Vui lòng nhập lý do hủy
                   </p>
                 )}
@@ -587,35 +594,59 @@ export function OrderDetail() {
               <h2 className="od-card-title">Order Timeline</h2>
             </div>
             <div className="od-card-body">
-              {(order.orderStatus === 'CANCELLED' || order.orderStatus === 'REFUNDED') && order.cancelReason && (
-                <div style={{ 
-                  marginBottom: 20, 
-                  padding: 12, 
-                  background: '#fef2f2', 
-                  border: '1px solid #fee2e2', 
-                  borderRadius: 8,
-                  display: 'flex',
-                  gap: 10,
-                  alignItems: 'flex-start'
-                }}>
-                  <AlertCircle size={18} style={{ color: 'var(--danger)', flexShrink: 0, marginTop: 2 }} />
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: 'var(--danger)' }}>
-                      Lý do hủy đơn:
-                    </p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#7f1d1d' }}>
-                      {order.cancelReason}
-                    </p>
+              {(order.orderStatus === 'CANCELLED' ||
+                order.orderStatus === 'REFUNDED') &&
+                order.cancelReason && (
+                  <div
+                    style={{
+                      marginBottom: 20,
+                      padding: 12,
+                      background: '#fef2f2',
+                      border: '1px solid #fee2e2',
+                      borderRadius: 8,
+                      display: 'flex',
+                      gap: 10,
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <AlertCircle
+                      size={18}
+                      style={{
+                        color: 'var(--danger)',
+                        flexShrink: 0,
+                        marginTop: 2,
+                      }}
+                    />
+                    <div>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          color: 'var(--danger)',
+                        }}
+                      >
+                        Lý do hủy đơn:
+                      </p>
+                      <p
+                        style={{
+                          margin: '4px 0 0',
+                          fontSize: '0.85rem',
+                          color: '#7f1d1d',
+                        }}
+                      >
+                        {order.cancelReason}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               <div className="od-timeline">
-                {TIMELINE_STEPS.filter(s => {
+                {TIMELINE_STEPS.filter((s) => {
                   // If cancelled, stop the timeline at CANCELLED
                   if (order.orderStatus === 'CANCELLED') {
                     // We only show CANCELLED and the steps that logically happened before it.
                     // But wait, the user wants "hiện cancle mới đúng".
-                    // Let's just include CANCELLED in TIMELINE_STEPS (already done) 
+                    // Let's just include CANCELLED in TIMELINE_STEPS (already done)
                     // and hide DELIVERED if it's CANCELLED.
                     return s !== 'DELIVERED';
                   }
@@ -623,16 +654,21 @@ export function OrderDetail() {
                   return s !== 'CANCELLED';
                 }).map((s) => {
                   const stepIdx = statusOrder.indexOf(s);
-                  const isDone = order.orderStatus !== 'CANCELLED' && currentIdx >= stepIdx;
+                  const isDone =
+                    order.orderStatus !== 'CANCELLED' && currentIdx >= stepIdx;
                   const isCurrent = order.orderStatus === s;
-                  const isActuallyCancelled = order.orderStatus === 'CANCELLED' && s === 'CANCELLED';
-                  
+                  const isActuallyCancelled =
+                    order.orderStatus === 'CANCELLED' && s === 'CANCELLED';
+
                   return (
                     <div key={s} className="od-timeline-step">
                       <div
-                        className={`od-timeline-dot ${
-                          timelineDotClass(s, order.orderStatus, isDone, isCurrent)
-                        }`}
+                        className={`od-timeline-dot ${timelineDotClass(
+                          s,
+                          order.orderStatus,
+                          isDone,
+                          isCurrent
+                        )}`}
                       >
                         {s === 'SHIPPED' ? (
                           <Truck size={16} />
@@ -647,7 +683,10 @@ export function OrderDetail() {
                       <div
                         className="od-timeline-label"
                         style={{
-                          color: (isDone || isCurrent || isActuallyCancelled) ? 'var(--ink)' : 'var(--ink-3)',
+                          color:
+                            isDone || isCurrent || isActuallyCancelled
+                              ? 'var(--ink)'
+                              : 'var(--ink-3)',
                         }}
                       >
                         {s}
