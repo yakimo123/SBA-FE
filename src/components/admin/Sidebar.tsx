@@ -47,6 +47,7 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   { title: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { title: 'Reports', href: '/admin/reports', icon: FileText },
   {
     title: 'Products',
     href: '/admin/products',
