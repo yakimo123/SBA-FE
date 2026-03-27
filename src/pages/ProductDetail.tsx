@@ -533,7 +533,7 @@ export function ProductDetailPage() {
                 disabled={!isInStock}
                 onClick={() => {
                   handleAddToCart();
-                  navigate('/checkout');
+                  navigate('/checkout', { state: { selectedItemIds: [String(product.productId)] } });
                 }}
               >
                 Mua ngay
