@@ -23,7 +23,9 @@ import {
 import { warehouseService } from '../../services/warehouseService';
 import { userService } from '../../services/userService';
 
-const ALL_STATUSES: OrderStatus[] = [
+
+
+const TIMELINE_STEPS: OrderStatus[] = [
   'PENDING',
   'CONFIRMED',
   'PROCESSING',
@@ -33,14 +35,15 @@ const ALL_STATUSES: OrderStatus[] = [
   'REFUNDED',
 ];
 
-const TIMELINE_STEPS: OrderStatus[] = [
-  'PENDING',
-  'CONFIRMED',
-  'PROCESSING',
-  'SHIPPED',
-  'DELIVERED',
-  'CANCELLED',
-];
+const statusFlow: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["DELIVERED"],
+  DELIVERED: ["REFUNDED"],
+  CANCELLED: [],
+  REFUNDED: []
+};
 
 const css = `
   
@@ -239,6 +242,7 @@ const timelineDotClass = (
   isCurrent: boolean
 ) => {
   if (s === 'CANCELLED' && orderStatus === 'CANCELLED') return 'cancelled';
+  if (s === 'REFUNDED' && orderStatus === 'REFUNDED') return 'cancelled'; // use red background
   if (isCurrent) return 'current';
   if (isDone) return 'done';
   return 'pending';
@@ -250,8 +254,8 @@ export function OrderDetail() {
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>('PENDING');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -264,7 +268,6 @@ export function OrderDetail() {
       .getOrderById(id)
       .then((data) => {
         setOrder(data);
-        setSelectedStatus(data.orderStatus);
         setCancelReason(data.cancelReason || '');
 
         if (data.userId) {
@@ -277,10 +280,10 @@ export function OrderDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleUpdateStatus = async () => {
+  const handleUpdateStatus = async (statusToUpdate: OrderStatus) => {
     if (!order) return;
 
-    if (selectedStatus === 'CANCELLED' && !cancelReason.trim()) {
+    if (statusToUpdate === 'CANCELLED' && !cancelReason.trim()) {
       setShowError(true);
       return;
     }
@@ -291,11 +294,12 @@ export function OrderDetail() {
     try {
       const updated = await orderService.updateOrderStatus(
         order.orderId,
-        selectedStatus,
-        selectedStatus === 'CANCELLED' ? cancelReason : undefined
+        statusToUpdate,
+        statusToUpdate === 'CANCELLED' ? cancelReason : undefined
       );
       setOrder(updated);
-      setShowStatusModal(false);
+      setShowCancelModal(false);
+      setCancelReason('');
     } catch (err) {
       console.error(err);
       alert('Cập nhật trạng thái thất bại');
@@ -306,8 +310,8 @@ export function OrderDetail() {
 
   const handleExportStock = async () => {
     if (!order || !order.orderItems || order.orderItems.length === 0) return;
-    if (!window.confirm('Tiến hành xuất kho và giao hàng?')) return;
 
+    setShowExportModal(false);
     setExporting(true);
     try {
       // Gom nhóm items theo branchId
@@ -337,12 +341,9 @@ export function OrderDetail() {
 
       await Promise.all(exportPromises);
 
-      alert('Xuất kho và chuyển trạng thái thành công!');
-
       // Refresh order
       const data = await orderService.getOrderById(order.orderId);
       setOrder(data);
-      setSelectedStatus(data.orderStatus);
     } catch (err) {
       console.error(err);
       alert('Xuất kho thất bại. Vui lòng thử lại.');
@@ -379,9 +380,13 @@ export function OrderDetail() {
   }
 
   const statusOrder = [
-    ...TIMELINE_STEPS,
-    'CANCELLED',
+    'PENDING',
+    'CONFIRMED',
+    'PROCESSING',
+    'SHIPPED',
+    'DELIVERED',
     'REFUNDED',
+    'CANCELLED',
   ] as OrderStatus[];
   const currentIdx = statusOrder.indexOf(order.orderStatus);
 
@@ -418,11 +423,10 @@ export function OrderDetail() {
             <Printer size={16} /> Print Invoice
           </button>
 
-          {(order.orderStatus === 'PROCESSING' ||
-            order.orderStatus === 'CONFIRMED') && (
+          {order.orderStatus === 'PROCESSING' && (
             <button
               type="button"
-              onClick={handleExportStock}
+              onClick={() => setShowExportModal(true)}
               disabled={exporting}
               className="od-btn od-btn-primary"
               style={{
@@ -438,83 +442,122 @@ export function OrderDetail() {
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => setShowStatusModal(true)}
-            className="od-btn od-btn-primary"
-          >
-            Update Status
-          </button>
+          {statusFlow[order.orderStatus]?.filter((s) => s !== 'SHIPPED').map((s) => (
+            <button
+              key={s}
+              type="button"
+              disabled={updating || exporting}
+              onClick={() => {
+                if (s === 'CANCELLED') setShowCancelModal(true);
+                else handleUpdateStatus(s);
+              }}
+              className="od-btn od-btn-primary"
+              style={
+                s === 'CANCELLED'
+                  ? {
+                      background: 'var(--surface)',
+                      color: 'var(--danger)',
+                      border: '1px solid var(--danger)',
+                      boxShadow: 'none',
+                    }
+                  : s === 'DELIVERED' || s === 'PROCESSING' || s === 'CONFIRMED'
+                  ? {
+                      background: 'linear-gradient(135deg, var(--success) 0%, #1e5c3b 100%)',
+                      boxShadow: '0 4px 14px rgba(45, 122, 79, 0.3)',
+                    }
+                  : {}
+              }
+            >
+              {s === 'CANCELLED' ? 'Huỷ Đơn Hàng' : `Chuyển Sang ${s}`}
+            </button>
+          ))}
         </div>
       </div>
 
-      {showStatusModal && (
+      {showExportModal && (
+        <div className="od-modal-overlay" onClick={() => setShowExportModal(false)}>
+          <div className="od-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="od-modal-title">Xác nhận xuất kho</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--ink-2)', marginBottom: 20 }}>
+              Bạn có chắc chắn muốn tiến hành xuất kho và giao hàng cho đơn này?
+            </p>
+            <div className="od-modal-actions">
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                className="od-btn od-btn-outline"
+              >
+                Huỷ
+              </button>
+              <button
+                type="button"
+                onClick={handleExportStock}
+                className="od-btn od-btn-primary"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {showCancelModal && (
         <div
           className="od-modal-overlay"
-          onClick={() => setShowStatusModal(false)}
+          onClick={() => setShowCancelModal(false)}
         >
           <div className="od-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="od-modal-title">Update Order Status</h3>
-            <select
-              className="od-select"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
-            >
-              {ALL_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-
-            {selectedStatus === 'CANCELLED' && (
-              <>
-                <textarea
-                  className="od-textarea"
-                  style={{
-                    marginBottom: 8,
-                    borderColor: showError ? 'var(--danger)' : 'var(--border)',
-                  }}
-                  placeholder="Nhập lý do hủy đơn hàng..."
-                  value={cancelReason}
-                  onChange={(e) => {
-                    setCancelReason(e.target.value);
-                    if (showError) setShowError(false);
-                  }}
-                  required
-                />
-                {showError && (
-                  <p
-                    style={{
-                      color: 'var(--danger)',
-                      fontSize: '0.75rem',
-                      marginBottom: 16,
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <AlertCircle size={14} /> Vui lòng nhập lý do hủy
-                  </p>
-                )}
-              </>
+            <h3 className="od-modal-title">Lý do hủy đơn hàng</h3>
+            <textarea
+              className="od-textarea"
+              style={{
+                marginBottom: 8,
+                borderColor: showError ? 'var(--danger)' : 'var(--border)',
+              }}
+              placeholder="Nhập lý do hủy đơn hàng..."
+              value={cancelReason}
+              onChange={(e) => {
+                setCancelReason(e.target.value);
+                if (showError) setShowError(false);
+              }}
+              required
+            />
+            {showError && (
+              <p
+                style={{
+                  color: 'var(--danger)',
+                  fontSize: '0.75rem',
+                  marginBottom: 16,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                }}
+              >
+                <AlertCircle size={14} /> Vui lòng nhập lý do hủy
+              </p>
             )}
             <div className="od-modal-actions">
               <button
                 type="button"
-                onClick={() => setShowStatusModal(false)}
+                onClick={() => setShowCancelModal(false)}
                 className="od-btn od-btn-outline"
               >
-                Cancel
+                Huỷ
               </button>
               <button
                 type="button"
-                onClick={handleUpdateStatus}
+                onClick={() => handleUpdateStatus('CANCELLED')}
                 disabled={updating}
                 className="od-btn od-btn-primary"
+                style={{
+                  background: 'var(--danger)',
+                  boxShadow: 'none',
+                }}
               >
-                {updating ? 'Saving…' : 'Save'}
+                {updating ? 'Đang xử lý...' : 'Xác nhận Hủy'}
               </button>
             </div>
           </div>
@@ -725,23 +768,21 @@ export function OrderDetail() {
                 )}
               <div className="od-timeline">
                 {TIMELINE_STEPS.filter((s) => {
-                  // If cancelled, stop the timeline at CANCELLED
                   if (order.orderStatus === 'CANCELLED') {
-                    // We only show CANCELLED and the steps that logically happened before it.
-                    // But wait, the user wants "hiện cancle mới đúng".
-                    // Let's just include CANCELLED in TIMELINE_STEPS (already done)
-                    // and hide DELIVERED if it's CANCELLED.
-                    return s !== 'DELIVERED';
+                    return s !== 'DELIVERED' && s !== 'REFUNDED';
                   }
-                  // If not cancelled, hide CANCELLED
-                  return s !== 'CANCELLED';
+                  if (order.orderStatus === 'REFUNDED') {
+                    return s !== 'CANCELLED';
+                  }
+                  return s !== 'CANCELLED' && s !== 'REFUNDED';
                 }).map((s) => {
                   const stepIdx = statusOrder.indexOf(s);
                   const isDone =
                     order.orderStatus !== 'CANCELLED' && currentIdx >= stepIdx;
                   const isCurrent = order.orderStatus === s;
                   const isActuallyCancelled =
-                    order.orderStatus === 'CANCELLED' && s === 'CANCELLED';
+                    (order.orderStatus === 'CANCELLED' && s === 'CANCELLED') ||
+                    (order.orderStatus === 'REFUNDED' && s === 'REFUNDED');
 
                   return (
                     <div key={s} className="od-timeline-step">
@@ -759,6 +800,8 @@ export function OrderDetail() {
                           <CheckCircle size={16} />
                         ) : s === 'CANCELLED' ? (
                           <XCircle size={16} />
+                        ) : s === 'REFUNDED' ? (
+                          <CreditCard size={16} />
                         ) : (
                           <Clock size={16} />
                         )}
