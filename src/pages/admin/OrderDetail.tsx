@@ -6,6 +6,7 @@ import {
   CreditCard,
   MapPin,
   PackageCheck,
+  Phone,
   Printer,
   Truck,
   User,
@@ -20,6 +21,7 @@ import {
   OrderStatus,
 } from '../../services/orderService';
 import { warehouseService } from '../../services/warehouseService';
+import { userService } from '../../services/userService';
 
 const ALL_STATUSES: OrderStatus[] = [
   'PENDING',
@@ -134,13 +136,16 @@ const css = `
   .od-timeline {
     position: relative; padding-left: 24px;
     border-left: 2px solid var(--border);
+    margin-left: 16px;
   }
   .od-timeline-step {
-    position: relative; margin-bottom: 24px;
+    position: relative; margin-bottom: 5px;
+    display: flex; align-items: center; min-height: 36px;
   }
   .od-timeline-step:last-child { margin-bottom: 0; }
   .od-timeline-dot {
-    position: absolute; left: -29px; top: 0;
+    position: absolute; left: -43px; top: 50%;
+    transform: translateY(-50%);
     width: 36px; height: 36px; border-radius: 50%;
     border: 4px solid var(--surface);
     display: flex; align-items: center; justify-content: center;
@@ -251,6 +256,7 @@ export function OrderDetail() {
   const [exporting, setExporting] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showError, setShowError] = useState(false);
+  const [customerPhone, setCustomerPhone] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -260,6 +266,12 @@ export function OrderDetail() {
         setOrder(data);
         setSelectedStatus(data.orderStatus);
         setCancelReason(data.cancelReason || '');
+
+        if (data.userId) {
+          userService.getUserById(data.userId)
+            .then(user => setCustomerPhone(user.phoneNumber))
+            .catch(err => console.error('Failed to load user phone', err));
+        }
       })
       .catch(() => setError('Failed to load order'))
       .finally(() => setLoading(false));
@@ -820,6 +832,7 @@ export function OrderDetail() {
                   gap: 12,
                   fontSize: '0.9rem',
                   color: 'var(--ink-2)',
+                  marginBottom: 12,
                 }}
               >
                 <MapPin
@@ -827,6 +840,17 @@ export function OrderDetail() {
                   style={{ flexShrink: 0, color: 'var(--ink-3)' }}
                 />
                 <p style={{ margin: 0 }}>{order.shippingAddress}</p>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 12,
+                  fontSize: '0.9rem',
+                  color: 'var(--ink-2)',
+                }}
+              >
+                <Phone size={18} style={{ flexShrink: 0, color: 'var(--ink-3)' }} />
+                <p style={{ margin: 0 }}>{customerPhone ? customerPhone : 'Đang tải...'}</p>
               </div>
             </div>
           </div>
