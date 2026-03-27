@@ -85,15 +85,16 @@ export function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="space-y-1">
             <Label htmlFor="email">Email</Label>
+
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 id="email"
                 type="text"
                 placeholder="nguyenvana@example.com"
-                className="pl-10"
+                className="pl-10 mt-1"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -105,6 +106,7 @@ export function LoginPage() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <Label htmlFor="password">Mật khẩu</Label>
+              <br/>
               <button
                 type="button"
                 className="text-sm text-red-600 hover:underline"
