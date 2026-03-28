@@ -314,16 +314,7 @@ export function OrderDetail() {
                     Hủy đơn
                   </button>
                 )}
-              {/* Export Order Confirmation: only when CONFIRMED or later */}
-              {(currentStatus === 'CONFIRMED' || currentStatus === 'SHIPPED' || currentStatus === 'COMPLETED') && (
-                <button
-                  onClick={handleExportOrderConfirmation}
-                  className="px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-200 transition-colors inline-flex items-center gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Xuất Order Confirmation
-                </button>
-              )}
+              {/* Xuất Order Confirmation button removed as requested */}
               {/* Export Invoice: only when SHIPPED or COMPLETED */}
               {(currentStatus === 'SHIPPED' || currentStatus === 'COMPLETED') && (
                 <button
