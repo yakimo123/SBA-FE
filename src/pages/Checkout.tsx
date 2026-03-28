@@ -38,7 +38,7 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { cartItems } = useCart();
+  const { cartItems, refreshCart } = useCart();
 
   const [step, setStep] = useState<'info' | 'payment' | 'success'>('info');
   const [deliveryMethod, setDeliveryMethod] = useState('standard');
@@ -82,9 +82,10 @@ export function CheckoutPage() {
         totalAmount: state.totalAmount ?? 0,
       } as OrderResponse);
       setStep('success');
+      refreshCart();
       // Clear navigation state to avoid re-triggering on refresh
     }
-  }, [location.state]);
+  }, [location.state, refreshCart]);
 
   // Handle applied voucher from Cart
   useEffect(() => {
@@ -354,6 +355,7 @@ export function CheckoutPage() {
         return;
       }
 
+      await refreshCart();
       setOrderResult(result);
       setStep('success');
     } catch (error: unknown) {
