@@ -27,6 +27,8 @@ export { default as branchService } from './branchService';
 export * from './branchService';
 export { default as bulkOrderService } from './bulkOrderService';
 export * from './bulkOrderService';
+export { default as bulkOrderExportService } from './bulkOrderExportService';
+export * from './bulkOrderExportService';
 export * from './companyService';
 export { default as orderService } from './orderService';
 export * from './orderService';

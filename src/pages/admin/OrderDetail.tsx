@@ -22,8 +22,7 @@ import {
 } from '../../services/orderService';
 import { warehouseService } from '../../services/warehouseService';
 import { userService } from '../../services/userService';
-
-
+import { bulkOrderExportService } from '../../services';
 
 const TIMELINE_STEPS: OrderStatus[] = [
   'PENDING',
@@ -352,6 +351,40 @@ export function OrderDetail() {
     }
   };
 
+  const handlePrintInvoice = async () => {
+    if (!order) return;
+    try {
+      const file = await bulkOrderExportService.getInvoice(order.orderId);
+      const url = window.URL.createObjectURL(file.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bulk-order-invoice-${order.orderId}.${file.extension}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Không thể tải hóa đơn.');
+    }
+  };
+
+  const handlePrintOrderConfirmation = async () => {
+    if (!order) return;
+    try {
+      const file = await bulkOrderExportService.getOrderConfirmation(order.orderId);
+      const url = window.URL.createObjectURL(file.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bulk-order-confirmation-${order.orderId}.${file.extension}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Không thể tải xác nhận đơn hàng.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="od-root">
@@ -419,8 +452,16 @@ export function OrderDetail() {
           </div>
         </div>
         <div className="od-header-actions">
-          <button type="button" className="od-btn od-btn-outline">
+          <button type="button" className="od-btn od-btn-outline"
+            onClick={handlePrintInvoice}
+          >
             <Printer size={16} /> Print Invoice
+          </button>
+
+          <button type="button" className="od-btn od-btn-outline"
+            onClick={handlePrintOrderConfirmation}
+          >
+            <Printer size={16} /> Order Confirmation
           </button>
 
           {order.orderStatus === 'PROCESSING' && (
@@ -455,17 +496,17 @@ export function OrderDetail() {
               style={
                 s === 'CANCELLED'
                   ? {
-                      background: 'var(--surface)',
-                      color: 'var(--danger)',
-                      border: '1px solid var(--danger)',
-                      boxShadow: 'none',
-                    }
+                    background: 'var(--surface)',
+                    color: 'var(--danger)',
+                    border: '1px solid var(--danger)',
+                    boxShadow: 'none',
+                  }
                   : s === 'DELIVERED' || s === 'PROCESSING' || s === 'CONFIRMED'
-                  ? {
+                    ? {
                       background: 'linear-gradient(135deg, var(--success) 0%, #1e5c3b 100%)',
                       boxShadow: '0 4px 14px rgba(45, 122, 79, 0.3)',
                     }
-                  : {}
+                    : {}
               }
             >
               {s === 'CANCELLED' ? 'Huỷ Đơn Hàng' : `Chuyển Sang ${s}`}
@@ -925,13 +966,12 @@ export function OrderDetail() {
                     {order.paymentMethod}
                   </div>
                   <span
-                    className={`od-pay-status ${
-                      order.paymentStatus?.toUpperCase() === 'PAID'
-                        ? 'od-pay-paid'
-                        : order.paymentStatus?.toUpperCase() === 'UNPAID'
-                          ? 'od-pay-unpaid'
-                          : 'od-pay-pending'
-                    }`}
+                    className={`od-pay-status ${order.paymentStatus?.toUpperCase() === 'PAID'
+                      ? 'od-pay-paid'
+                      : order.paymentStatus?.toUpperCase() === 'UNPAID'
+                        ? 'od-pay-unpaid'
+                        : 'od-pay-pending'
+                      }`}
                   >
                     {order.paymentStatus}
                   </span>
