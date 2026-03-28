@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { useBulkOrders } from '../../contexts/BulkOrderContext';
 import { vnpayService } from '../../services/vnpayService';
 import { BulkOrderStatus } from '../../types';
+import bulkOrderExportService from '../../services/bulkOrderExportService';
 
 const STATUS_LABEL: Record<BulkOrderStatus, string> = {
   PENDING_REVIEW: 'Chờ duyệt',
@@ -51,14 +52,14 @@ const TIMELINE: {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
-  { status: 'PENDING_REVIEW', label: 'Chờ duyệt', icon: Clock },
-  { status: 'CONFIRMED', label: 'Đã xác nhận', icon: CheckCircle2 },
-  { status: 'AWAITING_PAYMENT', label: 'Chờ thanh toán', icon: DollarSign },
-  { status: 'PAID', label: 'Đã thanh toán', icon: CheckCircle2 },
-  { status: 'PROCESSING', label: 'Đang sản xuất', icon: Package },
-  { status: 'SHIPPED', label: 'Vận chuyển', icon: Truck },
-  { status: 'COMPLETED', label: 'Hoàn thành', icon: CheckCircle2 },
-];
+    { status: 'PENDING_REVIEW', label: 'Chờ duyệt', icon: Clock },
+    { status: 'CONFIRMED', label: 'Đã xác nhận', icon: CheckCircle2 },
+    { status: 'AWAITING_PAYMENT', label: 'Chờ thanh toán', icon: DollarSign },
+    { status: 'PAID', label: 'Đã thanh toán', icon: CheckCircle2 },
+    { status: 'PROCESSING', label: 'Đang sản xuất', icon: Package },
+    { status: 'SHIPPED', label: 'Vận chuyển', icon: Truck },
+    { status: 'COMPLETED', label: 'Hoàn thành', icon: CheckCircle2 },
+  ];
 
 const STATUS_ORDER: BulkOrderStatus[] = [
   'PENDING_REVIEW',
@@ -129,8 +130,8 @@ export function OrderDetail() {
   ).toUpperCase() as BulkOrderStatus;
   const currentStatus =
     normalizedStatus === 'CANCELLED' ||
-    normalizedStatus === 'REJECTED' ||
-    STATUS_ORDER.includes(normalizedStatus)
+      normalizedStatus === 'REJECTED' ||
+      STATUS_ORDER.includes(normalizedStatus)
       ? normalizedStatus
       : 'PENDING_REVIEW';
   const currentStep =
@@ -183,6 +184,41 @@ export function OrderDetail() {
     navigator.clipboard.writeText(String(order.bulkOrderId));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // --- Export handlers ---
+  const handleExportOrderConfirmation = async () => {
+    try {
+      const file = await bulkOrderExportService.getOrderConfirmation(
+        order.bulkOrderId
+      );
+      const url = window.URL.createObjectURL(file.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `order-confirmation-${order.bulkOrderId}.${file.extension}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể tải Order Confirmation.');
+    }
+  };
+
+  const handleExportInvoice = async () => {
+    try {
+      const file = await bulkOrderExportService.getInvoice(order.bulkOrderId);
+      const url = window.URL.createObjectURL(file.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${order.bulkOrderId}.${file.extension}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể tải Invoice.');
+    }
   };
 
   return (
@@ -271,17 +307,33 @@ export function OrderDetail() {
               )}
               {(currentStatus === 'PENDING_REVIEW' ||
                 currentStatus === 'CONFIRMED') && (
+                  <button
+                    onClick={handleCancelClick}
+                    className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                  >
+                    Hủy đơn
+                  </button>
+                )}
+              {/* Export Order Confirmation: only when CONFIRMED or later */}
+              {(currentStatus === 'CONFIRMED' || currentStatus === 'SHIPPED' || currentStatus === 'COMPLETED') && (
                 <button
-                  onClick={handleCancelClick}
-                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                  onClick={handleExportOrderConfirmation}
+                  className="px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-200 transition-colors inline-flex items-center gap-2"
                 >
-                  Hủy đơn
+                  <Download className="h-4 w-4" />
+                  Xuất Order Confirmation
                 </button>
               )}
-              <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors inline-flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                Xuất PDF
-              </button>
+              {/* Export Invoice: only when SHIPPED or COMPLETED */}
+              {(currentStatus === 'SHIPPED' || currentStatus === 'COMPLETED') && (
+                <button
+                  onClick={handleExportInvoice}
+                  className="px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-50 rounded-lg border border-green-200 transition-colors inline-flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Xuất Invoice
+                </button>
+              )}
               <button className="p-2 text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors">
                 <MoreVertical className="h-4 w-4" />
               </button>
@@ -327,31 +379,28 @@ export function OrderDetail() {
                       className="flex flex-col items-center"
                     >
                       <div
-                        className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${
-                          active
-                            ? 'bg-gradient-to-r from-[#ee4d2d] to-[#d73211] border-[#d73211] shadow-lg shadow-[#ee4d2d]/40 scale-110'
-                            : done
-                              ? (STEP_ICON_STYLE[step.status] ??
-                                'bg-white text-slate-400 border-slate-200')
-                              : 'bg-white text-slate-400 border-slate-200'
-                        }`}
+                        className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${active
+                          ? 'bg-gradient-to-r from-[#ee4d2d] to-[#d73211] border-[#d73211] shadow-lg shadow-[#ee4d2d]/40 scale-110'
+                          : done
+                            ? (STEP_ICON_STYLE[step.status] ??
+                              'bg-white text-slate-400 border-slate-200')
+                            : 'bg-white text-slate-400 border-slate-200'
+                          }`}
                       >
                         <Icon
-                          className={`h-5 w-5 transition-colors ${
-                            active ? 'text-white' : done ? '' : 'text-slate-400'
-                          }`}
+                          className={`h-5 w-5 transition-colors ${active ? 'text-white' : done ? '' : 'text-slate-400'
+                            }`}
                         />
                       </div>
 
                       <div className="mt-3 text-center">
                         <p
-                          className={`text-xs font-semibold ${
-                            active
-                              ? 'text-[#d73211]'
-                              : done
-                                ? 'text-slate-700'
-                                : 'text-slate-400'
-                          }`}
+                          className={`text-xs font-semibold ${active
+                            ? 'text-[#d73211]'
+                            : done
+                              ? 'text-slate-700'
+                              : 'text-slate-400'
+                            }`}
                         >
                           {step.label}
                         </p>
@@ -371,11 +420,10 @@ export function OrderDetail() {
           </div>
         ) : (
           <div
-            className={`${
-              currentStatus === 'REJECTED'
-                ? 'bg-red-50 border-red-200'
-                : 'bg-slate-50 border-slate-200'
-            } border rounded-xl p-6`}
+            className={`${currentStatus === 'REJECTED'
+              ? 'bg-red-50 border-red-200'
+              : 'bg-slate-50 border-slate-200'
+              } border rounded-xl p-6`}
           >
             <div className="flex items-start gap-3">
               <div
@@ -387,11 +435,10 @@ export function OrderDetail() {
               </div>
               <div>
                 <h3
-                  className={`text-sm font-semibold mb-1 ${
-                    currentStatus === 'REJECTED'
-                      ? 'text-red-900'
-                      : 'text-slate-900'
-                  }`}
+                  className={`text-sm font-semibold mb-1 ${currentStatus === 'REJECTED'
+                    ? 'text-red-900'
+                    : 'text-slate-900'
+                    }`}
                 >
                   Đơn hàng đã bị{' '}
                   {currentStatus === 'REJECTED' ? 'từ chối' : 'hủy'}
@@ -472,15 +519,15 @@ export function OrderDetail() {
                               {(detail.tierLabel ||
                                 (detail.priceTiers &&
                                   detail.priceTiers.length > 0)) && (
-                                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                                  <Tag className="h-3 w-3" />
-                                  {detail.tierLabel || 'Tier giá'}:{' '}
-                                  {detail.appliedTierPrice.toLocaleString(
-                                    'vi-VN'
-                                  )}
-                                  đ/sp
-                                </span>
-                              )}
+                                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                    <Tag className="h-3 w-3" />
+                                    {detail.tierLabel || 'Tier giá'}:{' '}
+                                    {detail.appliedTierPrice.toLocaleString(
+                                      'vi-VN'
+                                    )}
+                                    đ/sp
+                                  </span>
+                                )}
                               {detail.customizations?.length > 0 && (
                                 <div className="mt-2 space-y-1.5">
                                   {detail.customizations.map((c) => (
