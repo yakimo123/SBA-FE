@@ -452,17 +452,6 @@ export function OrderDetail() {
           </div>
         </div>
         <div className="od-header-actions">
-          <button type="button" className="od-btn od-btn-outline"
-            onClick={handlePrintInvoice}
-          >
-            <Printer size={16} /> Print Invoice
-          </button>
-
-          <button type="button" className="od-btn od-btn-outline"
-            onClick={handlePrintOrderConfirmation}
-          >
-            <Printer size={16} /> Order Confirmation
-          </button>
 
           {order.orderStatus === 'PROCESSING' && (
             <button
