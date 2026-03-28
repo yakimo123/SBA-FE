@@ -1,6 +1,8 @@
-import { Building2, Mail, Phone, User } from 'lucide-react';
+import { Building2, Mail, Phone, User, MessageCircle } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
+
+const ZALO_LINK = 'https://zalo.me/0569613822'; // Thay bằng link Zalo thật của bạn
 
 export function CompanyAccount() {
   const { user } = useAuth();
@@ -55,6 +57,19 @@ export function CompanyAccount() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="fixed bottom-8 right-8 z-50">
+        <a
+          href={ZALO_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-full bg-[#008fe5] hover:bg-[#006bb3] text-white px-5 py-3 shadow-lg transition-all duration-200 text-base font-semibold"
+          style={{ boxShadow: '0 4px 24px 0 rgba(0,143,229,0.18)' }}
+        >
+          <MessageCircle className="w-5 h-5" />
+          Hỗ trợ Zalo
+        </a>
       </div>
     </div>
   );
